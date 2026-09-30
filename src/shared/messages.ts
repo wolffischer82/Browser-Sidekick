@@ -15,6 +15,10 @@ import { browser } from 'wxt/browser';
  * - `pins-changed`: a pin was added, updated (status, snapshot) or removed,
  *   or the session title changed with the first pin.
  * - `already-pinned`: a pin request found the page already pinned.
+ * - `messages-changed`: a message was added to the session (a question, or
+ *   a finished or stopped answer). Streaming stays in the sidebar that
+ *   asked; other sidebars only see the stored message (decisions.md T10).
+ * - `title-changed`: the session title changed (the LLM title, or a rename).
  *
  * PDF request (Chrome's background -> its offscreen document, answered with a
  * `PdfText`; decisions.md T09). The one message that carries a URL, and its
@@ -28,6 +32,8 @@ export type SidekickMessage =
   | { type: 'refresh-pin'; pinId: string }
   | { type: 'pins-changed'; sessionId: string }
   | { type: 'already-pinned'; sessionId: string; pinId: string }
+  | { type: 'messages-changed'; sessionId: string }
+  | { type: 'title-changed'; sessionId: string }
   | { type: 'pdf-extract'; url: string; requirePdfType: boolean };
 
 export type SidekickRequest = Extract<SidekickMessage, { type: 'pin-tab' | 'refresh-pin' }>;
@@ -60,6 +66,8 @@ export function isSidekickMessage(value: unknown): value is SidekickMessage {
     case 'refresh-pin':
       return isId(value.pinId);
     case 'pins-changed':
+    case 'messages-changed':
+    case 'title-changed':
       return isId(value.sessionId);
     case 'already-pinned':
       return isId(value.sessionId) && isId(value.pinId);

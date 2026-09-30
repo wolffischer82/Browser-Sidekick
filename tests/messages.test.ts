@@ -20,6 +20,8 @@ describe('isSidekickMessage', () => {
     { type: 'refresh-pin', pinId: 'p1' },
     { type: 'pins-changed', sessionId: 's1' },
     { type: 'already-pinned', sessionId: 's1', pinId: 'p1' },
+    { type: 'messages-changed', sessionId: 's1' },
+    { type: 'title-changed', sessionId: 's1' },
     { type: 'pdf-extract', url: 'https://example.com/a.pdf', requirePdfType: false },
   ];
 
@@ -42,6 +44,9 @@ describe('isSidekickMessage', () => {
     { type: 'refresh-pin', pinId: 5 },
     { type: 'pins-changed' },
     { type: 'already-pinned', sessionId: 's1' },
+    { type: 'messages-changed' },
+    { type: 'messages-changed', sessionId: '' },
+    { type: 'title-changed', sessionId: 3 },
     { type: 'pdf-extract', url: 'https://example.com/a.pdf' },
     { type: 'pdf-extract', url: 'file:///a.pdf', requirePdfType: false },
     { type: 'pdf-extract', url: 7, requirePdfType: true },
