@@ -1,4 +1,7 @@
 import { Readability, isProbablyReaderable } from '@mozilla/readability';
+import { MAX_TEXT_CHARS, capText } from './cap';
+
+export { MAX_TEXT_CHARS, capText };
 
 /**
  * Generic page extraction (spec 5.5, kind "Page"). Runs inside the page via
@@ -7,9 +10,6 @@ import { Readability, isProbablyReaderable } from '@mozilla/readability';
  * goes back to the caller only; nothing here logs or sends it.
  */
 
-/** Extracted text is capped per pin (spec 5.5). */
-export const MAX_TEXT_CHARS = 200_000;
-
 export interface PageText {
   title: string;
   text: string;
@@ -17,18 +17,6 @@ export interface PageText {
   truncated: boolean;
   /** Readability's article, or the `innerText` fallback. */
   method: 'readability' | 'innerText';
-}
-
-/** Cuts `text` at `max` characters without splitting a surrogate pair. */
-export function capText(
-  text: string,
-  max: number = MAX_TEXT_CHARS,
-): { text: string; truncated: boolean } {
-  if (text.length <= max) return { text, truncated: false };
-  let end = max;
-  const last = text.charCodeAt(end - 1);
-  if (last >= 0xd800 && last <= 0xdbff) end -= 1;
-  return { text: text.slice(0, end), truncated: true };
 }
 
 const BLOCKS = new Set([
