@@ -469,6 +469,10 @@
     "message": "The page couldn't be read. Reload it and try again.",
     "description": "Pin failure: extraction failed for another reason."
   },
+  "youtubeNoTranscript": {
+    "message": "No transcript available.",
+    "description": "Note at the end of a pinned YouTube video's text when it has no transcript; the text goes to the model with the title and description."
+  },
   "pageAccessHeading": {
     "message": "Page access",
     "description": "Settings section about access to websites."

@@ -469,6 +469,10 @@
     "message": "Die Seite konnte nicht gelesen werden. Lade sie neu und versuch es noch einmal.",
     "description": "Pin failure: extraction failed for another reason."
   },
+  "youtubeNoTranscript": {
+    "message": "Kein Transkript verfügbar.",
+    "description": "Note at the end of a pinned YouTube video's text when it has no transcript; the text goes to the model with the title and description."
+  },
   "pageAccessHeading": {
     "message": "Seitenzugriff",
     "description": "Settings section about access to websites."

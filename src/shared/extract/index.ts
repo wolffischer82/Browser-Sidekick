@@ -1,7 +1,9 @@
 import { browser } from 'wxt/browser';
 import type { PinKind } from '../model';
 import { CURRENT_BROWSER, isRestrictedUrl, type BrowserName } from '../restricted';
+import { isAccessError } from './access';
 import type { PageText } from './page';
+import { youtubeExtractor } from './youtube-extractor';
 
 /**
  * Extractor dispatcher (spec 5.5). Picks the extractor for a tab's URL and
@@ -47,12 +49,6 @@ function isPageText(value: unknown): value is PageText {
   );
 }
 
-/** Chrome: "Cannot access contents of …"; Firefox: "Missing host permission for the tab". */
-function isAccessError(error: unknown): boolean {
-  const message = error instanceof Error ? error.message : String(error);
-  return /cannot access|permission|cannot be scripted/i.test(message);
-}
-
 /** Generic pages: Readability with the `innerText` fallback (spec 5.5, kind "Page"). */
 export const pageExtractor: Extractor = {
   kind: 'page',
@@ -82,10 +78,10 @@ export const pageExtractor: Extractor = {
 };
 
 /**
- * Registered extractors, most specific first. T08 (YouTube) and T09 (PDF)
- * add theirs before the generic page extractor, which matches everything.
+ * Registered extractors, most specific first: YouTube (T08) before the
+ * generic page extractor, which matches everything. T09 adds PDF.
  */
-export const EXTRACTORS: readonly Extractor[] = [pageExtractor];
+export const EXTRACTORS: readonly Extractor[] = [youtubeExtractor, pageExtractor];
 
 function parse(url: string): URL | null {
   try {
