@@ -123,7 +123,7 @@ Status: done (2026-09-30; gate-checker PASS-WITH-NOTES, CI green, Firefox 140 lo
 
 ## T05 Provider settings UI
 
-Status: implemented (2026-09-30); awaiting gate-checker and the orchestrator's check in both browsers
+Status: done (2026-09-30; gate-checker PASS, CI green incl. e2e, orchestrator reviewed screenshots; Firefox permission prompts deferred to docs/owner-checklist.md)
 
 ### Plan
 
@@ -146,7 +146,7 @@ Status: implemented (2026-09-30); awaiting gate-checker and the orchestrator's c
 - [x] A custom origin triggers exactly one permission request (component tests: one request when granted, one when declined, none when already covered; Grant access requests one host).
 - [x] Delete all data empties IndexedDB and, when ticked, the providers too (component tests for both, and Cancel; e2e with the box ticked).
 - [x] The input is disabled until a usable provider exists (component tests: no provider, a no-access provider, then access granted; e2e before and after).
-- [ ] The orchestrator has looked at the build in both browsers (screens in `test-results/screens/T05-*.png`, light and dark).
+- [x] The orchestrator has looked at the build in both browsers (screens in `test-results/screens/T05-*.png`, light and dark).
 
 ### Tests
 
