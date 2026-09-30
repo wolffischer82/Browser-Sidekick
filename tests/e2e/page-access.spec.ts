@@ -59,8 +59,9 @@ test.describe('page access', () => {
     const sidebar = await openSidebarWindow(context, id);
     expect(await hasPermission(sidebar, '<all_urls>')).toBe(false);
     await expect(banner(sidebar)).toBeVisible();
-    await expect(sidebar.getByRole('button', { name: 'Allow on all sites' })).toBeVisible();
-    await expect(currentRow(sidebar)).toHaveText('Current tab not accessible');
+    await expect(banner(sidebar).getByRole('button', { name: 'Allow on all sites' })).toBeVisible();
+    await expect(currentRow(sidebar)).toContainText('Current tab not accessible');
+    await expect(currentRow(sidebar)).toContainText('right-click the page');
     await expect(sidebar.getByRole('button', { name: 'Session tabs (1)' })).toBeVisible();
     await screens(sidebar, 'T06-01-banner');
 
@@ -86,8 +87,18 @@ test.describe('page access', () => {
     await expect(sidebar.getByRole('button', { name: 'Session tabs (1)' })).toBeFocused();
     await screens(sidebar, 'T06-02-banner-dismissed');
     await sidebar.reload();
-    await expect(currentRow(sidebar)).toHaveText('Current tab not accessible');
+    await expect(currentRow(sidebar)).toContainText('Current tab not accessible');
     await expect(banner(sidebar)).toHaveCount(0);
+
+    // Recovery: the row's link opens the Page access section in settings.
+    await currentRow(sidebar).getByRole('button', { name: 'Allow on all sites' }).click();
+    const section = sidebar.getByRole('region', { name: 'Page access' });
+    await expect(section.getByRole('heading', { name: 'Page access' })).toBeFocused();
+    await expect(section.getByText('Not allowed')).toBeVisible();
+    await expect(section.getByRole('button', { name: 'Allow on all sites' })).toBeVisible();
+    await screens(sidebar, 'T06-04-settings-page-access');
+    await sidebar.getByRole('button', { name: 'Back' }).click();
+    await expect(currentRow(sidebar)).toContainText('Current tab not accessible');
   });
 
   test('with access to all sites: the tracker follows tabs and windows', async () => {
@@ -105,6 +116,11 @@ test.describe('page access', () => {
     await expect(currentRow(sidebar)).toContainText('127.0.0.1');
     await expect(banner(sidebar)).toHaveCount(0);
     await screens(sidebar, 'T06-03-granted');
+    await sidebar.getByRole('button', { name: 'Settings', exact: true }).click();
+    await expect(
+      sidebar.getByRole('region', { name: 'Page access' }).getByText('Allowed on all sites'),
+    ).toBeVisible();
+    await sidebar.getByRole('button', { name: 'Back' }).click();
 
     // A second tab in the same window.
     const second = await context.newPage();

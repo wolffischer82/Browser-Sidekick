@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/preact';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/preact';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fakeBrowser } from 'wxt/testing/fake-browser';
 import { App } from '@/entrypoints/sidepanel/App';
@@ -42,6 +42,10 @@ async function open(locale: Locale = 'en', granted: string[] = NATIVE_HOSTS): Pr
 }
 
 const banner = () => screen.queryByRole('region', { name: 'Page access' });
+/** The banner's button; the current-tab row has a link with the same name. */
+async function bannerButton(name: string, region = 'Page access'): Promise<HTMLElement> {
+  return within(await screen.findByRole('region', { name: region })).getByRole('button', { name });
+}
 
 beforeEach(() => {
   tab = { id: 11, windowId: 1, url: 'https://example.com/news/a', title: 'Night trains' };
@@ -57,7 +61,7 @@ describe('access banner', () => {
     await open();
     await screen.findByRole('region', { name: 'Page access' });
     expect(banner()?.textContent).toContain(msg('accessBannerText'));
-    expect(screen.getByRole('button', { name: ALLOW })).toBeTruthy();
+    expect(await bannerButton(ALLOW)).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Dismiss' })).toBeTruthy();
   });
 
@@ -65,13 +69,15 @@ describe('access banner', () => {
     await open('de');
     const de = readMessages('de');
     await screen.findByRole('region', { name: de.accessBannerLabel?.message ?? '' });
-    expect(screen.getByRole('button', { name: 'Auf allen Websites erlauben' })).toBeTruthy();
+    expect(
+      await bannerButton('Auf allen Websites erlauben', de.accessBannerLabel?.message),
+    ).toBeTruthy();
     expect(screen.getByText(de.accessBannerText?.message ?? '')).toBeTruthy();
   });
 
   it('requests <all_urls> from the click and goes away when granted', async () => {
     await open();
-    fireEvent.click(await screen.findByRole('button', { name: ALLOW }));
+    fireEvent.click(await bannerButton(ALLOW));
     // Synchronously inside the click, before any await (Firefox).
     expect(perms.requests).toEqual([['<all_urls>']]);
     await waitFor(() => {
@@ -88,7 +94,7 @@ describe('access banner', () => {
     async (answer) => {
       await open();
       perms.answer = answer;
-      fireEvent.click(await screen.findByRole('button', { name: ALLOW }));
+      fireEvent.click(await bannerButton(ALLOW));
       expect(perms.requests).toHaveLength(1);
       await waitFor(() => {
         expect(banner()).toBeNull();
@@ -116,7 +122,7 @@ describe('access banner', () => {
 
   it('is keyboard-operable', async () => {
     await open();
-    const allow = await screen.findByRole('button', { name: ALLOW });
+    const allow = await bannerButton(ALLOW);
     allow.focus();
     expect(document.activeElement).toBe(allow);
     expect(allow.tagName).toBe('BUTTON');
@@ -201,5 +207,74 @@ describe('current-tab row', () => {
     await screen.findByText('Current tab not accessible');
     fireEvent.click(screen.getByRole('button', { name: heading(1) }));
     expect(screen.getByText('Current tab not accessible').closest('[hidden]')).not.toBeNull();
+  });
+});
+
+describe('page access in settings', () => {
+  const section = () => screen.getByRole('region', { name: 'Page access' });
+
+  it('opens from the not-accessible row, focused, and asks for all sites from the click', async () => {
+    await open();
+    await screen.findByText('Current tab not accessible');
+    expect(screen.getByText(msg('currentTabNoAccessHint'))).toBeTruthy();
+    const link = document.getElementById('page-access-link');
+    expect(link?.textContent).toBe(ALLOW);
+    fireEvent.click(link as HTMLElement);
+
+    const heading = await screen.findByRole('heading', { name: 'Page access' });
+    await waitFor(() => {
+      expect(document.activeElement).toBe(heading);
+    });
+    await within(section()).findByText('Not allowed');
+    fireEvent.click(within(section()).getByRole('button', { name: ALLOW }));
+    expect(perms.requests).toEqual([['<all_urls>']]);
+    await within(section()).findByText('Allowed on all sites');
+    expect(within(section()).queryByRole('button', { name: ALLOW })).toBeNull();
+
+    // Back in the session, the current tab is now readable.
+    fireEvent.click(screen.getByRole('button', { name: 'Back' }));
+    await screen.findByText('Night trains');
+  });
+
+  it('keeps offering the request when declined', async () => {
+    await open();
+    await updateSettings({ accessBannerDismissed: true });
+    fireEvent.click(await screen.findByRole('button', { name: 'Settings' }));
+    await within(section()).findByText('Not allowed');
+    perms.answer = 'decline';
+    fireEvent.click(within(section()).getByRole('button', { name: ALLOW }));
+    expect(perms.requests).toHaveLength(1);
+    await new Promise((r) => setTimeout(r, 20));
+    expect(within(section()).getByText('Not allowed')).toBeTruthy();
+    expect(within(section()).getByRole('button', { name: ALLOW })).toBeTruthy();
+  });
+
+  it('shows the grant, sits above Delete all data, and keeps focus on Back from the gear', async () => {
+    await open('en', [...NATIVE_HOSTS, '<all_urls>']);
+    fireEvent.click(await screen.findByRole('button', { name: 'Settings' }));
+    await within(section()).findByText('Allowed on all sites');
+    expect(within(section()).queryByRole('button')).toBeNull();
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Back' }));
+    const deleteAll = screen.getByRole('heading', { name: msg('deleteAllHeading') });
+    expect(
+      section().compareDocumentPosition(deleteAll) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
+  it('follows a grant made outside the sidebar', async () => {
+    await open();
+    fireEvent.click(await screen.findByRole('button', { name: 'Settings' }));
+    await within(section()).findByText('Not allowed');
+    perms.grant('<all_urls>');
+    await within(section()).findByText('Allowed on all sites');
+  });
+
+  it('renders the row hint and the section in German', async () => {
+    await open('de');
+    const de = readMessages('de');
+    await screen.findByText(de.currentTabNoAccessHint?.message ?? '');
+    fireEvent.click(document.getElementById('page-access-link') as HTMLElement);
+    await screen.findByText(de.pageAccessText?.message ?? '');
+    await screen.findByText('Nicht erlaubt');
   });
 });

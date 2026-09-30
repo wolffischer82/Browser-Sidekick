@@ -57,7 +57,13 @@ export function fakePermissions(granted: string[] = NATIVE_HOSTS): FakePermissio
     state.requests.push(origins);
     if (state.answer === 'throw') return Promise.reject(new Error('Not allowed'));
     if (state.answer === 'decline') return Promise.resolve(false);
-    for (const o of origins) state.granted.add(o);
+    const fresh = origins.filter((o) => !state.granted.has(o));
+    for (const o of fresh) state.granted.add(o);
+    // Like the browsers, a grant fires `permissions.onAdded` in every page.
+    if (fresh.length > 0)
+      queueMicrotask(() => {
+        for (const l of added) l();
+      });
     return Promise.resolve(true);
   });
   vi.spyOn(p.onAdded, 'addListener').mockImplementation((l) => {
