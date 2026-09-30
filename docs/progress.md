@@ -155,3 +155,18 @@ Status: done (2026-09-30; gate-checker PASS, CI green incl. e2e, orchestrator re
 - `tests/sidepanel-settings.test.tsx`: provider form per kind, masking, host access (granted, declined, refused, covered, Grant access, revoked on open), default provider, Test connection and model list, session model dropdown (mouse and keyboard), provider deletion fallback, Delete all data, input state.
 - `tests/mock-llm.test.ts`: the mock server against the real OpenAI-compatible adapter.
 - `tests/e2e/providers.spec.ts`: provider flow against the mock server; screens `T05-01` to `T05-11`.
+
+## T06 Page access and generic extraction
+
+Status: in progress
+
+### Plan
+
+- Manifest: add `activeTab` and `scripting` to both targets (decision T01-4, orchestrator); no `tabs`. Update manifest test and snapshots.
+- `src/shared/restricted.ts` (tests first): restricted-URL check per browser (non-http(s) schemes incl. `view-source:`, `file:`, other extensions' pages; Chrome Web Store, Firefox restricted Mozilla domains).
+- `src/shared/extract/` (tests first): pure `extractFromDocument(doc)` (Readability on a clone, clean block text, `innerText` fallback, 200k cap without splitting a surrogate pair); dispatcher `extractTab(tabId, url)` with a kind registry (generic page now; YouTube/PDF slots for T08/T09) and failure reason codes; unlisted script `extract-page` injected via `scripting.executeScript({ files })`. Add `@mozilla/readability` (spec 6).
+- `src/shared/page-access.ts`: all-sites check, banner request and per-site request (D10), both called synchronously from the click; site pattern per URL.
+- `src/shared/current-tab.ts`: tracker over `tabs.onActivated`/`onUpdated`, `windows.onFocusChanged` and permission events; active tab of the last focused normal window; states readable / restricted / not accessible from what host permissions and activeTab reveal.
+- Sidebar: access banner (Allow on all sites, Dismiss; hidden once granted, dismissed or declined), a plain current-tab row in Session tabs (needle and eye are T07).
+- Tests: extractor fixtures (article, non-article, huge), restricted table, dispatcher, tracker, banner component tests. e2e with a localhost fixture server: not-granted (banner, dismiss, not accessible) and all-sites granted (tracker follows tab and window switches, injected extractor returns text); screens `T06-*`.
+- Open questions: none so far.
