@@ -128,5 +128,301 @@
   "saveError": {
     "message": "The change couldn't be saved. Try again.",
     "description": "Shown when a session change fails."
+  },
+  "providersHeading": {
+    "message": "Providers",
+    "description": "Settings section listing the saved LLM providers."
+  },
+  "addProvider": {
+    "message": "Add provider",
+    "description": "Button and form heading for adding a provider."
+  },
+  "editProvider": {
+    "message": "Edit provider",
+    "description": "Form heading when editing a provider."
+  },
+  "providerDefaultBadge": {
+    "message": "Default",
+    "description": "Badge on the default provider."
+  },
+  "providerNoAccessBadge": {
+    "message": "No access",
+    "description": "Badge on a provider whose server the extension may not contact."
+  },
+  "providerNoAccessHint": {
+    "message": "The extension isn't allowed to contact this provider's server. Grant access to use it.",
+    "description": "Explains the No access badge."
+  },
+  "grantAccess": {
+    "message": "Grant access",
+    "description": "Button that asks the browser for access to a provider's server."
+  },
+  "makeDefault": {
+    "message": "Make default",
+    "description": "Button that makes a provider the default."
+  },
+  "makeDefaultNamed": {
+    "message": "Make “$LABEL$” the default",
+    "description": "Accessible name of the Make default button.",
+    "placeholders": {
+      "label": {
+        "content": "$1",
+        "example": "Work OpenAI"
+      }
+    }
+  },
+  "edit": {
+    "message": "Edit",
+    "description": "Button that edits a provider."
+  },
+  "editProviderNamed": {
+    "message": "Edit “$LABEL$”",
+    "description": "Accessible name of the Edit button.",
+    "placeholders": {
+      "label": {
+        "content": "$1",
+        "example": "Work OpenAI"
+      }
+    }
+  },
+  "deleteProviderNamed": {
+    "message": "Delete “$LABEL$”",
+    "description": "Accessible name of the provider Delete button.",
+    "placeholders": {
+      "label": {
+        "content": "$1",
+        "example": "Work OpenAI"
+      }
+    }
+  },
+  "deleteProviderConfirm": {
+    "message": "Delete this provider and its API key? Sessions that use it switch to the default provider.",
+    "description": "Confirmation before a provider is deleted."
+  },
+  "kindOpenAi": {
+    "message": "OpenAI-compatible",
+    "description": "Provider type: OpenAI or any server with the same API."
+  },
+  "kindAnthropic": {
+    "message": "Anthropic",
+    "description": "Provider type: Anthropic."
+  },
+  "kindGemini": {
+    "message": "Google Gemini",
+    "description": "Provider type: Google Gemini."
+  },
+  "fieldKind": {
+    "message": "Type",
+    "description": "Provider form: provider type."
+  },
+  "fieldLabel": {
+    "message": "Name",
+    "description": "Provider form: name shown in lists."
+  },
+  "fieldBaseUrl": {
+    "message": "Base URL",
+    "description": "Provider form: the API's base URL."
+  },
+  "baseUrlFixedHint": {
+    "message": "Fixed for this provider.",
+    "description": "Hint under a base URL that cannot be changed."
+  },
+  "fieldApiKey": {
+    "message": "API key",
+    "description": "Provider form: API key."
+  },
+  "apiKeyOptionalHint": {
+    "message": "Optional for local servers.",
+    "description": "Hint under the key field for OpenAI-compatible providers."
+  },
+  "apiKeySaved": {
+    "message": "Saved key: $MASK$. Type a new key to replace it.",
+    "description": "Shows the masked saved key.",
+    "placeholders": {
+      "mask": {
+        "content": "$1",
+        "example": "••••1a2b"
+      }
+    }
+  },
+  "apiKeyStorageHint": {
+    "message": "Stored on this device only and sent only to this provider.",
+    "description": "Hint under the key field."
+  },
+  "fieldDefaultModel": {
+    "message": "Default model",
+    "description": "Provider form: default model."
+  },
+  "chooseModel": {
+    "message": "Choose a model",
+    "description": "Empty option of the model dropdown."
+  },
+  "loadModels": {
+    "message": "Load models",
+    "description": "Button that fetches the provider's model list."
+  },
+  "modelsLoading": {
+    "message": "Loading models…",
+    "description": "Shown while the model list loads."
+  },
+  "modelsLoaded": {
+    "message": "Model list loaded.",
+    "description": "Shown when the model list loaded."
+  },
+  "modelsFailed": {
+    "message": "The model list couldn't be loaded. Type the model name instead.",
+    "description": "Shown when the model list failed; the field becomes free text."
+  },
+  "fieldContextBudget": {
+    "message": "Context budget (tokens)",
+    "description": "Provider form: context budget."
+  },
+  "contextBudgetHint": {
+    "message": "Pages and history are shortened to fit. About 4 characters make a token.",
+    "description": "Hint under the context budget."
+  },
+  "localServerHelp": {
+    "message": "For Ollama or LM Studio, the local server must allow this extension's origin, for example with OLLAMA_ORIGINS.",
+    "description": "Help text for OpenAI-compatible local servers."
+  },
+  "testConnection": {
+    "message": "Test connection",
+    "description": "Button that sends a one-token test request."
+  },
+  "testing": {
+    "message": "Testing…",
+    "description": "Shown while the connection test runs."
+  },
+  "testOk": {
+    "message": "The connection works.",
+    "description": "Connection test succeeded."
+  },
+  "save": {
+    "message": "Save",
+    "description": "Saves the provider form."
+  },
+  "errorLabelRequired": {
+    "message": "Enter a name.",
+    "description": "Validation: name missing."
+  },
+  "errorBaseUrl": {
+    "message": "Enter a URL that starts with http:// or https://.",
+    "description": "Validation: base URL invalid."
+  },
+  "errorKeyRequired": {
+    "message": "Enter the API key.",
+    "description": "Validation: key missing."
+  },
+  "errorModelRequired": {
+    "message": "Choose or enter a model.",
+    "description": "Validation: model missing."
+  },
+  "errorBudget": {
+    "message": "Enter a whole number from 1000 to 10000000.",
+    "description": "Validation: context budget out of range."
+  },
+  "llmErrorInvalidKey": {
+    "message": "The API key was rejected. Check the key and try again.",
+    "description": "LLM error: 401/403."
+  },
+  "llmErrorRateLimit": {
+    "message": "The provider's rate limit or quota was reached. Wait a moment or check your plan.",
+    "description": "LLM error: 429 or quota."
+  },
+  "llmErrorModelNotFound": {
+    "message": "The model wasn't found. Check the model name.",
+    "description": "LLM error: model not found."
+  },
+  "llmErrorContextTooLong": {
+    "message": "The request is too long for this model. Unpin pages or lower the context budget.",
+    "description": "LLM error: context too long."
+  },
+  "llmErrorBadRequest": {
+    "message": "The provider rejected the request. Check the settings and try again.",
+    "description": "LLM error: other 4xx."
+  },
+  "llmErrorServer": {
+    "message": "The provider had a problem. Try again later.",
+    "description": "LLM error: 5xx."
+  },
+  "llmErrorNetwork": {
+    "message": "The provider couldn't be reached. Check the base URL and your connection.",
+    "description": "LLM error: network or CORS."
+  },
+  "llmErrorAborted": {
+    "message": "The request was stopped.",
+    "description": "LLM error: aborted."
+  },
+  "llmErrorTimeout": {
+    "message": "The provider didn't answer in time. Try again.",
+    "description": "Connection test timed out."
+  },
+  "llmErrorUnknown": {
+    "message": "Something went wrong. Try again.",
+    "description": "LLM error: anything else."
+  },
+  "providerMessage": {
+    "message": "Provider message: $MESSAGE$",
+    "description": "The provider's own error text (key removed).",
+    "placeholders": {
+      "message": {
+        "content": "$1",
+        "example": "Invalid parameter"
+      }
+    }
+  },
+  "deleteAllHeading": {
+    "message": "Delete all data",
+    "description": "Settings section and button that delete all data."
+  },
+  "deleteAllText": {
+    "message": "Removes all sessions, pinned pages and chat history from this device.",
+    "description": "Explains Delete all data."
+  },
+  "deleteAllProviders": {
+    "message": "Also delete providers and API keys",
+    "description": "Checkbox for Delete all data."
+  },
+  "deleteAllConfirm": {
+    "message": "Delete all sessions, pinned pages and chat history? This can't be undone.",
+    "description": "Confirmation of Delete all data."
+  },
+  "deleteAllConfirmProviders": {
+    "message": "Delete all sessions, pinned pages, chat history, providers and API keys? This can't be undone.",
+    "description": "Confirmation of Delete all data with providers."
+  },
+  "deleteAllDone": {
+    "message": "All data was deleted.",
+    "description": "Shown after Delete all data."
+  },
+  "deleteAllError": {
+    "message": "The data couldn't be deleted. Try again.",
+    "description": "Delete all data failed."
+  },
+  "model": {
+    "message": "Model",
+    "description": "Label of the session model list."
+  },
+  "modelMenuLabel": {
+    "message": "Model: $MODEL$",
+    "description": "Accessible name of the header model button.",
+    "placeholders": {
+      "model": {
+        "content": "$1",
+        "example": "Work OpenAI · gpt-4o"
+      }
+    }
+  },
+  "noModel": {
+    "message": "No model",
+    "description": "Header model button when the session has none."
+  },
+  "sessionProviderDeleted": {
+    "message": "This session's provider was deleted. It now uses the default provider.",
+    "description": "Notice after a session moved to the default provider."
+  },
+  "sessionProviderDeletedNoDefault": {
+    "message": "This session's provider was deleted. Add a provider in settings to ask questions.",
+    "description": "Notice after a session lost its provider and no default exists."
   }
 }
