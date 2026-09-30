@@ -93,7 +93,7 @@ Status: done (2026-09-30; gate-checker PASS-WITH-NOTES, CI green incl. e2e, orch
 
 ## T04 LLM provider adapters
 
-Status: in progress
+Status: in progress (implementation complete, awaiting gate-checker)
 
 ### Plan
 
@@ -106,3 +106,17 @@ Status: in progress
 - Tests (mocked `fetch` only, a guard fails any unmocked call): per adapter request shape, stream parsing incl. split chunks, abort, 401/429/404/400/network mappings, `listModels` success and fallback, key only in its own auth header.
 - Record doc versions/dates relied on in `docs/decisions.md`.
 - Open questions: none so far.
+
+### Acceptance
+
+- [x] The adapters stream, abort and map errors correctly against mocked `fetch` (`tests/llm-adapters.test.ts` contract per adapter; `tests/llm-openai.test.ts`, `tests/llm-anthropic.test.ts`, `tests/llm-gemini.test.ts`).
+- [x] The key only appears in the auth header of its own provider (contract test on stream and model-list calls: not in URL, body or other headers; Anthropic and Gemini ignore the stored base URL; the key is redacted from provider messages).
+- [x] No real network calls are made in tests (`fetch` injected as a mock; the global `fetch` is stubbed to throw in every LLM test file).
+
+### Tests
+
+- `tests/llm-sse.test.ts`: SSE framing, chunks split mid-event and mid-character, CRLF split across chunks, comments, missing final blank line, bare JSON lines.
+- `tests/llm-errors.test.ts`: status and body mapping per provider, key redaction, message cap, in-stream payloads, thrown values.
+- `tests/llm-openai.test.ts`, `tests/llm-anthropic.test.ts`, `tests/llm-gemini.test.ts`: request shape, stream parsing at many chunk sizes, provider-specific events and errors, `listModels` success, pagination and fallback.
+- `tests/llm-adapters.test.ts`: per adapter 401/403/429/404/400/500/network mappings, broken stream, abort mid-stream / while waiting / while pending / pre-aborted, key placement, `listModels` fallbacks and abort, default global `fetch`, `mapError`.
+- `tests/manifest.test.ts`: provider `host_permissions` on both targets.
