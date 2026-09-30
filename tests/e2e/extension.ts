@@ -136,3 +136,26 @@ export async function hasPermission(page: Page, origin: string): Promise<boolean
     return api.permissions.contains({ origins: [o] });
   }, origin);
 }
+
+/**
+ * Opens the sidebar page in its own popup window, like a side panel that
+ * isn't a tab: the current-tab tracker follows normal windows only, so the
+ * tabs of the normal window stay the "current tab".
+ */
+export async function openSidebarWindow(context: BrowserContext, id: string): Promise<Page> {
+  const worker = context.serviceWorkers()[0] ?? (await context.waitForEvent('serviceworker'));
+  const url = `chrome-extension://${id}/sidepanel.html`;
+  const [page] = await Promise.all([
+    context.waitForEvent('page', (p) => p.url() === url),
+    worker.evaluate(async (u) => {
+      const api = (
+        globalThis as unknown as {
+          chrome: { windows: { create(o: object): Promise<unknown> } };
+        }
+      ).chrome;
+      await api.windows.create({ url: u, type: 'popup', width: 400, height: 720 });
+    }, url),
+  ]);
+  await page.waitForLoadState();
+  return page;
+}
