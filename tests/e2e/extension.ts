@@ -1,5 +1,5 @@
 import { existsSync } from 'node:fs';
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { chromium, type BrowserContext, type Page } from '@playwright/test';
@@ -79,4 +79,60 @@ export async function reloadExtension(context: BrowserContext): Promise<void> {
   } finally {
     await cdp.detach();
   }
+}
+
+interface ExtensionPrefs {
+  path?: string;
+  granted_permissions?: { explicit_host?: string[] };
+  active_permissions?: { explicit_host?: string[] };
+  runtime_granted_permissions?: { explicit_host?: string[] };
+}
+
+/**
+ * Grants host permissions to the extension in a profile, as if the user had
+ * accepted the browser's permission prompt, which Playwright can't click
+ * (headless Chromium keeps it pending). Launches once so Chromium records
+ * the extension, then writes the grant into the profile's `Preferences`
+ * (Linux Chromium doesn't enforce the preference MACs) and relaunches.
+ * Test-only: the shipped build is loaded unchanged (decisions.md T05).
+ */
+export async function launchWithGrantedOrigins(
+  profileDir: string,
+  origins: string[],
+): Promise<BrowserContext> {
+  const first = await launchWithExtension(profileDir);
+  await extensionId(first);
+  await first.close();
+
+  const file = join(profileDir, 'Default', 'Preferences');
+  const prefs = JSON.parse(await readFile(file, 'utf8')) as {
+    extensions?: { settings?: Record<string, ExtensionPrefs> };
+  };
+  const entry = Object.values(prefs.extensions?.settings ?? {}).find(
+    (e) => e.path === EXTENSION_DIR,
+  );
+  if (!entry) throw new Error('The extension is missing from the profile preferences.');
+  for (const key of [
+    'granted_permissions',
+    'active_permissions',
+    'runtime_granted_permissions',
+  ] as const) {
+    const set = (entry[key] ??= {});
+    set.explicit_host = [...new Set([...(set.explicit_host ?? []), ...origins])];
+  }
+  await writeFile(file, JSON.stringify(prefs));
+  return launchWithExtension(profileDir);
+}
+
+/** Checks from an extension page whether the extension holds `origin`. */
+export async function hasPermission(page: Page, origin: string): Promise<boolean> {
+  return page.evaluate(async (o) => {
+    // Runs in the extension page, where the `chrome` global exists.
+    const api = (
+      globalThis as unknown as {
+        chrome: { permissions: { contains(p: { origins: string[] }): Promise<boolean> } };
+      }
+    ).chrome;
+    return api.permissions.contains({ origins: [o] });
+  }, origin);
 }
