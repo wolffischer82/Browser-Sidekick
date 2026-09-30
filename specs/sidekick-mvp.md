@@ -218,7 +218,7 @@ Tasks run in order. A task starts only when its dependencies are marked done in 
 - A test that the sync storage API is never called.
 
 ### T03 Sidebar shell and session management
-**Scope**: §5.2 items 1–2 and the empty layout of 3–6. It covers the active-session persistence, the fallback title (D11) and inline rename, the New session button, and the drawer with switch and delete (with confirmation).
+**Scope**: §5.2 items 1–2 and the empty layout of 3–6. It covers the active-session persistence, the fallback title (D11) and inline rename, the New session button, and the drawer with switch and delete (with confirmation). It also sets up the Playwright e2e harness (§9 Browser automation) and adds `npm run e2e` to CI.
 
 **Acceptance**:
 - The sessions list behaves per §5.2.
@@ -227,7 +227,9 @@ Tasks run in order. A task starts only when its dependencies are marked done in 
 - Everything is keyboard-operable.
 - All strings are in both locales.
 
-**Tests**: component tests for the header, drawer (switch, delete confirm, delete active) and rename.
+**Tests**:
+- Component tests for the header, drawer (switch, delete confirm, delete active) and rename.
+- e2e: create sessions, rename one, switch, delete; the active session survives an extension reload.
 
 ### T04 LLM provider adapters
 **Scope**:
@@ -256,6 +258,7 @@ Tasks run in order. A task starts only when its dependencies are marked done in 
 - The input is disabled until a usable provider exists.
 
 **Tests**: component tests for the provider form (per kind), masking, the permission-request path (granted and denied), the default provider, the session model dropdown, provider deletion fallback, and delete-all.
+- The mock LLM server (`tests/mock-llm/`), and an e2e that adds a provider pointing at it, tests the connection and picks a session model.
 
 **UI check**: the orchestrator loads the build in both browsers.
 
@@ -293,6 +296,7 @@ Tasks run in order. A task starts only when its dependencies are marked done in 
 - Context-menu handler tests on `fakeBrowser`.
 - Pin orchestration tests (success, failure, duplicate, refresh).
 - Component tests for Session tabs (pinned rows, current-tab row, pinned current tab, unreadable tab, collapse).
+- e2e: open a local fixture page, pin it from the current-tab row, see it ready in Session tabs, unpin it. (Context-menu clicks can't be driven by Playwright; the handler is unit-tested.)
 
 **UI check** in both browsers.
 
@@ -346,6 +350,7 @@ Tasks run in order. A task starts only when its dependencies are marked done in 
 - Sanitiser and citation-linking tests.
 - Title-generation tests (success, failure, rename race).
 - Ask-flow component tests with a mocked provider (stream, stop, error, retry).
+- e2e against the mock LLM: ask about a pinned fixture page, see the streamed answer with a working citation, stop mid-stream, switch session and back.
 
 **UI check** in both browsers.
 
@@ -359,10 +364,11 @@ Tasks run in order. A task starts only when its dependencies are marked done in 
 **Tests**:
 - A page-set selection table test.
 - A component test for the button states.
+- e2e: Summarize with one pin plus the current tab against the mock LLM.
 
 ### T12 End-to-end smoke, hardening, final report
 **Scope**:
-- A Playwright Chrome e2e that runs against a local mock OpenAI-compatible server (`tests/mock-llm/`): load the extension, configure the mock provider, open a fixture page, pin it, ask, see the streamed answer, summarise, switch session and come back.
+- One Playwright end-to-end journey across all features built by T03–T11 (the suite from §9 Browser automation already exists): configure the mock provider, pin, ask, summarise, switch session and come back.
 - A written manual test checklist for Firefox (`docs/manual-test-firefox.md`), executed with the results recorded.
 - A privacy and permission audit against §6.
 - String review handed to the owner (D16).
@@ -426,7 +432,15 @@ Style rules for other strings:
 - For UI tasks, the orchestrator has looked at the build in both browsers.
 
 ### Verification gate
-`npm run lint && npm run typecheck && npm run test && npm run build && npm run lint:firefox`. From T12 onwards, `npm run e2e` is added.
+`npm run lint && npm run typecheck && npm run test && npm run build && npm run lint:firefox`. From T03 onwards, `npm run e2e` is added.
+
+### Browser automation (owner decision 2026-09-30)
+- From T03 on, every UI task extends the Playwright Chrome e2e suite (`tests/e2e/`) with the user flow it delivers. The suite loads `dist/chrome-ext` into Playwright's Chromium and drives the sidebar page (`chrome-extension://<id>/sidepanel.html`).
+- LLM calls go to a local mock OpenAI-compatible server (`tests/mock-llm/`), added in T05. Nothing ever calls a real provider.
+- Each e2e flow writes screenshots of its key states to `test-results/screens/<task>-<step>.png` (gitignored, never uploaded). The orchestrator reviews them against the spec before advancing a UI task.
+- The orchestrator also loads `dist/firefox-ext` in Firefox 140 ESR (`~/opt/firefox-esr-140/firefox`) headless via `web-ext run` for every task that changes the manifest or a background script.
+- Only toolbar-icon clicks and the final look-and-feel are left to the owner, at the end of T11.
+- Each task report states what a user can now do in the extension and what is still missing.
 
 ### Stop and ask
 Stop and ask the owner about:
