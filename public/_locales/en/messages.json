@@ -492,5 +492,111 @@
   "contextMenuPin": {
     "message": "Pin to Sidekick",
     "description": "Context menu item that pins the page to the active session."
+  },
+  "sessionTabsList": {
+    "message": "Session tabs",
+    "description": "Accessible name of the list of pinned pages and the current tab."
+  },
+  "pinToSession": {
+    "message": "Pin to session",
+    "description": "Pin needle on the current-tab row (tooltip and label)."
+  },
+  "excludeFromQuestions": {
+    "message": "Exclude from questions",
+    "description": "Eye toggle on the current-tab row while the tab is included."
+  },
+  "includeInQuestions": {
+    "message": "Include in questions",
+    "description": "Eye toggle on the current-tab row while the tab is excluded."
+  },
+  "currentTabExcluded": {
+    "message": "Not included in questions",
+    "description": "Shown on the current-tab row after the eye toggle excluded it."
+  },
+  "openPage": {
+    "message": "Open",
+    "description": "Tooltip of the open action on a pinned row."
+  },
+  "openPageNamed": {
+    "message": "Open “$TITLE$”",
+    "description": "Accessible name of the open action on a pinned row.",
+    "placeholders": {
+      "title": {
+        "content": "$1",
+        "example": "Night trains return"
+      }
+    }
+  },
+  "refreshPin": {
+    "message": "Refresh",
+    "description": "Tooltip of the refresh action on a pinned row, and the refresh offer after “Already pinned”."
+  },
+  "refreshPinNamed": {
+    "message": "Refresh “$TITLE$”",
+    "description": "Accessible name of the refresh action on a pinned row.",
+    "placeholders": {
+      "title": {
+        "content": "$1",
+        "example": "Night trains return"
+      }
+    }
+  },
+  "unpin": {
+    "message": "Unpin",
+    "description": "Tooltip of the filled needle that unpins a page."
+  },
+  "unpinNamed": {
+    "message": "Unpin “$TITLE$”",
+    "description": "Accessible name of the filled needle that unpins a page.",
+    "placeholders": {
+      "title": {
+        "content": "$1",
+        "example": "Night trains return"
+      }
+    }
+  },
+  "kindPage": {
+    "message": "Page",
+    "description": "Kind badge of a pinned web page."
+  },
+  "kindYoutube": {
+    "message": "YouTube",
+    "description": "Kind badge of a pinned YouTube video."
+  },
+  "kindPdf": {
+    "message": "PDF",
+    "description": "Kind badge of a pinned PDF."
+  },
+  "pinStatusExtracting": {
+    "message": "Extracting…",
+    "description": "Status of a pin while its text is extracted."
+  },
+  "pinStatusReady": {
+    "message": "Ready",
+    "description": "Status of a pin whose text was extracted."
+  },
+  "pinStatusFailed": {
+    "message": "Failed",
+    "description": "Status of a pin whose extraction failed; the reason follows."
+  },
+  "pinTruncated": {
+    "message": "Truncated",
+    "description": "Marker on a pin whose text was cut at 200,000 characters."
+  },
+  "alreadyPinned": {
+    "message": "Already pinned",
+    "description": "Notice when the page is already pinned in this session."
+  },
+  "dismissNotice": {
+    "message": "Dismiss",
+    "description": "Closes the “Already pinned” notice."
+  },
+  "pinFailed": {
+    "message": "The page couldn't be pinned. Reload it and try again.",
+    "description": "Shown when pinning the current tab fails."
+  },
+  "refreshFailed": {
+    "message": "The page couldn't be refreshed. Open it in a tab and try again.",
+    "description": "Shown when refreshing a pin fails."
   }
 }

@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
+import { browser } from 'wxt/browser';
 import type { Repository } from '@/shared/db/repository';
 import { t } from '@/shared/i18n';
-import type { ProviderConfig, Session } from '@/shared/model';
+import { broadcast, isSidekickMessage, sendToBackground } from '@/shared/messages';
+import type { Pin, ProviderConfig, Session } from '@/shared/model';
+import { findTab, focusOrOpen, watchOpenTabs, type OpenTab } from '@/shared/open-tabs';
 import {
   activateSession,
   createActiveSession,
@@ -9,7 +12,7 @@ import {
   openActiveSession,
 } from '@/shared/sessions';
 import { watchCurrentTab, type CurrentTab } from '@/shared/current-tab';
-import { hasAllSitesAccess, requestAllSitesAccess } from '@/shared/page-access';
+import { hasAllSitesAccess, requestAllSitesAccess, requestSiteAccess } from '@/shared/page-access';
 import { syncProviderAccess, watchHostAccess } from '@/shared/provider-access';
 import { isUsable, modelGroups, resolveSessionModel } from '@/shared/providers';
 import {
@@ -56,12 +59,22 @@ function focusAfterBanner(): void {
   });
 }
 
+/** A pin or refresh request that did nothing (spec 5.4, D3). */
+type PinError = 'none' | 'pin' | 'refresh';
+
 /** Sidebar root (spec 5.2): header, sessions drawer and the session view. */
 export function App({ repository }: Props) {
   const [repo, setRepo] = useState<Repository | null>(null);
   const [status, setStatus] = useState<Status>('loading');
   const [active, setActive] = useState<Session | null>(null);
-  const [pinCount, setPinCount] = useState(0);
+  /** The active session's pins in pin order (spec 5.2 item 3). */
+  const [pins, setPins] = useState<Pin[]>([]);
+  const [openTabs, setOpenTabs] = useState<OpenTab[]>([]);
+  /** The tab the eye toggle excluded; cleared when another tab becomes current (D9). */
+  const [excludedTabId, setExcludedTabId] = useState<number | null>(null);
+  /** The pin an "Already pinned" notice is about (spec 5.4). */
+  const [alreadyPinnedId, setAlreadyPinnedId] = useState<string | null>(null);
+  const [pinError, setPinError] = useState<PinError>('none');
   const [tabsExpanded, setTabsExpanded] = useState(true);
   const [providers, setProviders] = useState<ProviderConfig[]>([]);
   const [defaultProviderId, setDefaultProviderId] = useState<string | null>(null);
@@ -78,6 +91,34 @@ export function App({ repository }: Props) {
   /** Selector of the control that opened settings, refocused on the way back. */
   const settingsOpener = useRef<string | null>(null);
   const refocusDrawerButton = useRef(false);
+  /** The session shown, for broadcasts that arrive between renders. */
+  const activeId = useRef<string | null>(null);
+  activeId.current = active?.id ?? null;
+  /** A broadcast arrived before the session was loaded. */
+  const missedSync = useRef(false);
+  /** Only the latest pin read is applied. */
+  const pinsRead = useRef(0);
+  /** A pin whose Unpin button gets focus once it is listed. */
+  const focusPinId = useRef<string | null>(null);
+
+  /**
+   * Re-reads the pins of session `id` and its title (the first pin sets the
+   * fallback title, D11), if that session is still shown.
+   */
+  const reloadPins = async (r: Repository, id: string | null): Promise<void> => {
+    if (!id) return;
+    const read = ++pinsRead.current;
+    const [list, session] = await Promise.all([r.listPins(id), r.getSession(id)]);
+    if (read !== pinsRead.current || activeId.current !== id) return;
+    setPins(list);
+    if (!session) return;
+    setActive((shown) =>
+      shown?.id === id &&
+      (shown.title !== session.title || shown.titleSource !== session.titleSource)
+        ? { ...shown, title: session.title, titleSource: session.titleSource }
+        : shown,
+    );
+  };
 
   useEffect(() => {
     // An object, so the async closure sees the cleanup's write.
@@ -85,11 +126,16 @@ export function App({ repository }: Props) {
     (async () => {
       const opened = await repository;
       const [session, settings] = await Promise.all([openActiveSession(opened), getSettings()]);
-      const count = await opened.countPins(session.id);
+      const list = await opened.listPins(session.id);
       if (effect.cancelled) return;
       setRepo(opened);
       setActive(session);
-      setPinCount(count);
+      setPins(list);
+      activeId.current = session.id;
+      if (missedSync.current) {
+        missedSync.current = false;
+        void reloadPins(opened, session.id);
+      }
       setTabsExpanded(settings.sessionTabsExpanded);
       setProviders(settings.providers);
       setDefaultProviderId(settings.defaultProviderId);
@@ -119,14 +165,49 @@ export function App({ repository }: Props) {
       refreshAccess();
       checkAllSites();
     });
+    // Live sync (decisions.md T07): the background and other sidebars announce
+    // pin changes; the sidebar showing that session re-reads it. Registered
+    // at once, so nothing is missed while the session loads.
+    const onMessage = (message: unknown): undefined => {
+      if (!isSidekickMessage(message)) return;
+      if (message.type !== 'pins-changed' && message.type !== 'already-pinned') return;
+      const id = activeId.current;
+      if (id === null) {
+        missedSync.current = true;
+        return;
+      }
+      if (message.sessionId !== id) return;
+      if (message.type === 'already-pinned') setAlreadyPinnedId(message.pinId);
+      void repository.then((r) => reloadPins(r, id));
+    };
+    browser.runtime.onMessage.addListener(onMessage);
     const unwatchTab = watchCurrentTab(setCurrentTab);
+    const unwatchOpenTabs = watchOpenTabs(setOpenTabs);
     return () => {
       effect.cancelled = true;
+      browser.runtime.onMessage.removeListener(onMessage);
       unwatch();
       unwatchAccess();
       unwatchTab();
+      unwatchOpenTabs();
     };
   }, [repository]);
+
+  // The eye toggle's exclusion lasts until another tab becomes current (D9).
+  const currentTabId = currentTab.state === 'none' ? null : currentTab.tabId;
+  useEffect(() => {
+    setExcludedTabId((excluded) => (excluded === currentTabId ? excluded : null));
+  }, [currentTabId]);
+
+  useEffect(() => {
+    const id = focusPinId.current;
+    if (!id) return;
+    const button = document.querySelector<HTMLElement>(`[data-pin-id="${id}"] .unpin-button`);
+    if (button) {
+      focusPinId.current = null;
+      button.focus();
+    }
+  }, [pins]);
 
   // A session on a deleted provider moves to the default with a notice; a
   // session without a provider takes the default (spec 5.7, D15).
@@ -193,7 +274,12 @@ export function App({ repository }: Props) {
   };
 
   const show = async (r: Repository, session: Session) => {
-    setPinCount(await r.countPins(session.id));
+    const read = ++pinsRead.current;
+    const list = await r.listPins(session.id);
+    if (read !== pinsRead.current) return;
+    setPins(list);
+    setAlreadyPinnedId(null);
+    setPinError('none');
     setNotice('none');
     setActive(session);
   };
@@ -220,6 +306,48 @@ export function App({ repository }: Props) {
       } else {
         dismissBanner();
       }
+    });
+  };
+
+  const isOpen = (pin: Pin) => findTab(openTabs, pin.url) !== undefined;
+  const alreadyPinned = pins.find((p) => p.id === alreadyPinnedId) ?? null;
+
+  // The needle (D9, D10). A tab readable only through `activeTab` asks for
+  // its site first, synchronously in the click (Firefox refuses later), so
+  // Refresh keeps working after `activeTab` lapses. Pinning goes ahead
+  // either way: `activeTab` still allows this read.
+  const pinCurrent = () => {
+    if (currentTab.state !== 'readable') return;
+    const tab = currentTab;
+    const access = tab.siteAccess ? Promise.resolve(true) : requestSiteAccess(tab.url);
+    const sessionId = active.id;
+    run(async (r) => {
+      await access;
+      const outcome = await sendToBackground({ type: 'pin-tab', sessionId, tabId: tab.tabId });
+      setPinError(outcome.status === 'refused' ? 'pin' : 'none');
+      setAlreadyPinnedId(outcome.status === 'duplicate' ? outcome.pinId : null);
+      if (outcome.status === 'pinned') focusPinId.current = outcome.pinId;
+      await reloadPins(r, sessionId);
+    });
+  };
+
+  const refreshPin = (pin: Pin) => {
+    setAlreadyPinnedId(null);
+    run(async (r) => {
+      const outcome = await sendToBackground({ type: 'refresh-pin', pinId: pin.id });
+      setPinError(outcome.status === 'refused' ? 'refresh' : 'none');
+      await reloadPins(r, pin.sessionId);
+    });
+  };
+
+  // Unpinning leaves past messages and their sources alone (spec 5.4).
+  const unpin = (pin: Pin) => {
+    if (alreadyPinnedId === pin.id) setAlreadyPinnedId(null);
+    run(async (r) => {
+      await r.deletePin(pin.id);
+      await reloadPins(r, pin.sessionId);
+      document.querySelector<HTMLElement>('.session-tabs-toggle')?.focus();
+      await broadcast({ type: 'pins-changed', sessionId: pin.sessionId });
     });
   };
 
@@ -322,9 +450,31 @@ export function App({ repository }: Props) {
         {allSites === false && !bannerDismissed && (
           <AccessBanner onAllow={allowAllSites} onDismiss={dismissBanner} />
         )}
+        {pinError !== 'none' && (
+          <p class="error" role="alert">
+            {t(pinError === 'pin' ? 'pinFailed' : 'refreshFailed')}
+          </p>
+        )}
         <SessionTabs
-          pinCount={pinCount}
+          pins={pins}
           currentTab={currentTab}
+          currentTabExcluded={currentTabId !== null && excludedTabId === currentTabId}
+          isOpen={isOpen}
+          alreadyPinned={alreadyPinned}
+          onPinCurrent={pinCurrent}
+          onToggleExcluded={() => {
+            setExcludedTabId((excluded) => (excluded === currentTabId ? null : currentTabId));
+          }}
+          onOpen={(pin) => {
+            focusOrOpen(pin.url).catch(() => {
+              console.error('Sidekick: a page could not be opened.');
+            });
+          }}
+          onRefresh={refreshPin}
+          onUnpin={unpin}
+          onDismissNotice={() => {
+            setAlreadyPinnedId(null);
+          }}
           expanded={tabsExpanded}
           onToggle={() => {
             const next = !tabsExpanded;

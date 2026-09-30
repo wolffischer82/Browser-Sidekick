@@ -69,3 +69,54 @@ export const ChevronDownIcon = () => (
     <path d="m6 9 6 6 6-6" />
   </Icon>
 );
+
+/** Pin needle, outline: pins the current tab (D9). */
+export const PinIcon = () => (
+  <Icon>
+    <path d="M9 3h6l-1 6 3 3v2H7v-2l3-3-1-6z" />
+    <path d="M12 14v7" />
+  </Icon>
+);
+
+/** Pin needle, filled: the page is pinned; the button unpins it. */
+export const PinFilledIcon = () => (
+  <Icon>
+    <path d="M9 3h6l-1 6 3 3v2H7v-2l3-3-1-6z" fill="currentColor" />
+    <path d="M12 14v7" />
+  </Icon>
+);
+
+export const EyeIcon = () => (
+  <Icon>
+    <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" />
+    <circle cx="12" cy="12" r="3" />
+  </Icon>
+);
+
+export const EyeOffIcon = () => (
+  <Icon>
+    <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" />
+    <circle cx="12" cy="12" r="3" />
+    <path d="M3 3l18 18" />
+  </Icon>
+);
+
+export const OpenIcon = () => (
+  <Icon>
+    <path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" />
+  </Icon>
+);
+
+export const RefreshIcon = () => (
+  <Icon>
+    <path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7" />
+  </Icon>
+);
+
+/** Stands in for a missing favicon. */
+export const GlobeIcon = () => (
+  <Icon>
+    <circle cx="12" cy="12" r="9" />
+    <path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" />
+  </Icon>
+);
