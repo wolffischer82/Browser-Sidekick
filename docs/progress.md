@@ -30,3 +30,18 @@ Status: done (2026-09-30, orchestrator). Owner loaded both builds on their deskt
 - `tests/manifest.test.ts`: snapshot and exact permission lists per target.
 - `tests/sidepanel-app.test.tsx`: sidebar root smoke test in `en` and `de`.
 - `tests/locales.test.ts`: `en` and `de` have the same keys, no empty messages.
+
+## T02 Storage layer and data model
+
+Status: in progress
+
+### Plan
+
+- Add `idb` (runtime, spec section 6) and `fake-indexeddb` (dev, spec section 6).
+- `src/shared/model.ts`: `Session` (`providerId`, `model`, `titleSource`), `Pin`, `Message` (with `MessageSource[]`), `ProviderConfig`, `Settings`, and their unions.
+- `src/shared/db/schema.ts`: `sidekick` DB, schema version 1 (`sessions` by `updatedAt`, `pins` and `messages` by `sessionId`), and a migration hook that runs one step per version.
+- `src/shared/db/repository.ts`: session, pin and message CRUD, sessions listed by `updatedAt`, cascade delete, delete-all; adding a pin or message bumps `updatedAt` in the same transaction.
+- `src/shared/settings.ts`: settings store over `storage.local` only (one key per field, defaults, change listener, reset for Delete all data).
+- Manifest: add `storage` to both targets (decision T01-4) and update the snapshot test.
+- Tests: repository on `fake-indexeddb`, migration hook, settings store on `fakeBrowser`, sync storage never called, API key never in IndexedDB.
+- Open questions: none so far.
