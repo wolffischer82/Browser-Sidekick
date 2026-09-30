@@ -191,3 +191,19 @@ Status: done (2026-09-30; gate-checker PASS-WITH-NOTES, CI green incl. e2e, Fire
 - `tests/sidepanel-access.test.tsx`: banner component tests, current-tab row.
 - `tests/manifest.test.ts`: `activeTab` and `scripting` on both targets.
 - `tests/e2e/page-access.spec.ts`: without access and with the all-sites grant; screens `T06-01-banner`, `T06-02-banner-dismissed`, `T06-03-granted`, `T06-04-settings-page-access` (each also `-dark`).
+
+## T07 Pinning and pinned-pages list
+
+Status: in progress
+
+### Plan
+
+- Manifest: `contextMenus` on both targets (decision T01-4, orchestrator). Firefox 140's `contextMenus` namespace imports the full `menus` schema incl. the `tab` context (checked in its `omni.ja` and MDN), so no `menus` permission. Update manifest test and snapshots.
+- `src/shared/messages.ts` (tests first): the typed message union and runtime guard (spec 6 "Messaging"): `pin-tab` and `refresh-pin` (sidebar -> background, with a response), `pins-changed` and `already-pinned` (broadcasts to every sidebar). This is the live-sync protocol for T03-12; later tasks reuse it.
+- `src/shared/pins.ts` (tests first): URL normalisation (fragment stripped), duplicate check, pin orchestration (add `extracting` -> extractor dispatcher -> `ready` / `failed` with reason), first-pin fallback title only while `titleSource` is `fallback`, refresh; restricted pages refused. Dependencies injected (repository, extractor, broadcast).
+- `src/shared/open-tabs.ts`: open tabs by normalised URL (visible URLs only, no `tabs`), focus-or-open (reused by T10 citations), watcher for the Refresh button.
+- `src/shared/context-menu.ts` + background: "Pin to Sidekick" (Chrome `page`, `frame`; Firefox also `tab`), created on install; click pins into the active session; message handlers for the sidebar.
+- Sidebar: pinned rows (favicon, title, domain, kind badge, status, truncated, failure reason; open, refresh when open, unpin), current-tab row with needle (calls `requestSiteAccess` first in the click when `siteAccess` is false, D10) and eye toggle (reset on tab switch), the pinned current tab shown once, "Already pinned" notice with Refresh, live updates from broadcasts. Strings in `en` and `de`.
+- Tests: messages guard, pin orchestration (success, failure, duplicate, refresh, restricted, title rule), context-menu handler on `fakeBrowser`, open tabs, Session tabs component tests (pinned rows, current-tab row, pinned current tab, unreadable tab, collapse, eye, needle with and without site access, live update).
+- e2e: needle pin with extracting -> ready (slow fixture page), second pin, duplicate via the menu listener, failed pin, refresh, unpin, eye, collapse, context-menu pin with the sidebar closed; screens `T07-*`. Check headless whether `openPanelOnActionClick` grants activeTab, else owner checklist.
+- Open questions: none so far.
