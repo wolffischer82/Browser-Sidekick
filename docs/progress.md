@@ -194,7 +194,7 @@ Status: done (2026-09-30; gate-checker PASS-WITH-NOTES, CI green incl. e2e, Fire
 
 ## T07 Pinning and pinned-pages list
 
-Status: in progress
+Status: in progress (implementer done; awaiting gate-checker and orchestrator UI check)
 
 ### Plan
 
@@ -207,3 +207,22 @@ Status: in progress
 - Tests: messages guard, pin orchestration (success, failure, duplicate, refresh, restricted, title rule), context-menu handler on `fakeBrowser`, open tabs, Session tabs component tests (pinned rows, current-tab row, pinned current tab, unreadable tab, collapse, eye, needle with and without site access, live update).
 - e2e: needle pin with extracting -> ready (slow fixture page), second pin, duplicate via the menu listener, failed pin, refresh, unpin, eye, collapse, context-menu pin with the sidebar closed; screens `T07-*`. Check headless whether `openPanelOnActionClick` grants activeTab, else owner checklist.
 - Open questions: none so far.
+
+### Acceptance
+
+- [~] Pinning works from the page context menu in both browsers, from the Firefox tab strip, and from the current-tab needle, with the sidebar open and with it closed (the needle only with it open). Chrome: e2e fires the real menu listener with the sidebar open (duplicate) and closed (new pins, incl. a first run with no session), and the needle pins in the e2e. Firefox: the same handler with the `tab` context is unit-tested (`tests/pin-service.test.ts`), and the Firefox build installs cleanly in Firefox 140. Real right-clicks in both browsers and the tab strip are on the owner checklist (Playwright can't open context menus; spec T07 Tests).
+- [x] Duplicates are prevented (fragment ignored): unit tests (`tests/pins.test.ts`, `tests/pin-service.test.ts`), component tests ("Already pinned" with Refresh and Dismiss), e2e via the menu listener.
+- [x] Failed pins show their reason (unit: `failed` with reason code, extractor throwing; component: localised reason; e2e: empty page shows "No readable text was found on this page.").
+- [x] The list reflects status changes live (broadcast protocol, decisions.md T07-3; component tests for background and other-session messages; e2e: extracting -> ready on a held-back page, and a menu pin with the sidebar open).
+- [x] The current tab appears once, whether pinned or not, and the eye toggle resets on tab switch (component tests incl. a pinned URL with a different fragment; e2e counts and marker; eye resets after switching tabs and back, and stays on navigation within the tab).
+- [ ] The orchestrator has looked at the build in both browsers (screens `test-results/screens/T07-*.png`).
+
+### Tests
+
+- `tests/messages.test.ts`: message and outcome guards, broadcast without a receiver, request replies.
+- `tests/pins.test.ts`: URL normalisation, pin orchestration (extracting -> ready, failed, extractor error, kind, duplicate, other session, restricted, unknown session, URL title, pin deleted mid-extraction), first-pin fallback title, refresh (success, failure keeps text, unknown pin).
+- `tests/pin-service.test.ts`: menu contexts per browser, registration and German title, menu click (active session, no session yet, Firefox tab strip, page URL fallback, duplicate broadcast, other items, hidden URL, restricted), pin and refresh requests, message listener guard, service wiring on `fakeBrowser`.
+- `tests/open-tabs.test.ts`: visible tabs, matching without fragment, focus or open, watcher.
+- `tests/sidepanel-session-tabs.test.tsx`: current-tab row, unreadable tabs, eye toggle and reset, needle (extracting -> ready, failed, D10 site request first in the click, already granted, refused, background unreachable), pinned rows (fields, order, Refresh only when open, refresh, open, unpin), pinned current tab, "Already pinned", live updates, collapse, German.
+- `tests/manifest.test.ts`: `contextMenus` on both targets.
+- `tests/e2e/pinning.spec.ts`: needle, extracting -> ready, failed, duplicate via the menu listener, refresh, unpin, eye, collapse, menu pin with the sidebar closed; screens `T07-01` to `T07-07`.
