@@ -120,3 +120,18 @@ Status: done (2026-09-30; gate-checker PASS-WITH-NOTES, CI green, Firefox 140 lo
 - `tests/llm-openai.test.ts`, `tests/llm-anthropic.test.ts`, `tests/llm-gemini.test.ts`: request shape, stream parsing at many chunk sizes, provider-specific events and errors, `listModels` success, pagination and fallback.
 - `tests/llm-adapters.test.ts`: per adapter 401/403/429/404/400/500/network mappings, broken stream, abort mid-stream / while waiting / while pending / pre-aborted, key placement, `listModels` fallbacks and abort, default global `fetch`, `mapError`.
 - `tests/manifest.test.ts`: provider `host_permissions` on both targets.
+
+## T05 Provider settings UI
+
+Status: in progress
+
+### Plan
+
+- `src/shared/providers.ts` (tests first): origin match pattern per provider (Chrome with port, Firefox without: MDN says Firefox patterns can't carry a port), masked key, default-provider normalisation (one usable default whenever a usable provider exists), header model options, session provider fallback after deletion, form validation.
+- `src/shared/provider-access.ts`: `permissions.contains` / `request` for custom origins and, per the orchestrator's T04-10 decision, the three native hosts too; `syncProviderAccess` refreshes the stored `hasAccess` on open and on `permissions.onAdded/onRemoved`; "Grant access" requests one host from the click.
+- `src/shared/llm-messages.ts`: localised text per `LlmError` code (reused by T10); `providerMessage` shown only redacted and capped, never logged.
+- Settings view: provider list (default badge, no-access badge with Grant access, make default, edit, delete with confirmation), provider form per kind (kind, label, base URL editable for OpenAI-compatible only, key masked `••••last4` after save, model dropdown from `listModels` with free-text fallback, context budget, Ollama/LM Studio help), Test connection (1-token request), permission request on save from the click, Delete all data with the providers box.
+- Header model dropdown (D15, custom listbox so it is keyboard-operable and screenshot-able); a session on a deleted provider falls back to the default with a one-line notice.
+- Tests: component tests for the form per kind, masking, permission request granted/denied (exactly one request), default provider, model dropdown, deletion fallback, delete-all, input disabled until usable provider.
+- `tests/mock-llm/`: Node OpenAI-compatible server (`/v1/models`, streaming `/v1/chat/completions`, key check, scripted errors, request log) with its own test; e2e adds a provider pointing at it, tests invalid and valid keys, picks a session model, deletes all data. Mock origin granted by seeding the Chromium profile's `Preferences` (no build change). Screens `test-results/screens/T05-*.png`.
+- Open questions: none so far.
