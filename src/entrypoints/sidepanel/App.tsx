@@ -8,10 +8,18 @@ import {
   deleteSessionAndResolveActive,
   openActiveSession,
 } from '@/shared/sessions';
-import { getSettings, updateSettings, watchSettings } from '@/shared/settings';
+import { syncProviderAccess, watchHostAccess } from '@/shared/provider-access';
+import { isUsable, modelGroups, resolveSessionModel } from '@/shared/providers';
+import {
+  clearSettingsForDeleteAll,
+  getSettings,
+  updateSettings,
+  watchSettings,
+} from '@/shared/settings';
 import { ActionBar } from './components/ActionBar';
 import { Composer } from './components/Composer';
 import { Header } from './components/Header';
+import { ModelMenu } from './components/ModelMenu';
 import { SessionTabs } from './components/SessionTabs';
 import { SessionsDrawer, type SessionSummary } from './components/SessionsDrawer';
 import { SettingsView } from './components/SettingsView';
@@ -27,11 +35,16 @@ export function displayTitle(session: Session): string {
   return session.title === '' ? t('fallbackTitle') : session.title;
 }
 
-function hasUsableProvider(providers: ProviderConfig[]): boolean {
-  return providers.some((p) => p.hasAccess);
-}
-
 type Status = 'loading' | 'ready' | 'error';
+
+/** The one-line notice after a session's provider was deleted (spec 5.7). */
+type Notice = 'none' | 'movedToDefault' | 'noProvider';
+
+function refreshAccess(): void {
+  syncProviderAccess().catch(() => {
+    console.error('Sidekick: provider access could not be checked.');
+  });
+}
 
 /** Sidebar root (spec 5.2): header, sessions drawer and the session view. */
 export function App({ repository }: Props) {
@@ -40,7 +53,9 @@ export function App({ repository }: Props) {
   const [active, setActive] = useState<Session | null>(null);
   const [pinCount, setPinCount] = useState(0);
   const [tabsExpanded, setTabsExpanded] = useState(true);
-  const [hasProvider, setHasProvider] = useState(false);
+  const [providers, setProviders] = useState<ProviderConfig[]>([]);
+  const [defaultProviderId, setDefaultProviderId] = useState<string | null>(null);
+  const [notice, setNotice] = useState<Notice>('none');
   const [drawer, setDrawer] = useState<SessionSummary[] | null>(null);
   const [view, setView] = useState<'main' | 'settings'>('main');
   const [saveError, setSaveError] = useState(false);
@@ -61,21 +76,52 @@ export function App({ repository }: Props) {
       setActive(session);
       setPinCount(count);
       setTabsExpanded(settings.sessionTabsExpanded);
-      setHasProvider(hasUsableProvider(settings.providers));
+      setProviders(settings.providers);
+      setDefaultProviderId(settings.defaultProviderId);
       setStatus('ready');
+      // Host access can change outside the sidebar (decisions.md T05).
+      refreshAccess();
     })().catch(() => {
       console.error('Sidekick: the session storage could not be opened.');
       if (!effect.cancelled) setStatus('error');
     });
     const unwatch = watchSettings((changed) => {
-      if (changed.providers) setHasProvider(hasUsableProvider(changed.providers));
+      if (changed.providers) setProviders(changed.providers);
+      if (changed.defaultProviderId !== undefined) setDefaultProviderId(changed.defaultProviderId);
       if (changed.sessionTabsExpanded !== undefined) setTabsExpanded(changed.sessionTabsExpanded);
     });
+    const unwatchAccess = watchHostAccess(refreshAccess);
     return () => {
       effect.cancelled = true;
       unwatch();
+      unwatchAccess();
     };
   }, [repository]);
+
+  // A session on a deleted provider moves to the default with a notice; a
+  // session without a provider takes the default (spec 5.7, D15).
+  useEffect(() => {
+    if (!repo || !active || view !== 'main') return;
+    const resolved = resolveSessionModel(active, providers, defaultProviderId);
+    if (resolved.change === 'none') return;
+    const effect = { cancelled: false };
+    repo.updateSession(active.id, { providerId: resolved.providerId, model: resolved.model }).then(
+      (updated) => {
+        if (effect.cancelled || !updated) return;
+        setActive(updated);
+        if (resolved.change === 'deleted') {
+          setNotice(resolved.providerId ? 'movedToDefault' : 'noProvider');
+        }
+      },
+      () => {
+        console.error('Sidekick: a session change could not be saved.');
+        setSaveError(true);
+      },
+    );
+    return () => {
+      effect.cancelled = true;
+    };
+  }, [repo, active, providers, defaultProviderId, view]);
 
   useEffect(() => {
     if (view === 'main' && settingsOpener.current) {
@@ -118,8 +164,18 @@ export function App({ repository }: Props) {
 
   const show = async (r: Repository, session: Session) => {
     setPinCount(await r.countPins(session.id));
+    setNotice('none');
     setActive(session);
   };
+
+  const deleteAll = async (includeProviders: boolean) => {
+    await repo.deleteAll();
+    await clearSettingsForDeleteAll({ includeProviders });
+    await show(repo, await createActiveSession(repo));
+  };
+
+  const groups = modelGroups(providers);
+  const sessionProvider = providers.find((p) => p.id === active.providerId);
 
   const loadSummaries = async (r: Repository): Promise<SessionSummary[]> => {
     const sessions = await r.listSessions();
@@ -140,6 +196,9 @@ export function App({ repository }: Props) {
     return (
       <main class="app">
         <SettingsView
+          providers={providers}
+          defaultProviderId={defaultProviderId}
+          onDeleteAll={deleteAll}
           onBack={() => {
             setView('main');
           }}
@@ -177,7 +236,33 @@ export function App({ repository }: Props) {
             settingsOpener.current = '#settings-button';
             setView('settings');
           }}
+          modelMenu={
+            (groups.length > 0 || active.providerId !== null) && (
+              <ModelMenu
+                groups={groups}
+                providerId={active.providerId}
+                model={active.model}
+                providerLabel={sessionProvider?.label ?? null}
+                onChoose={(providerId, model) => {
+                  run(async (r) => {
+                    const updated = await r.updateSession(active.id, { providerId, model });
+                    if (updated) setActive(updated);
+                    setNotice('none');
+                  });
+                }}
+              />
+            )
+          }
         />
+        {notice !== 'none' && (
+          <p class="notice" role="status">
+            {t(
+              notice === 'movedToDefault'
+                ? 'sessionProviderDeleted'
+                : 'sessionProviderDeletedNoDefault',
+            )}
+          </p>
+        )}
         {saveError && (
           <p class="error" role="alert">
             {t('saveError')}
@@ -195,7 +280,7 @@ export function App({ repository }: Props) {
         <Transcript />
         <ActionBar canSummarize={false} />
         <Composer
-          hasProvider={hasProvider}
+          hasProvider={providers.some(isUsable)}
           onOpenSettings={() => {
             settingsOpener.current = '#settings-link';
             setView('settings');

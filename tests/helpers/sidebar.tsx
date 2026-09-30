@@ -6,11 +6,16 @@ import { fakeBrowser } from 'wxt/testing/fake-browser';
 import { App } from '@/entrypoints/sidepanel/App';
 import { openRepository, type Repository } from '@/shared/db/repository';
 import { useLocale, type Locale } from './i18n';
+import { fakePermissions } from './permissions';
 
-/** A fresh browser, locale and empty IndexedDB, with a clock that ticks per call. */
+/**
+ * A fresh browser, locale and empty IndexedDB, with a clock that ticks per
+ * call. Host permissions start as installed: the three native provider hosts.
+ */
 export async function freshRepository(locale: Locale = 'en'): Promise<Repository> {
   fakeBrowser.reset();
   useLocale(locale);
+  fakePermissions();
   globalThis.indexedDB = new IDBFactory();
   let clock = Date.now() - 60 * 60 * 1000;
   return openRepository({ now: () => (clock += 1000) });

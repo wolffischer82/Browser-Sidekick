@@ -1,4 +1,4 @@
-import type { Ref } from 'preact';
+import type { ComponentChildren, Ref } from 'preact';
 import { t } from '@/shared/i18n';
 import { GearIcon, MenuIcon, PlusIcon } from './icons';
 import { SessionTitle } from './SessionTitle';
@@ -11,12 +11,13 @@ interface Props {
   onRename: (title: string) => void;
   onNewSession: () => void;
   onOpenSettings: () => void;
+  /** The session model dropdown (D15), shown after the title. */
+  modelMenu?: ComponentChildren;
 }
 
 /**
  * Sidebar header (spec 5.2 item 1): sessions drawer, title with inline
- * rename, New session and settings. The session model dropdown (D15) is
- * added by T05.
+ * rename, the session model dropdown (D15), New session and settings.
  */
 export function Header(props: Props) {
   return (
@@ -36,6 +37,7 @@ export function Header(props: Props) {
       <div class="header-title">
         <SessionTitle title={props.title} onRename={props.onRename} />
       </div>
+      {props.modelMenu}
       <button
         type="button"
         class="icon-button"

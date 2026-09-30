@@ -74,7 +74,11 @@ export function watchHostAccess(listener: () => void): () => void {
     return () => undefined;
   }
   return () => {
-    browser.permissions.onAdded.removeListener(onChange);
-    browser.permissions.onRemoved.removeListener(onChange);
+    try {
+      browser.permissions.onAdded.removeListener(onChange);
+      browser.permissions.onRemoved.removeListener(onChange);
+    } catch {
+      // The page is going away; nothing is left to stop.
+    }
   };
 }
