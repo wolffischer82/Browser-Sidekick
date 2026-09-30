@@ -16,7 +16,7 @@ Internal decisions and differences between the spec and current package or brows
    - `permissions.request()` from a sidebar document: Firefox 101+ (earlier versions could not). Relevant for T05/T06.
    - `scripting.executeScript`: Firefox 102, Chrome 88.
    - `side_panel` and `sidePanel.setPanelBehavior`: Chrome 114, below the Chrome 116 minimum.
-   - `browser_specific_settings.gecko.data_collection_permissions`: Firefox 140. Owner decision 2026-09-30 (questions.md Q1, spec section 1): the Firefox manifest declares `data_collection_permissions: { required: ["websiteContent"] }` and the Firefox minimum is raised to 140 ESR, so the key is supported on every allowed version.
+   - `browser_specific_settings.gecko.data_collection_permissions`: Firefox 140. Owner decision 2026-09-30 (questions.md Q1, spec section 1): the Firefox manifest declares `data_collection_permissions: { required: ["websiteContent", "browsingActivity"] }` (`browsingActivity` added by an owner correction the same day) and the Firefox minimum is raised to 140 ESR, so the key is supported on every allowed version.
    - Minimums set in the manifest: `minimum_chrome_version: "116"`, `gecko.strict_min_version: "140.0"`. The Firefox findings above for versions below 140 no longer constrain anything.
    - Firefox background is an event page (`background.scripts`); Chrome uses a service worker. WXT emits the right key per target.
 8. **`web-ext lint` warning `UNSAFE_VAR_ASSIGNMENT`** comes from Preact's own `dangerouslySetInnerHTML` code path in the bundle, not from project code. Accepted; project code must not use `dangerouslySetInnerHTML` without the sanitiser (T10).

@@ -53,7 +53,7 @@ describe('manifest', () => {
     expect(manifest.browser_specific_settings).toMatchObject({
       gecko: {
         strict_min_version: '140.0',
-        data_collection_permissions: { required: ['websiteContent'] },
+        data_collection_permissions: { required: ['websiteContent', 'browsingActivity'] },
       },
     });
     expect(manifest.sidebar_action).toMatchObject({
