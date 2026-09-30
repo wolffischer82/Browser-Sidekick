@@ -51,3 +51,8 @@ jobs:
       - name: build
         if: steps.detect.outputs.present == 'true'
         run: npm run --if-present build
+
+      # web-ext lint on the unpacked Firefox build from the step above.
+      - name: lint:firefox
+        if: steps.detect.outputs.present == 'true'
+        run: npm run --if-present lint:firefox
