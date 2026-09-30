@@ -15,15 +15,24 @@ import { browser } from 'wxt/browser';
  * - `pins-changed`: a pin was added, updated (status, snapshot) or removed,
  *   or the session title changed with the first pin.
  * - `already-pinned`: a pin request found the page already pinned.
+ *
+ * PDF request (Chrome's background -> its offscreen document, answered with a
+ * `PdfText`; decisions.md T09). The one message that carries a URL, and its
+ * answer the extracted text; both stay inside the extension, and every other
+ * receiver ignores it:
+ * - `pdf-extract`: download `url` and extract its text with pdf.js;
+ *   `requirePdfType` refuses a response that isn't `application/pdf`.
  */
 export type SidekickMessage =
   | { type: 'pin-tab'; sessionId: string; tabId: number }
   | { type: 'refresh-pin'; pinId: string }
   | { type: 'pins-changed'; sessionId: string }
-  | { type: 'already-pinned'; sessionId: string; pinId: string };
+  | { type: 'already-pinned'; sessionId: string; pinId: string }
+  | { type: 'pdf-extract'; url: string; requirePdfType: boolean };
 
 export type SidekickRequest = Extract<SidekickMessage, { type: 'pin-tab' | 'refresh-pin' }>;
-export type SidekickBroadcast = Exclude<SidekickMessage, SidekickRequest>;
+export type PdfExtractRequest = Extract<SidekickMessage, { type: 'pdf-extract' }>;
+export type SidekickBroadcast = Exclude<SidekickMessage, SidekickRequest | PdfExtractRequest>;
 
 /** Why a pin or refresh request did nothing. */
 export type RefusalReason = 'restricted' | 'no-access' | 'not-open' | 'not-found';
@@ -54,6 +63,12 @@ export function isSidekickMessage(value: unknown): value is SidekickMessage {
       return isId(value.sessionId);
     case 'already-pinned':
       return isId(value.sessionId) && isId(value.pinId);
+    case 'pdf-extract':
+      return (
+        typeof value.url === 'string' &&
+        /^https?:\/\//i.test(value.url) &&
+        typeof value.requirePdfType === 'boolean'
+      );
     default:
       return false;
   }

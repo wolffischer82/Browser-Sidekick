@@ -1,3 +1,4 @@
+import { resolve } from 'node:path';
 import { defineConfig } from 'wxt';
 
 // Placeholder artwork: design/icon.svg, exported by `npm run icons`.
@@ -37,7 +38,15 @@ export default defineConfig({
     // and `scripting` inject the extractor on demand; no `tabs` permission.
     // T07: `contextMenus` for "Pin to Sidekick"; Firefox's `contextMenus`
     // namespace includes the `tab` context, so no `menus` (decisions.md T07).
-    permissions: ['storage', 'activeTab', 'scripting', 'contextMenus'],
+    // T09: Chrome's `offscreen` document parses PDFs; Firefox parses them in
+    // its background page (spec 5.5).
+    permissions: [
+      'storage',
+      'activeTab',
+      'scripting',
+      'contextMenus',
+      ...(browser === 'firefox' ? [] : ['offscreen']),
+    ],
     // T04: the three known provider hosts (spec section 6, D6). A custom
     // OpenAI-compatible origin is requested at runtime when saved (T05).
     host_permissions: [
@@ -60,6 +69,18 @@ export default defineConfig({
       : { minimum_chrome_version: '116' }),
   }),
   hooks: {
+    // T09: pdf.js's worker ships as a packaged file (no CDN, no remote code).
+    // Legacy build (Chrome 116), minified like the bundled main library. `.js` so both
+    // browsers serve it as JavaScript.
+    'build:publicAssets': (_wxt, files) => {
+      files.push({
+        absoluteSrc: resolve(
+          import.meta.dirname,
+          'node_modules/pdfjs-dist/legacy/build/pdf.worker.min.mjs',
+        ),
+        relativeDest: 'pdf.worker.js',
+      });
+    },
     // WXT fills `sidebar_action` from the sidepanel HTML; localise its title
     // and give it the toolbar icon.
     'build:manifestGenerated': (_wxt, manifest) => {

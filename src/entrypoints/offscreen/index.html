@@ -1,0 +1,12 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <!-- Chrome only: the service worker can't start pdf.js's worker (spec 6 "Contexts"). -->
+    <meta name="manifest.include" content="['chrome']" />
+    <title>Browser Sidekick PDF reader</title>
+  </head>
+  <body>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

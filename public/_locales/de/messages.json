@@ -469,6 +469,22 @@
     "message": "Die Seite konnte nicht gelesen werden. Lade sie neu und versuch es noch einmal.",
     "description": "Pin failure: extraction failed for another reason."
   },
+  "extractFailedPdfTooLarge": {
+    "message": "Dieses PDF kann nicht gelesen werden: Es ist größer als 30 MB. Nur kleinere PDFs lassen sich anheften.",
+    "description": "Pin failure: the PDF is larger than 30 MB."
+  },
+  "extractFailedPdfEncrypted": {
+    "message": "Dieses PDF kann nicht gelesen werden: Es ist mit einem Passwort geschützt. Hefte stattdessen eine Kopie ohne Passwort an.",
+    "description": "Pin failure: the PDF needs a password to open."
+  },
+  "extractFailedPdfNoText": {
+    "message": "Dieses PDF kann nicht gelesen werden: Es enthält keinen Text, nur Bilder wie bei einem Scan. Hefte stattdessen eine Version mit markierbarem Text an.",
+    "description": "Pin failure: the PDF has no text layer (scanned or image-only)."
+  },
+  "extractFailedPdfUnreadable": {
+    "message": "Dieses PDF kann nicht gelesen werden. Prüfe, ob es sich im Browser öffnet, und aktualisiere es dann.",
+    "description": "Pin failure: the PDF couldn't be downloaded or parsed."
+  },
   "youtubeNoTranscript": {
     "message": "Kein Transkript verfügbar.",
     "description": "Note at the end of a pinned YouTube video's text when it has no transcript; the text goes to the model with the title and description."

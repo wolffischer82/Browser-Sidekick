@@ -37,6 +37,7 @@ exports[`manifest > chrome: exact permissions and snapshot 1`] = `
     "activeTab",
     "scripting",
     "contextMenus",
+    "offscreen",
     "sidePanel",
   ],
   "side_panel": {

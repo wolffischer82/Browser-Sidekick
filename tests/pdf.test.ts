@@ -8,6 +8,7 @@ import {
   MAX_PDF_BYTES,
   downloadPdf,
   isPdfContentType,
+  isPdfText,
   isPdfUrl,
   pdfToText,
   readPdf,
@@ -43,6 +44,27 @@ function chunkedBody(chunks: number, size: number) {
   });
   return { stream, state };
 }
+
+describe('isPdfText', () => {
+  it.each([
+    { ok: true, title: '', text: 'a', truncated: false },
+    { ok: false, reason: 'pdf-encrypted' },
+    { ok: false, reason: 'not-pdf' },
+  ])('accepts %j', (value) => {
+    expect(isPdfText(value)).toBe(true);
+  });
+
+  it.each([
+    null,
+    'text',
+    { ok: true, text: 'a', truncated: false },
+    { ok: true, title: '', text: 1, truncated: false },
+    { ok: false, reason: 'restricted' },
+    { ok: false },
+  ])('rejects %j', (value) => {
+    expect(isPdfText(value)).toBe(false);
+  });
+});
 
 describe('isPdfUrl', () => {
   it.each([

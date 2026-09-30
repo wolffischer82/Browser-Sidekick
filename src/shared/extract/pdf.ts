@@ -36,6 +36,27 @@ export type PdfDownload = { ok: true; data: Uint8Array } | { ok: false; reason: 
 /** The part of pdf.js this module uses; tests pass the Node build. */
 export type PdfJs = Pick<typeof PdfJsLib, 'getDocument'>;
 
+const PDF_FAILURES: readonly string[] = [
+  'pdf-too-large',
+  'pdf-encrypted',
+  'pdf-no-text',
+  'pdf-unreadable',
+  'fetch-failed',
+  'not-pdf',
+];
+
+/** Runtime guard for a `PdfText` that crossed a context boundary (the offscreen reply). */
+export function isPdfText(value: unknown): value is PdfText {
+  if (typeof value !== 'object' || value === null) return false;
+  const v = value as Record<string, unknown>;
+  if (v.ok === true) {
+    return (
+      typeof v.title === 'string' && typeof v.text === 'string' && typeof v.truncated === 'boolean'
+    );
+  }
+  return v.ok === false && typeof v.reason === 'string' && PDF_FAILURES.includes(v.reason);
+}
+
 /** Detection by URL (spec 5.5): an http(s) URL whose path ends in `.pdf`. */
 export function isPdfUrl(url: URL): boolean {
   return (

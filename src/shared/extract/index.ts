@@ -3,6 +3,8 @@ import type { PinKind } from '../model';
 import { CURRENT_BROWSER, isRestrictedUrl, type BrowserName } from '../restricted';
 import { isAccessError } from './access';
 import type { PageText } from './page';
+import type { PdfFailure } from './pdf';
+import { pdfExtractor } from './pdf-extractor';
 import { youtubeExtractor } from './youtube-extractor';
 
 /**
@@ -15,7 +17,7 @@ import { youtubeExtractor } from './youtube-extractor';
  * Why an extraction failed; stored as `Pin.failureReason` (decisions.md T02-2)
  * and localised by `extractionFailureMessage`.
  */
-export type ExtractionFailure = 'restricted' | 'no-access' | 'empty' | 'unreadable';
+export type ExtractionFailure = 'restricted' | 'no-access' | 'empty' | 'unreadable' | PdfFailure;
 
 export type ExtractionResult =
   | {
@@ -78,10 +80,17 @@ export const pageExtractor: Extractor = {
 };
 
 /**
- * Registered extractors, most specific first: YouTube (T08) before the
- * generic page extractor, which matches everything. T09 adds PDF.
+ * Registered extractors, most specific first: YouTube (T08) and PDF (T09)
+ * before the generic page extractor, which matches everything.
  */
-export const EXTRACTORS: readonly Extractor[] = [youtubeExtractor, pageExtractor];
+export const EXTRACTORS: readonly Extractor[] = [youtubeExtractor, pdfExtractor, pageExtractor];
+
+/**
+ * Detection by response (spec 5.5): a URL that looks like a page may still
+ * serve a PDF, shown in the browser's PDF viewer, which can't be scripted.
+ * Asked only after the page extractor failed; `null` keeps that failure.
+ */
+export type ContentProbe = (url: string) => Promise<ExtractionResult | null>;
 
 function parse(url: string): URL | null {
   try {
@@ -108,7 +117,11 @@ export function detectKind(url: string, extractors: readonly Extractor[] = EXTRA
 export async function extractTab(
   tabId: number,
   url: string,
-  options: { browser?: BrowserName; extractors?: readonly Extractor[] } = {},
+  options: {
+    browser?: BrowserName;
+    extractors?: readonly Extractor[];
+    probe?: ContentProbe | null;
+  } = {},
 ): Promise<ExtractionResult> {
   const extractors = options.extractors ?? EXTRACTORS;
   const extractor = pick(url, extractors);
@@ -116,9 +129,13 @@ export async function extractTab(
   if (!extractor || isRestrictedUrl(url, options.browser ?? CURRENT_BROWSER)) {
     return { ok: false, kind, reason: 'restricted' };
   }
+  let result: ExtractionResult;
   try {
-    return await extractor.extract(tabId, url);
+    result = await extractor.extract(tabId, url);
   } catch {
-    return { ok: false, kind, reason: 'unreadable' };
+    result = { ok: false, kind, reason: 'unreadable' };
   }
+  const probe = options.probe === undefined ? pdfExtractor.probe : options.probe;
+  if (result.ok || kind !== 'page' || !probe) return result;
+  return (await probe(url).catch(() => null)) ?? result;
 }

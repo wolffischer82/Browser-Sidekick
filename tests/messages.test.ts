@@ -20,6 +20,7 @@ describe('isSidekickMessage', () => {
     { type: 'refresh-pin', pinId: 'p1' },
     { type: 'pins-changed', sessionId: 's1' },
     { type: 'already-pinned', sessionId: 's1', pinId: 'p1' },
+    { type: 'pdf-extract', url: 'https://example.com/a.pdf', requirePdfType: false },
   ];
 
   it.each(valid)('accepts $type', (message) => {
@@ -41,6 +42,9 @@ describe('isSidekickMessage', () => {
     { type: 'refresh-pin', pinId: 5 },
     { type: 'pins-changed' },
     { type: 'already-pinned', sessionId: 's1' },
+    { type: 'pdf-extract', url: 'https://example.com/a.pdf' },
+    { type: 'pdf-extract', url: 'file:///a.pdf', requirePdfType: false },
+    { type: 'pdf-extract', url: 7, requirePdfType: true },
   ])('rejects %j', (value) => {
     expect(isSidekickMessage(value)).toBe(false);
   });
