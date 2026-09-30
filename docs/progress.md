@@ -33,7 +33,7 @@ Status: done (2026-09-30, orchestrator). Owner loaded both builds on their deskt
 
 ## T02 Storage layer and data model
 
-Status: in progress
+Status: in progress (implementation complete; awaiting gate check)
 
 ### Plan
 
@@ -45,3 +45,16 @@ Status: in progress
 - Manifest: add `storage` to both targets (decision T01-4) and update the snapshot test.
 - Tests: repository on `fake-indexeddb`, migration hook, settings store on `fakeBrowser`, sync storage never called, API key never in IndexedDB.
 - Open questions: none so far.
+
+### Acceptance
+
+- [x] All repository functions are covered by tests (`tests/repository.test.ts`: every `Repository` method; `tests/db-schema.test.ts`: schema v1 and the migration hook; `tests/settings.test.ts`: every settings function).
+- [x] Cascade delete leaves no orphan pins or messages (tested by dumping all stores after `deleteSession`; `deleteAll` empties every store).
+- [x] Keys are only ever written to `storage.local` (tests: the key appears only in `storage.local.set` calls, never in `storage.session` or IndexedDB; `storage.sync` spies never called; source scan finds no sync storage use).
+
+### Tests
+
+- `tests/repository.test.ts`: repository unit tests on `fake-indexeddb`.
+- `tests/db-schema.test.ts`: schema version 1, migration hook (ordering, async steps, failing step, versionchange).
+- `tests/settings.test.ts`: settings store on `fakeBrowser`, sync storage never called, key never in IndexedDB.
+- `tests/manifest.test.ts`: `storage` added to both permission lists and snapshots.
