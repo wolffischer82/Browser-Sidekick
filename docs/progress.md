@@ -226,3 +226,16 @@ Status: done (2026-09-30; gate-checker PASS-WITH-NOTES, CI green incl. e2e, Fire
 - `tests/sidepanel-session-tabs.test.tsx`: current-tab row, unreadable tabs, eye toggle and reset, needle (extracting -> ready, failed, D10 site request first in the click, already granted, refused, background unreachable), pinned rows (fields, order, Refresh only when open, refresh, open, unpin), pinned current tab, "Already pinned", live updates, collapse, German.
 - `tests/manifest.test.ts`: `contextMenus` on both targets.
 - `tests/e2e/pinning.spec.ts`: needle, extracting -> ready, failed, duplicate via the menu listener, refresh, unpin, eye, collapse, menu pin with the sidebar closed; screens `T07-01` to `T07-07`.
+
+## T08 YouTube transcript extractor
+
+Status: in progress
+
+### Plan
+
+- Spike (live, local only, throwaway Playwright profile, not signed in): on public videos with and without captions, try (a) the caption track `baseUrl` from the player response, (b) the transcript panel in the DOM, (c) InnerTube `get_transcript` with the page's own client context; also how to get a fresh player response after in-app navigation. Record per-method results and the choice in decisions.md.
+- `src/shared/extract/youtube.ts` (tests first): URL detection (`watch`, `youtu.be`, `shorts`, `m.`/`www.`), video id; pure parsers for the chosen payloads (track choice: page language, else first), plain text with `[mm:ss]` markers every ~30 s, fallback text (title + description + "No transcript available" note), 200k cap.
+- Injected MAIN-world function via `scripting.executeScript({ world: 'MAIN', func })` that returns untrusted raw data; validated and parsed in the extension. Register the YouTube extractor before the page extractor in `EXTRACTORS`.
+- Tests: detection URL table, parsers on trimmed synthetic fixtures (`tests/fixtures/youtube/`), dispatcher wiring. e2e: localhost fixture that mimics the watch page (served under a YouTube-like path is not possible, so the extractor gets a test seam or the fixture is matched differently; decided during implementation), screen `T08-01-youtube-pin`.
+- Owner checklist line: pin a real video with and without captions in both browsers. No new permissions, no new dependencies.
+- Open questions: none so far.
