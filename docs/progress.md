@@ -158,7 +158,7 @@ Status: done (2026-09-30; gate-checker PASS, CI green incl. e2e, orchestrator re
 
 ## T06 Page access and generic extraction
 
-Status: in progress (implementer done; awaiting gate-checker and orchestrator UI check)
+Status: done (2026-09-30; gate-checker PASS-WITH-NOTES, CI green incl. e2e, Firefox 140 load OK, orchestrator reviewed screenshots)
 
 ### Plan
 
@@ -178,7 +178,7 @@ Status: in progress (implementer done; awaiting gate-checker and orchestrator UI
 - [x] Extraction returns clean text for article fixtures and falls back correctly (`tests/extract-page.test.ts`: article via Readability without nav/ads/footer/scripts, non-article via `innerText`, empty page, huge article and huge fallback capped at 200,000 and marked truncated; e2e runs the built injected script on the article fixture).
 - [x] The current tab updates when switching tabs or windows (`tests/current-tab.test.ts`: activation, navigation, window focus, access changes, re-read during a read; e2e: tab switch, navigation, new window and back). Clicking between two windows in a headed browser is on the owner checklist (headless Chromium doesn't move focus).
 - [x] Follow-up (orchestrator): the Page access section in Settings lets the user grant all-sites access after the banner is gone, and the "not accessible" row has a hint that links to it (`tests/sidepanel-access.test.tsx`; e2e screen `T06-04-settings-page-access`).
-- [ ] The orchestrator has looked at the build in both browsers (screens `test-results/screens/T06-*.png`).
+- [x] The orchestrator has looked at the build in both browsers (screens `test-results/screens/T06-*.png`).
 
 ### Tests
 
