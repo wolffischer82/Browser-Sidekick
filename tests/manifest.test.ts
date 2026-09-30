@@ -6,6 +6,11 @@ import { afterAll, describe, expect, it } from 'vitest';
 import { build } from 'wxt';
 
 const root = resolve(__dirname, '..');
+const PROVIDER_HOSTS = [
+  'https://api.openai.com/*',
+  'https://api.anthropic.com/*',
+  'https://generativelanguage.googleapis.com/*',
+];
 const outDirs: string[] = [];
 
 async function buildManifest(browser: 'chrome' | 'firefox'): Promise<Record<string, unknown>> {
@@ -38,7 +43,7 @@ describe('manifest', () => {
   it('chrome: exact permissions and snapshot', async () => {
     const manifest = await buildManifest('chrome');
     expect(manifest.permissions).toEqual(['storage', 'sidePanel']);
-    expect(manifest.host_permissions).toBeUndefined();
+    expect(manifest.host_permissions).toEqual(PROVIDER_HOSTS);
     expect(manifest.optional_host_permissions).toEqual(['<all_urls>']);
     expect(manifest.optional_permissions).toBeUndefined();
     expect(manifest).toMatchSnapshot();
@@ -47,7 +52,7 @@ describe('manifest', () => {
   it('firefox: exact permissions and snapshot', async () => {
     const manifest = await buildManifest('firefox');
     expect(manifest.permissions).toEqual(['storage']);
-    expect(manifest.host_permissions).toBeUndefined();
+    expect(manifest.host_permissions).toEqual(PROVIDER_HOSTS);
     expect(manifest.optional_host_permissions).toEqual(['<all_urls>']);
     expect(manifest.optional_permissions).toBeUndefined();
     expect(manifest.browser_specific_settings).toMatchObject({

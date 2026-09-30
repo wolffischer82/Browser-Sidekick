@@ -35,6 +35,13 @@ export default defineConfig({
     action: { default_title: '__MSG_extName__', default_icon: TOOLBAR_ICONS },
     // T02: settings live in storage.local (spec section 6).
     permissions: ['storage'],
+    // T04: the three known provider hosts (spec section 6, D6). A custom
+    // OpenAI-compatible origin is requested at runtime when saved (T05).
+    host_permissions: [
+      'https://api.openai.com/*',
+      'https://api.anthropic.com/*',
+      'https://generativelanguage.googleapis.com/*',
+    ],
     optional_host_permissions: ['<all_urls>'],
     ...(browser === 'firefox'
       ? {
