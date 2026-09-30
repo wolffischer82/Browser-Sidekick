@@ -7,6 +7,8 @@ interface Props {
   currentTab: CurrentTab;
   expanded: boolean;
   onToggle: () => void;
+  /** Opens the Page access section in settings. */
+  onOpenPageAccess: () => void;
 }
 
 function domain(url: string): string {
@@ -21,11 +23,30 @@ function domain(url: string): string {
  * The current-tab row (spec 5.2 item 3): title and domain when readable,
  * otherwise why it can't be read. T07 adds the pin needle and the eye toggle.
  */
-function CurrentTabRow({ tab }: { tab: Exclude<CurrentTab, { state: 'none' }> }) {
+function CurrentTabRow({
+  tab,
+  onOpenPageAccess,
+}: {
+  tab: Exclude<CurrentTab, { state: 'none' }>;
+  onOpenPageAccess: () => void;
+}) {
   if (tab.state === 'noAccess') {
+    // The URL is hidden, so no per-site request is possible (decisions.md
+    // T06-4, T06-15): point to the two paths that work.
     return (
       <li class="tab-row tab-row-unavailable" data-state="noAccess">
         <span class="tab-row-title">{t('currentTabNotAccessible')}</span>
+        <p class="tab-row-hint">
+          {t('currentTabNoAccessHint')}{' '}
+          <button
+            id="page-access-link"
+            type="button"
+            class="link-button"
+            onClick={onOpenPageAccess}
+          >
+            {t('accessBannerAllow')}
+          </button>
+        </p>
       </li>
     );
   }
@@ -45,7 +66,7 @@ function CurrentTabRow({ tab }: { tab: Exclude<CurrentTab, { state: 'none' }> })
  * Session tabs section (spec 5.2 item 3, D9): the pinned pages (T07) and
  * the current tab. The count covers every listed row.
  */
-export function SessionTabs({ pinCount, currentTab, expanded, onToggle }: Props) {
+export function SessionTabs({ pinCount, currentTab, expanded, onToggle, onOpenPageAccess }: Props) {
   const count = pinCount + (currentTab.state === 'none' ? 0 : 1);
   return (
     <section class="session-tabs">
@@ -67,7 +88,7 @@ export function SessionTabs({ pinCount, currentTab, expanded, onToggle }: Props)
         {pinCount === 0 && <p class="muted">{t('sessionTabsEmpty')}</p>}
         {currentTab.state !== 'none' && (
           <ul class="tab-rows" aria-label={t('currentTabMarker')}>
-            <CurrentTabRow tab={currentTab} />
+            <CurrentTabRow tab={currentTab} onOpenPageAccess={onOpenPageAccess} />
           </ul>
         )}
       </div>

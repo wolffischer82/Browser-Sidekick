@@ -887,3 +887,15 @@ textarea {
 .tab-row-unavailable .tab-row-title {
   color: var(--fg-muted);
 }
+
+.page-access-state {
+  margin: 8px 0;
+  font-weight: 600;
+}
+
+.tab-row-hint {
+  margin: 2px 0 0;
+  color: var(--fg-muted);
+  font-size: 0.86rem;
+  white-space: normal;
+}

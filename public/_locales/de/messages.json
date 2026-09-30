@@ -468,5 +468,25 @@
   "extractFailedUnreadable": {
     "message": "Die Seite konnte nicht gelesen werden. Lade sie neu und versuch es noch einmal.",
     "description": "Pin failure: extraction failed for another reason."
+  },
+  "pageAccessHeading": {
+    "message": "Seitenzugriff",
+    "description": "Settings section about access to websites."
+  },
+  "pageAccessText": {
+    "message": "Sidekick liest den aktuellen Tab und deine angehefteten Seiten. Ohne Zugriff auf alle Websites kann es nur Seiten lesen, die du über ihr Kontextmenü anheftest.",
+    "description": "Explanation in the Page access settings section."
+  },
+  "pageAccessAllowed": {
+    "message": "Auf allen Websites erlaubt",
+    "description": "Page access state: the all-sites grant is held."
+  },
+  "pageAccessNotAllowed": {
+    "message": "Nicht erlaubt",
+    "description": "Page access state: the all-sites grant is missing."
+  },
+  "currentTabNoAccessHint": {
+    "message": "Um ihn zu lesen, klick mit der rechten Maustaste auf die Seite und wähle „An Sidekick anheften“.",
+    "description": "Hint under “Current tab not accessible”; followed by the Allow on all sites link."
   }
 }

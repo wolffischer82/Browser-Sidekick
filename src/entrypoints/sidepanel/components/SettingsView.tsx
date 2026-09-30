@@ -3,6 +3,7 @@ import { t } from '@/shared/i18n';
 import type { ProviderConfig } from '@/shared/model';
 import { BackIcon } from './icons';
 import { DeleteAllData } from './settings/DeleteAllData';
+import { PageAccess } from './settings/PageAccess';
 import { ProviderForm } from './settings/ProviderForm';
 import { ProviderList } from './settings/ProviderList';
 
@@ -11,22 +12,31 @@ interface Props {
   defaultProviderId: string | null;
   onBack: () => void;
   onDeleteAll: (includeProviders: boolean) => Promise<void>;
+  /** Open on the Page access section instead of the top (current-tab row link). */
+  focusPageAccess?: boolean;
 }
 
 type Mode = { view: 'list'; focus: string | null } | { view: 'form'; id: string | null };
 
 /**
- * Settings inside the sidebar (D14): providers (spec 5.7) and Delete all
- * data (D12). Back or Escape leaves the form first, then the settings.
+ * Settings inside the sidebar (D14): providers (spec 5.7), page access
+ * (spec 5.3) and Delete all data (D12). Back or Escape leaves the form first, then the settings.
  */
-export function SettingsView({ providers, defaultProviderId, onBack, onDeleteAll }: Props) {
+export function SettingsView({
+  providers,
+  defaultProviderId,
+  onBack,
+  onDeleteAll,
+  focusPageAccess = false,
+}: Props) {
   const [mode, setMode] = useState<Mode>({ view: 'list', focus: null });
   const [saveError, setSaveError] = useState(false);
   const backRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
-    backRef.current?.focus();
-  }, []);
+    // Page access focuses its own heading when opened from the current-tab row.
+    if (!focusPageAccess) backRef.current?.focus();
+  }, [focusPageAccess]);
 
   const editing =
     mode.view === 'form' && mode.id ? (providers.find((p) => p.id === mode.id) ?? null) : null;
@@ -87,6 +97,7 @@ export function SettingsView({ providers, defaultProviderId, onBack, onDeleteAll
                 setSaveError(true);
               }}
             />
+            <PageAccess focusOnMount={focusPageAccess} />
             <DeleteAllData onDeleteAll={onDeleteAll} />
           </>
         )}

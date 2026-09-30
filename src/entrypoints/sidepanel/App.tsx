@@ -72,6 +72,7 @@ export function App({ repository }: Props) {
   const [bannerDismissed, setBannerDismissed] = useState(true);
   const [drawer, setDrawer] = useState<SessionSummary[] | null>(null);
   const [view, setView] = useState<'main' | 'settings'>('main');
+  const [focusPageAccess, setFocusPageAccess] = useState(false);
   const [saveError, setSaveError] = useState(false);
   const drawerButtonRef = useRef<HTMLButtonElement>(null);
   /** Selector of the control that opened settings, refocused on the way back. */
@@ -246,6 +247,7 @@ export function App({ repository }: Props) {
         <SettingsView
           providers={providers}
           defaultProviderId={defaultProviderId}
+          focusPageAccess={focusPageAccess}
           onDeleteAll={deleteAll}
           onBack={() => {
             setView('main');
@@ -282,6 +284,7 @@ export function App({ repository }: Props) {
           }}
           onOpenSettings={() => {
             settingsOpener.current = '#settings-button';
+            setFocusPageAccess(false);
             setView('settings');
           }}
           modelMenu={
@@ -328,6 +331,11 @@ export function App({ repository }: Props) {
             setTabsExpanded(next);
             run(() => updateSettings({ sessionTabsExpanded: next }));
           }}
+          onOpenPageAccess={() => {
+            settingsOpener.current = '#page-access-link';
+            setFocusPageAccess(true);
+            setView('settings');
+          }}
         />
         <Transcript />
         <ActionBar canSummarize={false} />
@@ -335,6 +343,7 @@ export function App({ repository }: Props) {
           hasProvider={providers.some(isUsable)}
           onOpenSettings={() => {
             settingsOpener.current = '#settings-link';
+            setFocusPageAccess(false);
             setView('settings');
           }}
         />

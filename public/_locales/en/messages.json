@@ -468,5 +468,25 @@
   "extractFailedUnreadable": {
     "message": "The page couldn't be read. Reload it and try again.",
     "description": "Pin failure: extraction failed for another reason."
+  },
+  "pageAccessHeading": {
+    "message": "Page access",
+    "description": "Settings section about access to websites."
+  },
+  "pageAccessText": {
+    "message": "Sidekick reads the current tab and the pages you pin. Without access to all sites, it can only read a page you pin from its context menu.",
+    "description": "Explanation in the Page access settings section."
+  },
+  "pageAccessAllowed": {
+    "message": "Allowed on all sites",
+    "description": "Page access state: the all-sites grant is held."
+  },
+  "pageAccessNotAllowed": {
+    "message": "Not allowed",
+    "description": "Page access state: the all-sites grant is missing."
+  },
+  "currentTabNoAccessHint": {
+    "message": "To read it, right-click the page and choose “Pin to Sidekick”.",
+    "description": "Hint under “Current tab not accessible”; followed by the Allow on all sites link."
   }
 }
