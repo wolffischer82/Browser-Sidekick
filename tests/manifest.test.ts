@@ -50,6 +50,16 @@ describe('manifest', () => {
     expect(manifest.host_permissions).toBeUndefined();
     expect(manifest.optional_host_permissions).toEqual(['<all_urls>']);
     expect(manifest.optional_permissions).toBeUndefined();
+    expect(manifest.browser_specific_settings).toMatchObject({
+      gecko: {
+        strict_min_version: '140.0',
+        data_collection_permissions: { required: ['websiteContent'] },
+      },
+    });
+    expect(manifest.sidebar_action).toMatchObject({
+      default_title: '__MSG_extName__',
+      open_at_install: false,
+    });
     expect(manifest).toMatchSnapshot();
   }, 60_000);
 });
