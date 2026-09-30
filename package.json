@@ -20,7 +20,7 @@
     "build:firefox": "wxt build -b firefox",
     "lint:firefox": "web-ext lint --source-dir dist/firefox-ext",
     "icons": "node scripts/export-icons.mjs",
-    "e2e": "playwright test --pass-with-no-tests"
+    "e2e": "playwright test"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

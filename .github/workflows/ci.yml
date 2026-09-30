@@ -56,3 +56,10 @@ jobs:
       - name: lint:firefox
         if: steps.detect.outputs.present == 'true'
         run: npm run --if-present lint:firefox
+
+      # Chrome e2e (spec 9 "Browser automation") on the build from above.
+      # Playwright's Chromium is already installed on the runner; screenshots
+      # stay in test-results/ on the machine and are not uploaded.
+      - name: e2e
+        if: steps.detect.outputs.present == 'true'
+        run: npm run --if-present e2e
