@@ -10,5 +10,123 @@
   "sidebarHeading": {
     "message": "Browser Sidekick",
     "description": "Heading at the top of the sidebar."
+  },
+  "sessions": {
+    "message": "Sessions",
+    "description": "Sessions drawer button and drawer heading."
+  },
+  "newSession": {
+    "message": "New session",
+    "description": "Button that starts a new session."
+  },
+  "fallbackTitle": {
+    "message": "New session",
+    "description": "Title of a session before it has one."
+  },
+  "settings": {
+    "message": "Settings",
+    "description": "Settings gear label and settings heading."
+  },
+  "back": {
+    "message": "Back",
+    "description": "Button that leaves the settings view."
+  },
+  "renameSession": {
+    "message": "Rename session",
+    "description": "Tooltip of the session title, which starts the inline rename."
+  },
+  "sessionTitleLabel": {
+    "message": "Session title",
+    "description": "Label of the inline rename field."
+  },
+  "close": {
+    "message": "Close",
+    "description": "Button that closes the sessions drawer."
+  },
+  "deleteSessionNamed": {
+    "message": "Delete “$TITLE$”",
+    "description": "Delete icon label in a sessions drawer row.",
+    "placeholders": {
+      "title": {
+        "content": "$1",
+        "example": "Pricing research"
+      }
+    }
+  },
+  "deleteSessionConfirm": {
+    "message": "Delete this session with its pins and messages?",
+    "description": "Confirmation shown before a session is deleted."
+  },
+  "delete": {
+    "message": "Delete",
+    "description": "Confirms deleting a session."
+  },
+  "cancel": {
+    "message": "Cancel",
+    "description": "Cancels deleting a session."
+  },
+  "pinCountOne": {
+    "message": "1 pin",
+    "description": "Pin count of a session with one pin."
+  },
+  "pinCountOther": {
+    "message": "$COUNT$ pins",
+    "description": "Pin count of a session with zero or several pins.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "sessionTabsHeading": {
+    "message": "Session tabs ($COUNT$)",
+    "description": "Collapsible section listing pinned pages and the current tab.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "sessionTabsEmpty": {
+    "message": "No pinned pages yet.",
+    "description": "Shown in Session tabs when nothing is pinned."
+  },
+  "transcriptEmpty": {
+    "message": "Pin pages to this session, then ask about them or summarize them.",
+    "description": "Empty chat transcript."
+  },
+  "summarize": {
+    "message": "Summarize",
+    "description": "Button that summarises the pages."
+  },
+  "summarizeUnavailable": {
+    "message": "Pin a page or open a readable tab to summarize.",
+    "description": "Tooltip of the disabled Summarize button."
+  },
+  "inputPlaceholder": {
+    "message": "Ask about these pages…",
+    "description": "Placeholder of the question input."
+  },
+  "noProviderHint": {
+    "message": "Add a provider in settings to ask questions.",
+    "description": "Shown under the disabled input when no provider is set up."
+  },
+  "openSettings": {
+    "message": "Open settings",
+    "description": "Link from the disabled input to the settings."
+  },
+  "settingsNoProviders": {
+    "message": "No providers saved yet.",
+    "description": "Settings view without providers."
+  },
+  "loadError": {
+    "message": "Your sessions couldn't be loaded. Close and reopen the sidebar to try again.",
+    "description": "Shown when the local session storage can't be opened."
+  },
+  "saveError": {
+    "message": "The change couldn't be saved. Try again.",
+    "description": "Shown when a session change fails."
   }
 }
