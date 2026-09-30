@@ -158,7 +158,7 @@ Status: done (2026-09-30; gate-checker PASS, CI green incl. e2e, orchestrator re
 
 ## T06 Page access and generic extraction
 
-Status: in progress
+Status: in progress (implementer done; awaiting gate-checker and orchestrator UI check)
 
 ### Plan
 
@@ -170,3 +170,23 @@ Status: in progress
 - Sidebar: access banner (Allow on all sites, Dismiss; hidden once granted, dismissed or declined), a plain current-tab row in Session tabs (needle and eye are T07).
 - Tests: extractor fixtures (article, non-article, huge), restricted table, dispatcher, tracker, banner component tests. e2e with a localhost fixture server: not-granted (banner, dismiss, not accessible) and all-sites granted (tracker follows tab and window switches, injected extractor returns text); screens `T06-*`.
 - Open questions: none so far.
+
+### Acceptance
+
+- [x] The banner shows until access is granted or dismissed (component tests: first open, granted from the click, declined/refused counts as the one ask, Dismiss persists across reopen, grant and revoke from outside, German; e2e: shown without access, dismissed, still gone after reload; hidden with the all-sites grant). The real browser prompt is on the owner checklist.
+- [x] Restricted pages are recognised (`tests/restricted.test.ts` table per browser; dispatcher refuses them without injecting; current-tab row "This page can't be read").
+- [x] Extraction returns clean text for article fixtures and falls back correctly (`tests/extract-page.test.ts`: article via Readability without nav/ads/footer/scripts, non-article via `innerText`, empty page, huge article and huge fallback capped at 200,000 and marked truncated; e2e runs the built injected script on the article fixture).
+- [x] The current tab updates when switching tabs or windows (`tests/current-tab.test.ts`: activation, navigation, window focus, access changes, re-read during a read; e2e: tab switch, navigation, new window and back). Clicking between two windows in a headed browser is on the owner checklist (headless Chromium doesn't move focus).
+- [ ] The orchestrator has looked at the build in both browsers (screens `test-results/screens/T06-*.png`).
+
+### Tests
+
+- `tests/restricted.test.ts`: restricted-URL table (Chrome and Firefox), site patterns.
+- `tests/extract-page.test.ts`: extractor on fixtures (article, non-article, empty, huge -> truncated), cap without splitting a surrogate pair.
+- `tests/extract-dispatch.test.ts`: injection, restricted, no-access (Chrome and Firefox wording), unreadable, malformed result, empty, extractor registry.
+- `tests/extract-messages.test.ts`: localised failure reasons.
+- `tests/page-access.test.ts`: all-sites and per-site checks and requests (synchronous, declined, refused, non-web URLs).
+- `tests/current-tab.test.ts`: classification table, reading, watching.
+- `tests/sidepanel-access.test.tsx`: banner component tests, current-tab row.
+- `tests/manifest.test.ts`: `activeTab` and `scripting` on both targets.
+- `tests/e2e/page-access.spec.ts`: without access and with the all-sites grant; screens `T06-01-banner`, `T06-02-banner-dismissed`, `T06-03-granted` (each also `-dark`).
