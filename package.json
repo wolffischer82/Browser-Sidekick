@@ -1,0 +1,42 @@
+{
+  "name": "browser-sidekick",
+  "description": "Sidebar extension for Chrome and Firefox to ask an LLM about pinned pages.",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "scripts": {
+    "dev": "wxt",
+    "dev:firefox": "wxt -b firefox",
+    "postinstall": "wxt prepare",
+    "lint": "eslint . && prettier --check .",
+    "format": "prettier --write .",
+    "typecheck": "wxt prepare && tsc --noEmit",
+    "test": "vitest run",
+    "build": "npm run build:chrome && npm run build:firefox",
+    "build:chrome": "wxt build -b chrome",
+    "build:firefox": "wxt build -b firefox",
+    "lint:firefox": "web-ext lint --source-dir .output/firefox-mv3",
+    "e2e": "playwright test --pass-with-no-tests"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.63.0",
+    "@testing-library/preact": "^3.2.4",
+    "eslint": "^10.11.0",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^17.12.0",
+    "happy-dom": "^20.14.5",
+    "prettier": "^3.9.9",
+    "typescript": "~5.9.3",
+    "typescript-eslint": "^8.71.0",
+    "vitest": "~4.1.11",
+    "web-ext": "^10.7.0",
+    "wxt": "^0.20.27"
+  },
+  "dependencies": {
+    "preact": "^11.0.0"
+  }
+}

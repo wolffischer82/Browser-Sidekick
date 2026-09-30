@@ -1,0 +1,16 @@
+:root {
+  color-scheme: light dark;
+  font-family: system-ui, sans-serif;
+  font-size: 14px;
+}
+
+body {
+  margin: 0;
+}
+
+.sidebar-heading {
+  margin: 0;
+  padding: 12px;
+  font-size: 1.15rem;
+  font-weight: 600;
+}

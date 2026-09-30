@@ -1,0 +1,11 @@
+.output/
+.wxt/
+node_modules/
+coverage/
+playwright-report/
+test-results/
+package-lock.json
+tests/__snapshots__/
+specs/
+.claude/
+CLAUDE.md

@@ -1,0 +1,14 @@
+{
+  "extName": {
+    "message": "Browser Sidekick",
+    "description": "Extension name shown in the browser and the store."
+  },
+  "extDescription": {
+    "message": "Hefte Seiten an eine Sitzung an und frag dein eigenes LLM dazu.",
+    "description": "Short extension description shown in the browser's extension list."
+  },
+  "sidebarHeading": {
+    "message": "Browser Sidekick",
+    "description": "Heading at the top of the sidebar."
+  }
+}
