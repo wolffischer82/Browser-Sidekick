@@ -7,7 +7,7 @@ Status: APPROVED by the owner, 2026-09-30.
 A sidebar extension for Chrome and Firefox. The user configures an LLM provider with their own key, collects pages into a **session** by pinning them, and asks questions about those pages or summarises them. The focused tab is always available as extra, unpinned context. Sessions persist locally and can be switched, renamed and deleted.
 
 ### Targets
-- Chrome ≥ 116 (Manifest V3, `sidePanel` API). Firefox desktop ≥ 128 ESR (Manifest V3, `sidebar_action`). Firefox for Android, Edge, Safari: out of scope (Edge may work incidentally; not tested).
+- Chrome ≥ 116 (Manifest V3, `sidePanel` API). Firefox desktop ≥ 140 ESR (Manifest V3, `sidebar_action`; declares `data_collection_permissions: { required: ["websiteContent"] }`, owner decision 2026-09-30). Firefox for Android, Edge, Safari: out of scope (Edge may work incidentally; not tested).
 
 ## 2. Owner decisions (fixed)
 
