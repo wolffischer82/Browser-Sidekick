@@ -177,6 +177,7 @@ Status: in progress (implementer done; awaiting gate-checker and orchestrator UI
 - [x] Restricted pages are recognised (`tests/restricted.test.ts` table per browser; dispatcher refuses them without injecting; current-tab row "This page can't be read").
 - [x] Extraction returns clean text for article fixtures and falls back correctly (`tests/extract-page.test.ts`: article via Readability without nav/ads/footer/scripts, non-article via `innerText`, empty page, huge article and huge fallback capped at 200,000 and marked truncated; e2e runs the built injected script on the article fixture).
 - [x] The current tab updates when switching tabs or windows (`tests/current-tab.test.ts`: activation, navigation, window focus, access changes, re-read during a read; e2e: tab switch, navigation, new window and back). Clicking between two windows in a headed browser is on the owner checklist (headless Chromium doesn't move focus).
+- [x] Follow-up (orchestrator): the Page access section in Settings lets the user grant all-sites access after the banner is gone, and the "not accessible" row has a hint that links to it (`tests/sidepanel-access.test.tsx`; e2e screen `T06-04-settings-page-access`).
 - [ ] The orchestrator has looked at the build in both browsers (screens `test-results/screens/T06-*.png`).
 
 ### Tests
@@ -189,4 +190,4 @@ Status: in progress (implementer done; awaiting gate-checker and orchestrator UI
 - `tests/current-tab.test.ts`: classification table, reading, watching.
 - `tests/sidepanel-access.test.tsx`: banner component tests, current-tab row.
 - `tests/manifest.test.ts`: `activeTab` and `scripting` on both targets.
-- `tests/e2e/page-access.spec.ts`: without access and with the all-sites grant; screens `T06-01-banner`, `T06-02-banner-dismissed`, `T06-03-granted` (each also `-dark`).
+- `tests/e2e/page-access.spec.ts`: without access and with the all-sites grant; screens `T06-01-banner`, `T06-02-banner-dismissed`, `T06-03-granted`, `T06-04-settings-page-access` (each also `-dark`).

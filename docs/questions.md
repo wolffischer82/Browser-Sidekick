@@ -2,7 +2,7 @@
 
 Each entry names the task it blocks.
 
-None open.
+4. **D10 per-site request for tabs whose URL is hidden** (T06; **not blocking**, default applied). Without the `tabs` permission, the sidebar can't see the URL of a tab it has no access to, so the needle can't request access to that one site. Should we keep the current default (the "not accessible" row points to the context menu "Pin to Sidekick" and to "Allow on all sites" in Settings), or add the `tabs` permission (install warning "Read your browsing history") so that the needle can request that one site? decisions.md T06-4, T06-15.
 
 ## Closed
 
