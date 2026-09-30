@@ -194,7 +194,7 @@ Status: done (2026-09-30; gate-checker PASS-WITH-NOTES, CI green incl. e2e, Fire
 
 ## T07 Pinning and pinned-pages list
 
-Status: in progress (implementer done; awaiting gate-checker and orchestrator UI check)
+Status: done (2026-09-30; gate-checker PASS-WITH-NOTES, CI green incl. e2e, Firefox 140 load OK, orchestrator reviewed screenshots; duplicate race T07-5 accepted for the MVP)
 
 ### Plan
 
@@ -215,7 +215,7 @@ Status: in progress (implementer done; awaiting gate-checker and orchestrator UI
 - [x] Failed pins show their reason (unit: `failed` with reason code, extractor throwing; component: localised reason; e2e: empty page shows "No readable text was found on this page.").
 - [x] The list reflects status changes live (broadcast protocol, decisions.md T07-3; component tests for background and other-session messages; e2e: extracting -> ready on a held-back page, and a menu pin with the sidebar open).
 - [x] The current tab appears once, whether pinned or not, and the eye toggle resets on tab switch (component tests incl. a pinned URL with a different fragment; e2e counts and marker; eye resets after switching tabs and back, and stays on navigation within the tab).
-- [ ] The orchestrator has looked at the build in both browsers (screens `test-results/screens/T07-*.png`).
+- [x] The orchestrator has looked at the build in both browsers (screens `test-results/screens/T07-*.png`).
 
 ### Tests
 
