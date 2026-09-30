@@ -4,7 +4,7 @@ Spec: `specs/sidekick-mvp.md`. Status values: todo / in progress / done.
 
 ## T01 Scaffold and toolchain
 
-Status: in progress (the orchestrator runs CI on a draft PR and the browser checks)
+Status: done (2026-09-30, orchestrator). Owner loaded both builds on their desktop without errors, and the sidebar opened. The close-on-second-click check is deferred to the owner's end-of-MVP test.
 
 ### Plan
 
@@ -20,9 +20,9 @@ Status: in progress (the orchestrator runs CI on a draft PR and the browser chec
 
 ### Acceptance
 
-- [ ] Both builds load unpacked without manifest warnings. Chrome: loaded headless in Chromium, side panel page renders. Firefox: not loaded yet (no Firefox on the runner); `web-ext lint` has 0 errors and 2 warnings (`UNSAFE_VAR_ASSIGNMENT` from Preact, decisions.md T01-8; `KEY_FIREFOX_ANDROID_UNSUPPORTED_BY_MIN_VERSION`, Android only, decisions.md T01-16). Orchestrator checks both browsers.
-- [ ] Clicking the icon opens and closes the sidebar in Chrome and in Firefox. Needs the orchestrator's manual check.
-- [ ] The gate passes on CI. Passes locally on the runner machine; the CI run needs the branch pushed (owner approval).
+- [x] Both builds load unpacked without manifest warnings (owner desktop, both browsers; orchestrator: Firefox 140 headless `web-ext run` installs cleanly). Chrome: loaded headless in Chromium, side panel page renders. Firefox: not loaded yet (no Firefox on the runner); `web-ext lint` has 0 errors and 2 warnings (`UNSAFE_VAR_ASSIGNMENT` from Preact, decisions.md T01-8; `KEY_FIREFOX_ANDROID_UNSUPPORTED_BY_MIN_VERSION`, Android only, decisions.md T01-16). Orchestrator checks both browsers.
+- [~] Clicking the icon opens the sidebar in both browsers (owner). Closing on a second click is deferred to the owner's end-of-MVP test. Needs the orchestrator's manual check.
+- [x] The gate passes on CI (draft PR #1, self-hosted runner). Passes locally on the runner machine; the CI run needs the branch pushed (owner approval).
 - [x] The heading renders in German when the browser UI language is German. Component test renders with the `de` messages; the German string is "Browser Sidekick", identical to English. Browser check by the orchestrator.
 
 ### Tests
