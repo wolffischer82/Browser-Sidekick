@@ -955,9 +955,26 @@ textarea {
   height: 16px;
 }
 
-.tab-row-domain {
+/* Pinned and readable rows wrap their meta line instead of cutting it. */
+.tab-row-text .tab-row-meta {
+  flex-wrap: wrap;
+  row-gap: 2px;
+}
+
+.tab-row-text .tab-row-meta > * {
+  flex: none;
+}
+
+.tab-row-text .tab-row-meta > .tab-row-domain {
+  flex: 0 1 auto;
+  max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* The filled needle marks a pinned page; the outline one pins. */
+.unpin-button {
+  color: var(--accent);
 }
 
 .badge-muted {
