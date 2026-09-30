@@ -61,7 +61,7 @@ Status: done (2026-09-30; gate-checker PASS-WITH-NOTES, CI green, Firefox 140 lo
 
 ## T03 Sidebar shell and session management
 
-Status: in progress
+Status: in progress (implementation complete, gate passes locally; awaiting gate-checker and the orchestrator's browser check)
 
 ### Plan
 
@@ -72,3 +72,21 @@ Status: in progress
 - Component tests: header, rename, drawer (switch, delete confirm, delete active), keyboard paths.
 - Playwright harness in `tests/e2e/` loading `dist/chrome-ext`; flow: create, rename, switch, delete, survive extension reload and browser restart; screenshots `test-results/screens/T03-*.png` (light, plus dark). CI step `npm run e2e`.
 - Open questions: none so far.
+
+### Acceptance
+
+- [x] The sessions list behaves per spec 5.2: sorted by last activity with title, relative time and pin count; click switches; delete asks for confirmation and removes the session with its pins and messages (`tests/sidepanel-drawer.test.tsx`, `tests/sessions.test.ts`, e2e).
+- [x] The active session survives a browser restart (e2e: extension reload and a second launch on the same profile; `storage.local` + IndexedDB).
+- [x] Deleting the active session switches to the most recent remaining one, or to a new empty session (component tests, unit tests, e2e).
+- [x] Everything is keyboard-operable: native buttons, rename via Enter/Escape, drawer focus management with `inert`, Escape closes the drawer or cancels a delete, settings refocus (component tests; e2e drives rename, drawer navigation, switch and delete cancel by keyboard).
+- [x] All strings are in both locales (`tests/locales.test.ts`; `de` render test).
+- [ ] The orchestrator has looked at the build in both browsers (screenshots in `test-results/screens/T03-*.png`).
+
+### Tests
+
+- `tests/sessions.test.ts`: active-session resolution, new-session provider/model, activate, delete with the next-active rule.
+- `tests/sidepanel-app.test.tsx`: root layout in `en`/`de`, first run, stored active session, load error, Session tabs collapse state and count, Summarize tooltip, disabled input and settings link.
+- `tests/sidepanel-header.test.tsx`: header controls, New session, settings, inline rename (Enter, blur, Escape, empty/unchanged, save error, no double save).
+- `tests/sidepanel-drawer.test.tsx`: order and meta, focus and Escape, switch, delete confirm and cancel, delete other, delete active, delete last, renamed titles.
+- `tests/relative-time.test.ts`: relative time in `en` and `de`.
+- `tests/e2e/sessions.spec.ts`: create, rename, switch, delete; survives extension reload and browser restart; deleting the only session.
