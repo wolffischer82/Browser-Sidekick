@@ -33,6 +33,8 @@ export default defineConfig({
     // The `action` key creates the toolbar icon: Chrome opens the side panel
     // from it, Firefox toggles the sidebar in `action.onClicked`.
     action: { default_title: '__MSG_extName__', default_icon: TOOLBAR_ICONS },
+    // T02: settings live in storage.local (spec section 6).
+    permissions: ['storage'],
     optional_host_permissions: ['<all_urls>'],
     ...(browser === 'firefox'
       ? {

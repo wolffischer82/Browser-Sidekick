@@ -28,6 +28,7 @@ exports[`manifest > chrome: exact permissions and snapshot 1`] = `
     "<all_urls>",
   ],
   "permissions": [
+    "storage",
     "sidePanel",
   ],
   "side_panel": {
@@ -76,6 +77,9 @@ exports[`manifest > firefox: exact permissions and snapshot 1`] = `
   "name": "__MSG_extName__",
   "optional_host_permissions": [
     "<all_urls>",
+  ],
+  "permissions": [
+    "storage",
   ],
   "sidebar_action": {
     "default_icon": {
