@@ -10,3 +10,5 @@ tests/__snapshots__/
 specs/
 .claude/
 CLAUDE.md
+# Recorded-structure YouTube payloads keep YouTube's single-line layout (decisions.md T08).
+tests/fixtures/youtube/
