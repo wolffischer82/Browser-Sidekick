@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  build:
+    # Self-hosted only (lenovo-ai-server): GitHub hosts the repository and
+    # the issue tracker while all compute runs on that machine. Node is on
+    # the runner's PATH, so there is no setup-node and no dependency cache.
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 20
+    concurrency:
+      group: ci-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Toolchain
+        run: |
+          node --version
+          npm --version
+
+      # The toolchain arrives with the first spec. Until a package.json
+      # exists, the remaining steps are skipped so the pipeline stays green.
+      - name: Detect project
+        id: detect
+        run: |
+          if [ -f package.json ]; then echo "present=true" >> "$GITHUB_OUTPUT"; else echo "present=false" >> "$GITHUB_OUTPUT"; echo "No package.json yet; skipping build."; fi
+
+      - name: npm ci
+        if: steps.detect.outputs.present == 'true'
+        run: npm ci
+
+      - name: lint
+        if: steps.detect.outputs.present == 'true'
+        run: npm run --if-present lint
+
+      - name: typecheck
+        if: steps.detect.outputs.present == 'true'
+        run: npm run --if-present typecheck
+
+      - name: test
+        if: steps.detect.outputs.present == 'true'
+        run: npm run --if-present test
+
+      # Compile check only: the packaged extension is not uploaded.
+      - name: build
+        if: steps.detect.outputs.present == 'true'
+        run: npm run --if-present build

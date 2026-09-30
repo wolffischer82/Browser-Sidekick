@@ -1,0 +1,13 @@
+node_modules/
+dist/
+build/
+.output/
+web-ext-artifacts/
+*.zip
+*.xpi
+*.crx
+*.pem
+coverage/
+.env
+.env.*
+.DS_Store
