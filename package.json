@@ -18,7 +18,7 @@
     "build": "npm run build:chrome && npm run build:firefox",
     "build:chrome": "wxt build -b chrome",
     "build:firefox": "wxt build -b firefox",
-    "lint:firefox": "web-ext lint --source-dir .output/firefox-mv3",
+    "lint:firefox": "web-ext lint --source-dir dist/firefox-ext",
     "icons": "node scripts/export-icons.mjs",
     "e2e": "playwright test --pass-with-no-tests"
   },

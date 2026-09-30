@@ -20,6 +20,10 @@ interface SidebarAction {
 // `sidepanel` entrypoint.
 export default defineConfig({
   srcDir: 'src',
+  // Visible, directly loadable builds: dist/chrome-ext and dist/firefox-ext
+  // (dev builds get a -dev suffix). Not the repo root: WXT cleans outDir.
+  outDir: 'dist',
+  outDirTemplate: '{{browser}}-ext{{modeSuffix}}',
   manifestVersion: 3,
   manifest: ({ browser }) => ({
     name: '__MSG_extName__',

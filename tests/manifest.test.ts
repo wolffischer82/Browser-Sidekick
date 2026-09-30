@@ -26,7 +26,7 @@ async function buildManifest(browser: 'chrome' | 'firefox'): Promise<Record<stri
       level: 0,
     },
   });
-  const file = join(outDir, `${browser}-mv3`, 'manifest.json');
+  const file = join(outDir, `${browser}-ext`, 'manifest.json');
   return JSON.parse(await readFile(file, 'utf8')) as Record<string, unknown>;
 }
 

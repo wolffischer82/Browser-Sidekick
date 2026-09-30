@@ -6,6 +6,8 @@ import tseslint from 'typescript-eslint';
 export default tseslint.config(
   {
     ignores: [
+      'dist/',
+      // Stale pre-T01-17 build output may still exist locally; it stays gitignored.
       '.output/',
       '.wxt/',
       'node_modules/',
