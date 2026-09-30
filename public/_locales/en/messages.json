@@ -488,5 +488,9 @@
   "currentTabNoAccessHint": {
     "message": "To read it, right-click the page and choose “Pin to Sidekick”.",
     "description": "Hint under “Current tab not accessible”; followed by the Allow on all sites link."
+  },
+  "contextMenuPin": {
+    "message": "Pin to Sidekick",
+    "description": "Context menu item that pins the page to the active session."
   }
 }

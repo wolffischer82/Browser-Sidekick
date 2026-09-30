@@ -42,7 +42,13 @@ afterAll(async () => {
 describe('manifest', () => {
   it('chrome: exact permissions and snapshot', async () => {
     const manifest = await buildManifest('chrome');
-    expect(manifest.permissions).toEqual(['storage', 'activeTab', 'scripting', 'sidePanel']);
+    expect(manifest.permissions).toEqual([
+      'storage',
+      'activeTab',
+      'scripting',
+      'contextMenus',
+      'sidePanel',
+    ]);
     expect(manifest.host_permissions).toEqual(PROVIDER_HOSTS);
     expect(manifest.optional_host_permissions).toEqual(['<all_urls>']);
     expect(manifest.optional_permissions).toBeUndefined();
@@ -51,7 +57,7 @@ describe('manifest', () => {
 
   it('firefox: exact permissions and snapshot', async () => {
     const manifest = await buildManifest('firefox');
-    expect(manifest.permissions).toEqual(['storage', 'activeTab', 'scripting']);
+    expect(manifest.permissions).toEqual(['storage', 'activeTab', 'scripting', 'contextMenus']);
     expect(manifest.host_permissions).toEqual(PROVIDER_HOSTS);
     expect(manifest.optional_host_permissions).toEqual(['<all_urls>']);
     expect(manifest.optional_permissions).toBeUndefined();

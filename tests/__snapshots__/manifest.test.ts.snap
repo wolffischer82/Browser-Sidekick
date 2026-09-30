@@ -36,6 +36,7 @@ exports[`manifest > chrome: exact permissions and snapshot 1`] = `
     "storage",
     "activeTab",
     "scripting",
+    "contextMenus",
     "sidePanel",
   ],
   "side_panel": {
@@ -94,6 +95,7 @@ exports[`manifest > firefox: exact permissions and snapshot 1`] = `
     "storage",
     "activeTab",
     "scripting",
+    "contextMenus",
   ],
   "sidebar_action": {
     "default_icon": {

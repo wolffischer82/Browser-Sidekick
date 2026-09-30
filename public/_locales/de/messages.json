@@ -488,5 +488,9 @@
   "currentTabNoAccessHint": {
     "message": "Um ihn zu lesen, klick mit der rechten Maustaste auf die Seite und wähle „An Sidekick anheften“.",
     "description": "Hint under “Current tab not accessible”; followed by the Allow on all sites link."
+  },
+  "contextMenuPin": {
+    "message": "An Sidekick anheften",
+    "description": "Context menu item that pins the page to the active session."
   }
 }
