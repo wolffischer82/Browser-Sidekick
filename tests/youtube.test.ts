@@ -109,6 +109,17 @@ describe('parseWatchPage', () => {
     });
   });
 
+  it('finds the panel params behind the Transcript chip of videos with chapters', () => {
+    const html =
+      'var ytInitialPlayerResponse = {"videoDetails":{"videoId":"VIDEO000004","title":"T"},' +
+      '"captions":{"playerCaptionsTracklistRenderer":{"captionTracks":[{"languageCode":"en"}]}}};' +
+      'var ytInitialData = {"engagementPanels":[{"engagementPanelSectionListRenderer":{"header":{"chipBarViewModel":{"chips":[' +
+      '{"chipViewModel":{"text":"Timeline","tapCommand":{"innertubeCommand":{"commandExecutorCommand":{"commands":[{"updateEngagementPanelContentCommand":{"targetPanelIdentifier":{"surface":"ENGAGEMENT_PANEL_SURFACE_WATCH","tag":"PAtimeline"},"contentSourcePanelIdentifier":{"surface":"ENGAGEMENT_PANEL_SURFACE_WATCH","tag":"PAmacro_markers"},"globalConfiguration":{"params":"OTHER_PANEL"}}}]}}}}},' +
+      '{"chipViewModel":{"text":"Transcript","tapCommand":{"innertubeCommand":{"commandExecutorCommand":{"commands":[{"updateEngagementPanelContentCommand":{"targetPanelIdentifier":{"surface":"ENGAGEMENT_PANEL_SURFACE_WATCH","tag":"PAtimeline"},"contentSourcePanelIdentifier":{"surface":"ENGAGEMENT_PANEL_SURFACE_WATCH","tag":"PAmodern_transcript_view"},"globalConfiguration":{"params":"PANEL_PARAMS_VIDEO000004"}}}]}}}}}' +
+      ']}}}}]};';
+    expect(parseWatchPage(html)?.panelParams).toBe('PANEL_PARAMS_VIDEO000004');
+  });
+
   it('ignores the legacy get_transcript params', () => {
     expect(CAPTIONS).toContain('LEGACY_PARAMS_PLACEHOLDER');
     expect(parseWatchPage(CAPTIONS)?.panelParams).toBe('PANEL_PARAMS_VIDEO000001');

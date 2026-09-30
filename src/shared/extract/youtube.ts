@@ -120,15 +120,23 @@ export interface WatchPage {
   clientVersion: string | null;
 }
 
+/**
+ * The `get_panel` params of the transcript panel. YouTube links the panel
+ * from "Show transcript" (`showEngagementPanelEndpoint.identifier`) and, for
+ * videos with chapters, from a "Transcript" chip
+ * (`updateEngagementPanelContentCommand.contentSourcePanelIdentifier`), so
+ * any object whose panel identifier names the transcript panel and that
+ * carries `globalConfiguration.params` counts.
+ */
 function transcriptPanelParams(data: unknown): string | null {
   let params: string | null = null;
   walk(data, (node) => {
     if (params !== null) return true;
-    const endpoint = node.showEngagementPanelEndpoint;
-    if (field(endpoint, 'identifier', 'tag') !== TRANSCRIPT_PANEL_ID) return false;
-    const value = field(endpoint, 'globalConfiguration', 'params');
-    if (typeof value === 'string' && PANEL_PARAMS.test(value)) params = value;
-    return true;
+    const value = field(node, 'globalConfiguration', 'params');
+    if (typeof value !== 'string') return false;
+    const names = Object.values(node).some((v) => field(v, 'tag') === TRANSCRIPT_PANEL_ID);
+    if (names && PANEL_PARAMS.test(value)) params = value;
+    return names;
   });
   return params;
 }
