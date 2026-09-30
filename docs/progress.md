@@ -90,3 +90,19 @@ Status: done (2026-09-30; gate-checker PASS-WITH-NOTES, CI green incl. e2e, orch
 - `tests/sidepanel-drawer.test.tsx`: order and meta, focus and Escape, switch, delete confirm and cancel, delete other, delete active, delete last, renamed titles.
 - `tests/relative-time.test.ts`: relative time in `en` and `de`.
 - `tests/e2e/sessions.spec.ts`: create, rename, switch, delete; survives extension reload and browser restart; deleting the only session.
+
+## T04 LLM provider adapters
+
+Status: in progress
+
+### Plan
+
+- `src/shared/llm/types.ts`: `LlmProvider` (`listModels(signal?)`, `stream(request, signal)` yielding text deltas, `mapError(error)`), `LlmRequest` (model, system, turns, optional max output tokens), `LlmError` with a small code set (invalid key, rate limit/quota, model not found, context too long, bad request, server, network, aborted, unknown). No UI strings; T05/T10 localise the codes.
+- `src/shared/llm/sse.ts` (tests first): byte stream to SSE events; chunks split mid-event and mid-character, CRLF/CR/LF, comments, missing trailing blank line, bare JSON lines for lenient OpenAI-compatible servers.
+- `src/shared/llm/errors.ts` (tests first): HTTP status + provider error body to `LlmError`; key redacted and message length-capped.
+- Adapters `openai.ts`, `anthropic.ts`, `gemini.ts` and a `createProvider(config)` factory; `fetch` injectable, default `globalThis.fetch`.
+- OpenAI-compatible: `/models` missing or odd -> free-text fallback; unknown event fields ignored; non-streamed JSON reply tolerated.
+- Manifest: the three provider `host_permissions` from spec 6 on both targets (decision T01-4); update manifest test and snapshots.
+- Tests (mocked `fetch` only, a guard fails any unmocked call): per adapter request shape, stream parsing incl. split chunks, abort, 401/429/404/400/network mappings, `listModels` success and fallback, key only in its own auth header.
+- Record doc versions/dates relied on in `docs/decisions.md`.
+- Open questions: none so far.
