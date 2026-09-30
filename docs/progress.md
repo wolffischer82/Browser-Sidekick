@@ -123,7 +123,7 @@ Status: done (2026-09-30; gate-checker PASS-WITH-NOTES, CI green, Firefox 140 lo
 
 ## T05 Provider settings UI
 
-Status: in progress
+Status: implemented (2026-09-30); awaiting gate-checker and the orchestrator's check in both browsers
 
 ### Plan
 
@@ -135,3 +135,23 @@ Status: in progress
 - Tests: component tests for the form per kind, masking, permission request granted/denied (exactly one request), default provider, model dropdown, deletion fallback, delete-all, input disabled until usable provider.
 - `tests/mock-llm/`: Node OpenAI-compatible server (`/v1/models`, streaming `/v1/chat/completions`, key check, scripted errors, request log) with its own test; e2e adds a provider pointing at it, tests invalid and valid keys, picks a session model, deletes all data. Mock origin granted by seeding the Chromium profile's `Preferences` (no build change). Screens `test-results/screens/T05-*.png`.
 - Open questions: none so far.
+
+### Acceptance
+
+- [x] A provider of each kind can be added, tested, made default, edited and deleted (component tests per kind for add, validation, edit, Make default, delete with confirmation; Test connection success and mapped errors with a stubbed `fetch`; e2e adds, tests with a wrong and a right key, edits and deletes via Delete all data against the mock server). Anthropic and Gemini are never contacted in tests.
+- [x] New sessions start on the default provider and model (component test with two providers; e2e New session shows the default model).
+- [x] Changing a session's model affects only that session (component test checks both sessions in IndexedDB; e2e switches back to the first session).
+- [x] Deleting a provider moves its sessions to the default, with the notice (component tests: the active session at once, another session when opened, and the no-provider-left notice; decisions.md T05-5).
+- [x] The key is never rendered after save (component tests search the whole DOM for the key in the list and the edit form; e2e checks the page HTML; the field shows `••••last4` as text only).
+- [x] A custom origin triggers exactly one permission request (component tests: one request when granted, one when declined, none when already covered; Grant access requests one host).
+- [x] Delete all data empties IndexedDB and, when ticked, the providers too (component tests for both, and Cancel; e2e with the box ticked).
+- [x] The input is disabled until a usable provider exists (component tests: no provider, a no-access provider, then access granted; e2e before and after).
+- [ ] The orchestrator has looked at the build in both browsers (screens in `test-results/screens/T05-*.png`, light and dark).
+
+### Tests
+
+- `tests/providers.test.ts`: origin patterns (Chrome with port, Firefox without), native hosts, masking, default normalisation, header model groups, session model resolution, form validation.
+- `tests/provider-access.test.ts`: contains/request, declined and refused requests, access sync incl. revoked native host, permission events, provider writes keep one usable default, localised LLM errors.
+- `tests/sidepanel-settings.test.tsx`: provider form per kind, masking, host access (granted, declined, refused, covered, Grant access, revoked on open), default provider, Test connection and model list, session model dropdown (mouse and keyboard), provider deletion fallback, Delete all data, input state.
+- `tests/mock-llm.test.ts`: the mock server against the real OpenAI-compatible adapter.
+- `tests/e2e/providers.spec.ts`: provider flow against the mock server; screens `T05-01` to `T05-11`.
