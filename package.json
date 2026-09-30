@@ -19,6 +19,7 @@
     "build:chrome": "wxt build -b chrome",
     "build:firefox": "wxt build -b firefox",
     "lint:firefox": "web-ext lint --source-dir .output/firefox-mv3",
+    "icons": "node scripts/export-icons.mjs",
     "e2e": "playwright test --pass-with-no-tests"
   },
   "devDependencies": {
