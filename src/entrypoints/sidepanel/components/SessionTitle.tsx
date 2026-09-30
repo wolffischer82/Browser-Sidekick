@@ -19,6 +19,11 @@ export function SessionTitle({ title, onRename }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const refocus = useRef(false);
+  /**
+   * Guards `finish`: removing the focused field fires a late `blur` from the
+   * previous render, which must not save twice or drop the refocus.
+   */
+  const active = useRef(false);
 
   useEffect(() => {
     if (editing) {
@@ -32,11 +37,13 @@ export function SessionTitle({ title, onRename }: Props) {
 
   const start = () => {
     setDraft(title);
+    active.current = true;
     setEditing(true);
   };
 
   const finish = (save: boolean, returnFocus: boolean) => {
-    if (!editing) return;
+    if (!active.current) return;
+    active.current = false;
     refocus.current = returnFocus;
     setEditing(false);
     const next = draft.trim();

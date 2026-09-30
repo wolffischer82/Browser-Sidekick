@@ -49,6 +49,8 @@ body,
 
 body {
   margin: 0;
+  /* Chrome gives extension pages a smaller default body font; use the root's. */
+  font: inherit;
   background: var(--bg);
   color: var(--fg);
 }
@@ -400,6 +402,14 @@ textarea {
   border: 1px solid var(--border);
   border-radius: 6px;
   background: var(--bg-raised);
+}
+
+.session-confirm-title {
+  overflow: hidden;
+  margin: 0 0 2px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .session-confirm-text {

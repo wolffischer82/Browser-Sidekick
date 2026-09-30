@@ -87,6 +87,7 @@ export function SessionsDrawer({ sessions, activeId, now, onSelect, onDelete, on
             <li key={session.id} class="session-row">
               {confirming === session.id ? (
                 <div class="session-confirm" role="group" aria-label={title}>
+                  <p class="session-confirm-title">{title}</p>
                   <p class="session-confirm-text">{t('deleteSessionConfirm')}</p>
                   <div class="session-confirm-actions">
                     <button

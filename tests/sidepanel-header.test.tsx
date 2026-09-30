@@ -130,3 +130,28 @@ describe('inline rename', () => {
     );
   });
 });
+
+describe('inline rename edge cases', () => {
+  it('a blur after Enter saves once and keeps the refocus', async () => {
+    repo = await freshRepository();
+    await renderSidebar(repo);
+    let calls = 0;
+    const original = repo.setSessionTitle.bind(repo);
+    repo.setSessionTitle = (...args) => {
+      calls++;
+      return original(...args);
+    };
+    fireEvent.click(titleButton());
+    const input = titleInput();
+    fireEvent.input(input, { target: { value: 'Once' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+    fireEvent.blur(input);
+    await waitFor(() => {
+      expect(titleButton().textContent).toBe('Once');
+    });
+    await waitFor(() => {
+      expect(document.activeElement).toBe(titleButton());
+    });
+    expect(calls).toBe(1);
+  });
+});
