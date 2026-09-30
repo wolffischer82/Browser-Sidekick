@@ -33,8 +33,9 @@ export default defineConfig({
     // The `action` key creates the toolbar icon: Chrome opens the side panel
     // from it, Firefox toggles the sidebar in `action.onClicked`.
     action: { default_title: '__MSG_extName__', default_icon: TOOLBAR_ICONS },
-    // T02: settings live in storage.local (spec section 6).
-    permissions: ['storage'],
+    // T02: settings live in storage.local (spec section 6). T06: `activeTab`
+    // and `scripting` inject the extractor on demand; no `tabs` permission.
+    permissions: ['storage', 'activeTab', 'scripting'],
     // T04: the three known provider hosts (spec section 6, D6). A custom
     // OpenAI-compatible origin is requested at runtime when saved (T05).
     host_permissions: [
