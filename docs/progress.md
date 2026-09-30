@@ -285,3 +285,20 @@ Status: done (2026-09-30; gate-checker PASS-WITH-NOTES, npm audit clean, CI gree
 - `tests/messages.test.ts`: the `pdf-extract` request guard.
 - `tests/manifest.test.ts`: Chrome `offscreen`, no CSP key, `offscreen.html` only in the Chrome build, `pdf.worker.js` in both.
 - `tests/e2e/pdf.spec.ts`: text, encrypted, image-only and Content-Type PDFs from the viewer, the 31 MB PDF through the menu listener; screens `T09-01-pdf-pins`, `T09-02-pdf-too-large` (each also `-dark`).
+
+## T10 Chat: ask flow
+
+Status: in progress
+
+### Plan
+
+- Dependencies `marked` and `dompurify` (spec 6, approved).
+- `src/shared/chat/context.ts` (tests first): context assembly per spec 5.6 (system instructions, ready pins in Session tabs order with delimiters, index, title and URL, the current tab labelled with the next index, history as user/assistant pairs, the question), sources list, budget (chars ÷ 4; oldest history pairs dropped first, then page texts trimmed proportionally), `trimmed` flag.
+- `src/shared/chat/markdown.ts` (tests first): `marked` -> DOMPurify (DOM fragment) -> citation links for `[n]` with a matching source (outside code and links), other links `target=_blank rel="noopener noreferrer"`, only http(s)/mailto hrefs.
+- `src/shared/chat/title.ts` (tests first): one title request with the first question and the first 2,000 characters of the answer; cleaned to at most 6 words; applied with `setSessionTitle(..., 'llm')`, so the repository guard keeps a `user` title (race-safe); failures silent.
+- `src/shared/chat/current-tab-text.ts`: the current tab extracted on demand at send time via the dispatcher; PDFs read by pdf.js in the sidebar itself on both browsers (not Chrome's offscreen document); used for the request only.
+- Messages: broadcasts `messages-changed` and `title-changed` (ids only) in `src/shared/messages.ts`.
+- Sidebar: chat hook (send, stream, stop, retry; one request per session; streaming lives in the sending sidebar), Transcript (user messages, sanitised Markdown answers, citations via `focusOrOpen`, Stop, stopped mark, trimming and current-tab notices, error with Retry, auto-scroll), Composer (Enter sends, Shift+Enter newline, the "no access" state with Grant access). Strings in `en` and `de`.
+- Tests: context/budget, sanitiser/citations, title (success, failure, rename race), ask-flow component tests with a mocked provider (stream, stop, error, retry, history restore, exclusion, provider/model). Mock LLM request log used as is (it already scripts slow, hanging and error replies).
+- e2e `tests/e2e/chat.spec.ts` against the mock LLM with the orchestrator's 8 steps; screens `T10-*`.
+- Open questions: none so far.
