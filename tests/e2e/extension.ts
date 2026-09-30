@@ -159,3 +159,8 @@ export async function openSidebarWindow(context: BrowserContext, id: string): Pr
   await page.waitForLoadState();
   return page;
 }
+
+/** Saves `<task>-<step>.png` in light mode only. */
+export async function screen(page: Page, name: string): Promise<void> {
+  await page.screenshot({ path: join(SCREENS_DIR, `${name}.png`) });
+}
