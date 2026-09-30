@@ -8,6 +8,8 @@ import {
   deleteSessionAndResolveActive,
   openActiveSession,
 } from '@/shared/sessions';
+import { watchCurrentTab, type CurrentTab } from '@/shared/current-tab';
+import { hasAllSitesAccess, requestAllSitesAccess } from '@/shared/page-access';
 import { syncProviderAccess, watchHostAccess } from '@/shared/provider-access';
 import { isUsable, modelGroups, resolveSessionModel } from '@/shared/providers';
 import {
@@ -16,6 +18,7 @@ import {
   updateSettings,
   watchSettings,
 } from '@/shared/settings';
+import { AccessBanner } from './components/AccessBanner';
 import { ActionBar } from './components/ActionBar';
 import { Composer } from './components/Composer';
 import { Header } from './components/Header';
@@ -46,6 +49,13 @@ function refreshAccess(): void {
   });
 }
 
+/** Refocuses the Session tabs toggle once the banner has gone. */
+function focusAfterBanner(): void {
+  requestAnimationFrame(() => {
+    document.querySelector<HTMLElement>('.session-tabs-toggle')?.focus();
+  });
+}
+
 /** Sidebar root (spec 5.2): header, sessions drawer and the session view. */
 export function App({ repository }: Props) {
   const [repo, setRepo] = useState<Repository | null>(null);
@@ -56,6 +66,10 @@ export function App({ repository }: Props) {
   const [providers, setProviders] = useState<ProviderConfig[]>([]);
   const [defaultProviderId, setDefaultProviderId] = useState<string | null>(null);
   const [notice, setNotice] = useState<Notice>('none');
+  const [currentTab, setCurrentTab] = useState<CurrentTab>({ state: 'none' });
+  /** Whether the all-sites grant is held; `null` until checked (spec 5.3). */
+  const [allSites, setAllSites] = useState<boolean | null>(null);
+  const [bannerDismissed, setBannerDismissed] = useState(true);
   const [drawer, setDrawer] = useState<SessionSummary[] | null>(null);
   const [view, setView] = useState<'main' | 'settings'>('main');
   const [saveError, setSaveError] = useState(false);
@@ -78,6 +92,7 @@ export function App({ repository }: Props) {
       setTabsExpanded(settings.sessionTabsExpanded);
       setProviders(settings.providers);
       setDefaultProviderId(settings.defaultProviderId);
+      setBannerDismissed(settings.accessBannerDismissed);
       setStatus('ready');
       // Host access can change outside the sidebar (decisions.md T05).
       refreshAccess();
@@ -89,12 +104,26 @@ export function App({ repository }: Props) {
       if (changed.providers) setProviders(changed.providers);
       if (changed.defaultProviderId !== undefined) setDefaultProviderId(changed.defaultProviderId);
       if (changed.sessionTabsExpanded !== undefined) setTabsExpanded(changed.sessionTabsExpanded);
+      if (changed.accessBannerDismissed !== undefined) {
+        setBannerDismissed(changed.accessBannerDismissed);
+      }
     });
-    const unwatchAccess = watchHostAccess(refreshAccess);
+    const checkAllSites = () => {
+      void hasAllSitesAccess().then((granted) => {
+        if (!effect.cancelled) setAllSites(granted);
+      });
+    };
+    checkAllSites();
+    const unwatchAccess = watchHostAccess(() => {
+      refreshAccess();
+      checkAllSites();
+    });
+    const unwatchTab = watchCurrentTab(setCurrentTab);
     return () => {
       effect.cancelled = true;
       unwatch();
       unwatchAccess();
+      unwatchTab();
     };
   }, [repository]);
 
@@ -172,6 +201,25 @@ export function App({ repository }: Props) {
     await repo.deleteAll();
     await clearSettingsForDeleteAll({ includeProviders });
     await show(repo, await createActiveSession(repo));
+  };
+
+  const dismissBanner = () => {
+    setBannerDismissed(true);
+    focusAfterBanner();
+    run(() => updateSettings({ accessBannerDismissed: true }));
+  };
+
+  // The browser asks once (D2): a declined request hides the banner for good,
+  // and pinning then asks per site (D10). The request must start in the click.
+  const allowAllSites = () => {
+    void requestAllSitesAccess().then((granted) => {
+      if (granted) {
+        setAllSites(true);
+        focusAfterBanner();
+      } else {
+        dismissBanner();
+      }
+    });
   };
 
   const groups = modelGroups(providers);
@@ -268,8 +316,12 @@ export function App({ repository }: Props) {
             {t('saveError')}
           </p>
         )}
+        {allSites === false && !bannerDismissed && (
+          <AccessBanner onAllow={allowAllSites} onDismiss={dismissBanner} />
+        )}
         <SessionTabs
-          count={pinCount}
+          pinCount={pinCount}
+          currentTab={currentTab}
           expanded={tabsExpanded}
           onToggle={() => {
             const next = !tabsExpanded;

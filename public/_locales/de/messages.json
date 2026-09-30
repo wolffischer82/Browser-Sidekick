@@ -424,5 +424,49 @@
   "sessionProviderDeletedNoDefault": {
     "message": "Der Anbieter dieser Sitzung wurde gelöscht. Füge in den Einstellungen einen Anbieter hinzu, um Fragen zu stellen.",
     "description": "Notice after a session lost its provider and no default exists."
+  },
+  "accessBannerLabel": {
+    "message": "Seitenzugriff",
+    "description": "Accessible name of the page-access banner."
+  },
+  "accessBannerText": {
+    "message": "Sidekick braucht Zugriff auf Websites, um den aktuellen Tab und deine angehefteten Seiten zu lesen. Seiteninhalte gehen nur an deinen LLM-Anbieter, und nur wenn du fragst.",
+    "description": "Text of the first-use banner that asks for access to all sites."
+  },
+  "accessBannerAllow": {
+    "message": "Auf allen Websites erlauben",
+    "description": "Banner button that asks the browser for access to all sites."
+  },
+  "accessBannerDismiss": {
+    "message": "Ausblenden",
+    "description": "Banner button that hides the access banner for good."
+  },
+  "currentTabMarker": {
+    "message": "Aktueller Tab",
+    "description": "Marker on the current-tab row in Session tabs."
+  },
+  "currentTabNotAccessible": {
+    "message": "Aktueller Tab nicht zugänglich",
+    "description": "Current-tab row when the extension has no access to the tab's site."
+  },
+  "pageCantBeRead": {
+    "message": "Diese Seite kann nicht gelesen werden",
+    "description": "Current-tab row for browser pages, web stores, other extensions' pages, view-source and local files."
+  },
+  "extractFailedRestricted": {
+    "message": "Diese Seite kann nicht gelesen werden. Browser-Seiten, Web-Stores und lokale Dateien sind gesperrt.",
+    "description": "Pin failure: restricted page."
+  },
+  "extractFailedNoAccess": {
+    "message": "Kein Zugriff auf diese Website. Erlaube den Zugriff und versuch es noch einmal.",
+    "description": "Pin failure: the extension has no access to the site."
+  },
+  "extractFailedEmpty": {
+    "message": "Auf dieser Seite wurde kein lesbarer Text gefunden.",
+    "description": "Pin failure: the page has no text."
+  },
+  "extractFailedUnreadable": {
+    "message": "Die Seite konnte nicht gelesen werden. Lade sie neu und versuch es noch einmal.",
+    "description": "Pin failure: extraction failed for another reason."
   }
 }

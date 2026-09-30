@@ -828,3 +828,62 @@ textarea {
     transition: none;
   }
 }
+
+/* Access banner (spec 5.3) */
+
+.access-banner {
+  flex: none;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-raised);
+}
+
+.access-banner p {
+  margin: 0 0 8px;
+}
+
+.access-banner-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Session tabs rows */
+
+.tab-rows {
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tab-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.tab-row-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tab-row-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--fg-muted);
+  font-size: 0.86rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tab-row-unavailable .tab-row-title {
+  color: var(--fg-muted);
+}

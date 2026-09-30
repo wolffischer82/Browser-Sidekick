@@ -424,5 +424,49 @@
   "sessionProviderDeletedNoDefault": {
     "message": "This session's provider was deleted. Add a provider in settings to ask questions.",
     "description": "Notice after a session lost its provider and no default exists."
+  },
+  "accessBannerLabel": {
+    "message": "Page access",
+    "description": "Accessible name of the page-access banner."
+  },
+  "accessBannerText": {
+    "message": "Sidekick needs access to websites to read the current tab and the pages you pin. Page content is sent only to your LLM provider, and only when you ask.",
+    "description": "Text of the first-use banner that asks for access to all sites."
+  },
+  "accessBannerAllow": {
+    "message": "Allow on all sites",
+    "description": "Banner button that asks the browser for access to all sites."
+  },
+  "accessBannerDismiss": {
+    "message": "Dismiss",
+    "description": "Banner button that hides the access banner for good."
+  },
+  "currentTabMarker": {
+    "message": "Current tab",
+    "description": "Marker on the current-tab row in Session tabs."
+  },
+  "currentTabNotAccessible": {
+    "message": "Current tab not accessible",
+    "description": "Current-tab row when the extension has no access to the tab's site."
+  },
+  "pageCantBeRead": {
+    "message": "This page can't be read",
+    "description": "Current-tab row for browser pages, web stores, other extensions' pages, view-source and local files."
+  },
+  "extractFailedRestricted": {
+    "message": "This page can't be read. Browser pages, web stores and local files are off limits.",
+    "description": "Pin failure: restricted page."
+  },
+  "extractFailedNoAccess": {
+    "message": "No access to this site. Allow access and try again.",
+    "description": "Pin failure: the extension has no access to the site."
+  },
+  "extractFailedEmpty": {
+    "message": "No readable text was found on this page.",
+    "description": "Pin failure: the page has no text."
+  },
+  "extractFailedUnreadable": {
+    "message": "The page couldn't be read. Reload it and try again.",
+    "description": "Pin failure: extraction failed for another reason."
   }
 }
