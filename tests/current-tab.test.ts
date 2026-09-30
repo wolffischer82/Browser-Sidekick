@@ -224,7 +224,7 @@ describe('watchCurrentTab', () => {
     stop();
   });
 
-  it('drops a stale answer that arrives after a newer one', async () => {
+  it('reads again when the tab changes during a read and reports only the fresh tab', async () => {
     perms.granted.add('<all_urls>');
     const { seen, stop } = await watch();
     let release: () => void = () => undefined;
@@ -236,12 +236,35 @@ describe('watchCurrentTab', () => {
     await fakeBrowser.tabs.onActivated.trigger({ tabId: 21, windowId: 2 });
     active.set(1, { id: 13, windowId: 1, url: 'https://example.com/e', title: 'Example E' });
     await fakeBrowser.tabs.onActivated.trigger({ tabId: 13, windowId: 1 });
+    await new Promise((r) => setTimeout(r, 10));
+    expect(seen).toHaveLength(1);
+    release();
     await vi.waitFor(() => {
       expect(seen).toHaveLength(2);
     });
-    release();
     await new Promise((r) => setTimeout(r, 10));
     expect(titles(seen)).toEqual(['Example A', 'Example E']);
+    stop();
+  });
+
+  it('picks up a title that loads while the new tab is being read', async () => {
+    perms.granted.add('<all_urls>');
+    const { seen, stop } = await watch();
+    let release: () => void = () => undefined;
+    const slow = new Promise<void>((r) => (release = r));
+    getLastFocused.mockImplementationOnce(async () => {
+      await slow;
+      return { id: 1 } as Win;
+    });
+    active.set(1, { id: 12, windowId: 1, url: 'https://example.com/g', title: 'example.com/g' });
+    await fakeBrowser.tabs.onActivated.trigger({ tabId: 12, windowId: 1 });
+    active.set(1, { id: 12, windowId: 1, url: 'https://example.com/g', title: 'Loaded G' });
+    await fakeBrowser.tabs.onUpdated.trigger(12, { title: 'Loaded G' }, {} as never);
+    release();
+    await vi.waitFor(() => {
+      expect(seen).toHaveLength(2);
+    });
+    expect(titles(seen)).toEqual(['Example A', 'Loaded G']);
     stop();
   });
 

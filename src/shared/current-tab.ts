@@ -107,19 +107,34 @@ function same(a: CurrentTab, b: CurrentTab): boolean {
  * and host permission changes. Returns a function that stops watching.
  */
 export function watchCurrentTab(listener: (tab: CurrentTab) => void): () => void {
-  let latest = 0;
   let stopped = false;
   let last: CurrentTab | null = null;
+  // One read at a time; an event during a read makes it read again, and
+  // only the result of a read with no event during it is reported.
+  let reading = false;
+  let dirty = false;
   const refresh = () => {
-    const run = ++latest;
+    if (reading) {
+      dirty = true;
+      return;
+    }
+    reading = true;
     void readCurrentTab().then((tab) => {
-      if (stopped || run !== latest || (last && same(last, tab))) return;
+      reading = false;
+      if (stopped) return;
+      if (dirty) {
+        dirty = false;
+        refresh();
+        return;
+      }
+      if (last && same(last, tab)) return;
       last = tab;
       listener(tab);
     });
   };
+  // While a read runs, the tab it will find isn't known yet, so any update counts.
   const onUpdated = (tabId: number) => {
-    if (!last || last.state === 'none' || last.tabId === tabId) refresh();
+    if (reading || !last || last.state === 'none' || last.tabId === tabId) refresh();
   };
   const onFocus = (windowId: number) => {
     // WINDOW_ID_NONE (-1): focus left the browser; keep the last tab.
