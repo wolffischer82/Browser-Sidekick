@@ -229,13 +229,27 @@ Status: done (2026-09-30; gate-checker PASS-WITH-NOTES, CI green incl. e2e, Fire
 
 ## T08 YouTube transcript extractor
 
-Status: in progress
+Status: implemented, gate passed locally (2026-09-30); awaiting gate-checker
 
 ### Plan
 
 - Spike (live, local only, throwaway Playwright profile, not signed in): on public videos with and without captions, try (a) the caption track `baseUrl` from the player response, (b) the transcript panel in the DOM, (c) InnerTube `get_transcript` with the page's own client context; also how to get a fresh player response after in-app navigation. Record per-method results and the choice in decisions.md.
 - `src/shared/extract/youtube.ts` (tests first): URL detection (`watch`, `youtu.be`, `shorts`, `m.`/`www.`), video id; pure parsers for the chosen payloads (track choice: page language, else first), plain text with `[mm:ss]` markers every ~30 s, fallback text (title + description + "No transcript available" note), 200k cap.
 - Injected MAIN-world function via `scripting.executeScript({ world: 'MAIN', func })` that returns untrusted raw data; validated and parsed in the extension. Register the YouTube extractor before the page extractor in `EXTRACTORS`.
-- Tests: detection URL table, parsers on trimmed synthetic fixtures (`tests/fixtures/youtube/`), dispatcher wiring. e2e: localhost fixture that mimics the watch page (served under a YouTube-like path is not possible, so the extractor gets a test seam or the fixture is matched differently; decided during implementation), screen `T08-01-youtube-pin`.
+- Tests: detection URL table, parsers on trimmed synthetic fixtures (`tests/fixtures/youtube/`), dispatcher wiring. e2e: fixture watch pages served at youtube.com URLs by Playwright request interception (decisions.md T08-11), screen `T08-01-youtube-pin`.
 - Owner checklist line: pin a real video with and without captions in both browsers. No new permissions, no new dependencies.
 - Open questions: none so far.
+
+### Acceptance
+
+- [x] A video with captions yields its transcript, including after in-app navigation from another video. Unit: `[mm:ss]` blocks from the fixture panel; the tab URL's video is fetched afresh while the page globals are stale; language choice. e2e: fixture video pinned Ready with the YouTube badge and the transcript text, then `pushState` navigation. Live (spike, Chromium, `en` and `de`): real captioned videos, and a related video reached in-app (decisions.md T08-4). Firefox live is on the owner checklist.
+- [x] A video without captions yields the fallback (title, description, "No transcript available.", kind YouTube): unit (also when the panel request fails or is empty, German note), e2e, and live.
+- [x] Shorts are handled: detection table, unit extraction through the watch page, e2e (a fixture Short), live (a real Short with captions).
+- [x] Pins of YouTube URLs use the extractor through the dispatcher, and the row shows the "YouTube" badge (e2e, screen `T08-01-youtube-pin`).
+- [x] No new permission or dependency; CI and e2e never contact YouTube.
+
+### Tests
+
+- `tests/youtube.test.ts`: detection URL table (watch, `m.`, bare host, `youtu.be`, Shorts, and non-video YouTube URLs), JSON assignment reader, watch-page parser (captions, none, legacy params ignored, chapter chip, untrusted values), language choice, InnerTube context, timestamps, panel parser (malformed, deep input), text format, fallback.
+- `tests/youtube-extractor.test.ts`: the MAIN-world functions against a fake YouTube origin, the extractor end to end (transcript, page language, first track, minimal context, fallback incl. failed panel, in-app navigation, Shorts and `youtu.be`, wrong video, malformed results, no access, 200k cap), dispatcher order and badges.
+- `tests/e2e/youtube.spec.ts`: captioned video, in-app navigation to a video without captions, a Short; screens `T08-01-youtube-pin` (light and dark).

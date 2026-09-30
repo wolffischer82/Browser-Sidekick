@@ -13,4 +13,5 @@ Builds: Chrome "Load unpacked" on `dist/chrome-ext`; Firefox `about:debugging` â
 - [ ] T07 (Firefox): right-click a tab in the tab strip that isn't the selected tab, choose "Pin to Sidekick": that tab's page is pinned.
 - [ ] T07 (Chrome and Firefox): without "Allow on all sites", open the sidebar with the toolbar icon on a web page. Note whether the Session tabs row shows the page (the click granted activeTab) or "Current tab not accessible". Chrome's side-panel behaviour can't be checked headless (decisions.md T07-16).
 - [ ] T07 (Chrome and Firefox): if the row shows the page there, the pin needle asks for access to that one site; after allowing, navigate away and back, and Refresh on that pin works.
+- [ ] T08 (Chrome and Firefox): pin a real YouTube video with captions (the pin shows YouTube and Ready; after T10, asking about it answers from the transcript) and one without captions (Ready, title and description only). Also pin a video reached by clicking a suggested video on YouTube, and a Short.
 - [ ] Overall look-and-feel, in light and dark mode.
