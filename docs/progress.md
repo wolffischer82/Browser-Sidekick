@@ -58,3 +58,17 @@ Status: done (2026-09-30; gate-checker PASS-WITH-NOTES, CI green, Firefox 140 lo
 - `tests/db-schema.test.ts`: schema version 1, migration hook (ordering, async steps, failing step, versionchange).
 - `tests/settings.test.ts`: settings store on `fakeBrowser`, sync storage never called, key never in IndexedDB.
 - `tests/manifest.test.ts`: `storage` added to both permission lists and snapshots.
+
+## T03 Sidebar shell and session management
+
+Status: in progress
+
+### Plan
+
+- `src/shared/sessions.ts` (tests first): resolve the active session on open (stored id, else most recent, else create one), new-session input from the default provider, delete with the "next active" rule of spec 5.2.
+- `src/shared/i18n.ts`: message keys typed from `en/messages.json`, substitutions; new strings in `en` and `de`.
+- Sidebar UI (`src/entrypoints/sidepanel/`): header (drawer button, title with inline rename, New session, settings gear), sessions drawer (switch, delete with confirmation, relative time, pin count), empty Session tabs (collapsible, state remembered), empty transcript, disabled Summarize, disabled input with a settings link, minimal settings view (filled by T05). Neutral CSS with light and dark.
+- The sidebar opens one repository in `main.tsx` and passes it to `App`.
+- Component tests: header, rename, drawer (switch, delete confirm, delete active), keyboard paths.
+- Playwright harness in `tests/e2e/` loading `dist/chrome-ext`; flow: create, rename, switch, delete, survive extension reload and browser restart; screenshots `test-results/screens/T03-*.png` (light, plus dark). CI step `npm run e2e`.
+- Open questions: none so far.
