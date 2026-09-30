@@ -1,0 +1,59 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`manifest > chrome: exact permissions and snapshot 1`] = `
+{
+  "action": {
+    "default_title": "__MSG_extName__",
+  },
+  "background": {
+    "service_worker": "background.js",
+  },
+  "default_locale": "en",
+  "description": "__MSG_extDescription__",
+  "manifest_version": 3,
+  "minimum_chrome_version": "116",
+  "name": "__MSG_extName__",
+  "optional_host_permissions": [
+    "<all_urls>",
+  ],
+  "permissions": [
+    "sidePanel",
+  ],
+  "side_panel": {
+    "default_path": "sidepanel.html",
+  },
+  "version": "0.1.0",
+}
+`;
+
+exports[`manifest > firefox: exact permissions and snapshot 1`] = `
+{
+  "action": {
+    "default_title": "__MSG_extName__",
+  },
+  "background": {
+    "scripts": [
+      "background.js",
+    ],
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "browser-sidekick@wolffischer82.github.io",
+      "strict_min_version": "128.0",
+    },
+  },
+  "default_locale": "en",
+  "description": "__MSG_extDescription__",
+  "manifest_version": 3,
+  "name": "__MSG_extName__",
+  "optional_host_permissions": [
+    "<all_urls>",
+  ],
+  "sidebar_action": {
+    "default_panel": "sidepanel.html",
+    "default_title": "Browser Sidekick",
+    "open_at_install": false,
+  },
+  "version": "0.1.0",
+}
+`;
