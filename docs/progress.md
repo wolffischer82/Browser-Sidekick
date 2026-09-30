@@ -93,7 +93,7 @@ Status: done (2026-09-30; gate-checker PASS-WITH-NOTES, CI green incl. e2e, orch
 
 ## T04 LLM provider adapters
 
-Status: in progress (implementation complete, awaiting gate-checker)
+Status: done (2026-09-30; gate-checker PASS-WITH-NOTES, CI green, Firefox 140 load OK)
 
 ### Plan
 
