@@ -61,7 +61,7 @@ Status: done (2026-09-30; gate-checker PASS-WITH-NOTES, CI green, Firefox 140 lo
 
 ## T03 Sidebar shell and session management
 
-Status: in progress (implementation complete, gate passes locally; awaiting gate-checker and the orchestrator's browser check)
+Status: done (2026-09-30; gate-checker PASS-WITH-NOTES, CI green incl. e2e, orchestrator reviewed light/dark screenshots)
 
 ### Plan
 
@@ -80,7 +80,7 @@ Status: in progress (implementation complete, gate passes locally; awaiting gate
 - [x] Deleting the active session switches to the most recent remaining one, or to a new empty session (component tests, unit tests, e2e).
 - [x] Everything is keyboard-operable: native buttons, rename via Enter/Escape, drawer focus management with `inert`, Escape closes the drawer or cancels a delete, settings refocus (component tests; e2e drives rename, drawer navigation, switch and delete cancel by keyboard).
 - [x] All strings are in both locales (`tests/locales.test.ts`; `de` render test).
-- [ ] The orchestrator has looked at the build in both browsers (screenshots in `test-results/screens/T03-*.png`).
+- [x] The orchestrator has looked at the build in both browsers (screenshots in `test-results/screens/T03-*.png`).
 
 ### Tests
 
