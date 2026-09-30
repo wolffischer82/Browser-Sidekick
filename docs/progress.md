@@ -229,7 +229,7 @@ Status: done (2026-09-30; gate-checker PASS-WITH-NOTES, CI green incl. e2e, Fire
 
 ## T08 YouTube transcript extractor
 
-Status: implemented, gate passed locally (2026-09-30); awaiting gate-checker
+Status: done (2026-09-30; gate-checker PASS-WITH-NOTES, CI green incl. e2e, Firefox 140 load OK, orchestrator reviewed screenshot; live Firefox check on owner checklist)
 
 ### Plan
 
