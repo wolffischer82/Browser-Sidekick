@@ -21,7 +21,10 @@ export async function newProfile(): Promise<{ dir: string; remove: () => Promise
  * channel uses the new headless mode, which supports extensions. The UI
  * language is English so assertions can use the `en` strings.
  */
-export async function launchWithExtension(profileDir: string): Promise<BrowserContext> {
+export async function launchWithExtension(
+  profileDir: string,
+  extraArgs: string[] = [],
+): Promise<BrowserContext> {
   if (!existsSync(join(EXTENSION_DIR, 'manifest.json'))) {
     throw new Error('dist/chrome-ext is missing. Run `npm run build:chrome` first.');
   }
@@ -39,6 +42,7 @@ export async function launchWithExtension(profileDir: string): Promise<BrowserCo
       `--load-extension=${EXTENSION_DIR}`,
       // Allows CDP `Extensions.loadUnpacked`, used by `reloadExtension`.
       '--enable-unsafe-extension-debugging',
+      ...extraArgs,
     ],
   });
 }
@@ -99,8 +103,9 @@ interface ExtensionPrefs {
 export async function launchWithGrantedOrigins(
   profileDir: string,
   origins: string[],
+  extraArgs: string[] = [],
 ): Promise<BrowserContext> {
-  const first = await launchWithExtension(profileDir);
+  const first = await launchWithExtension(profileDir, extraArgs);
   await extensionId(first);
   await first.close();
 
@@ -121,7 +126,7 @@ export async function launchWithGrantedOrigins(
     set.explicit_host = [...new Set([...(set.explicit_host ?? []), ...origins])];
   }
   await writeFile(file, JSON.stringify(prefs));
-  return launchWithExtension(profileDir);
+  return launchWithExtension(profileDir, extraArgs);
 }
 
 /** Checks from an extension page whether the extension holds `origin`. */
