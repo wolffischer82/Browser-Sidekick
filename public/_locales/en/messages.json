@@ -618,5 +618,58 @@
   "refreshFailed": {
     "message": "The page couldn't be refreshed. Open it in a tab and try again.",
     "description": "Shown when refreshing a pin fails."
+  },
+  "chatQuestionLabel": {
+    "message": "Your question",
+    "description": "Accessible name of a question in the chat transcript."
+  },
+  "chatAnswerLabel": {
+    "message": "Answer",
+    "description": "Accessible name of an answer in the chat transcript."
+  },
+  "answerWaiting": {
+    "message": "Waiting for the answer…",
+    "description": "Shown while a question is sent and no text has arrived yet."
+  },
+  "stop": {
+    "message": "Stop",
+    "description": "Button that stops the answer while it streams."
+  },
+  "answerStopped": {
+    "message": "Stopped",
+    "description": "Mark on an answer the user stopped; the partial text is kept."
+  },
+  "answerTrimmed": {
+    "message": "Some history or page text was left out to fit the context budget.",
+    "description": "One-line notice on an answer whose request was trimmed to the provider's context budget."
+  },
+  "currentTabSkipped": {
+    "message": "The current tab couldn't be read, so it wasn't included.",
+    "description": "One-line notice when the current tab could not be read at send time."
+  },
+  "retry": {
+    "message": "Retry",
+    "description": "Button that sends the same question again after an error."
+  },
+  "citationLabel": {
+    "message": "Source $N$: $TITLE$",
+    "description": "Accessible name of a citation link [n] in an answer. $1 is the number, $2 the page title.",
+    "placeholders": {
+      "n": {
+        "content": "$1"
+      },
+      "title": {
+        "content": "$2"
+      }
+    }
+  },
+  "providerNoAccessComposer": {
+    "message": "No access to $LABEL$. Grant access to ask questions.",
+    "description": "Shown under the disabled input when the session's provider has no host access. $1 is the provider name.",
+    "placeholders": {
+      "label": {
+        "content": "$1"
+      }
+    }
   }
 }

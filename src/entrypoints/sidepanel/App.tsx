@@ -13,7 +13,13 @@ import {
 } from '@/shared/sessions';
 import { watchCurrentTab, type CurrentTab } from '@/shared/current-tab';
 import { hasAllSitesAccess, requestAllSitesAccess, requestSiteAccess } from '@/shared/page-access';
-import { syncProviderAccess, watchHostAccess } from '@/shared/provider-access';
+import {
+  accessPattern,
+  requestHostAccess,
+  syncProviderAccess,
+  watchHostAccess,
+} from '@/shared/provider-access';
+import { setProviderAccess } from '@/shared/provider-settings';
 import { isUsable, modelGroups, resolveSessionModel } from '@/shared/providers';
 import {
   clearSettingsForDeleteAll,
@@ -22,8 +28,9 @@ import {
   watchSettings,
 } from '@/shared/settings';
 import { AccessBanner } from './components/AccessBanner';
+import { useChat, type TabContext } from './chat/useChat';
 import { ActionBar } from './components/ActionBar';
-import { Composer } from './components/Composer';
+import { Composer, type ComposerState } from './components/Composer';
 import { Header } from './components/Header';
 import { ModelMenu } from './components/ModelMenu';
 import { SessionTabs } from './components/SessionTabs';
@@ -100,6 +107,14 @@ export function App({ repository }: Props) {
   const pinsRead = useRef(0);
   /** A pin whose Unpin button gets focus once it is listed. */
   const focusPinId = useRef<string | null>(null);
+  const chat = useChat({
+    repo,
+    session: active,
+    providers,
+    onTitleChanged: (id) => {
+      if (repo) void reloadPins(repo, id);
+    },
+  });
 
   /**
    * Re-reads the pins of session `id` and its title (the first pin sets the
@@ -170,7 +185,13 @@ export function App({ repository }: Props) {
     // at once, so nothing is missed while the session loads.
     const onMessage = (message: unknown): undefined => {
       if (!isSidekickMessage(message)) return;
-      if (message.type !== 'pins-changed' && message.type !== 'already-pinned') return;
+      if (
+        message.type !== 'pins-changed' &&
+        message.type !== 'already-pinned' &&
+        message.type !== 'title-changed'
+      ) {
+        return;
+      }
       const id = activeId.current;
       if (id === null) {
         missedSync.current = true;
@@ -354,6 +375,31 @@ export function App({ repository }: Props) {
   const groups = modelGroups(providers);
   const sessionProvider = providers.find((p) => p.id === active.providerId);
 
+  // The input (spec 5.2 item 6, 5.7): a session on a provider without host
+  // access shows that state with Grant access instead of sending.
+  let composerState: ComposerState = { kind: 'ready' };
+  if (sessionProvider && !sessionProvider.hasAccess) {
+    composerState = { kind: 'noAccess', providerLabel: sessionProvider.label };
+  } else if (!sessionProvider && !providers.some(isUsable)) {
+    composerState = { kind: 'noProvider' };
+  }
+
+  const tabContext = (): TabContext => ({
+    currentTab,
+    excluded: currentTabId !== null && excludedTabId === currentTabId,
+  });
+
+  const grantSessionProvider = () => {
+    if (!sessionProvider) return;
+    const pattern = accessPattern(sessionProvider);
+    if (!pattern) return;
+    // Asked synchronously in the click: Firefox refuses after an await.
+    const id = sessionProvider.id;
+    run(async () => {
+      if (await requestHostAccess(pattern)) await setProviderAccess(id, true);
+    });
+  };
+
   const loadSummaries = async (r: Repository): Promise<SessionSummary[]> => {
     const sessions = await r.listSessions();
     const counts = await Promise.all(sessions.map((s) => r.countPins(s.id)));
@@ -403,6 +449,7 @@ export function App({ repository }: Props) {
               await r.setSessionTitle(active.id, title, 'user');
               const updated = await r.getSession(active.id);
               if (updated) setActive(updated);
+              await broadcast({ type: 'title-changed', sessionId: active.id });
             });
           }}
           onNewSession={() => {
@@ -487,10 +534,30 @@ export function App({ repository }: Props) {
             setView('settings');
           }}
         />
-        <Transcript />
+        <Transcript
+          messages={chat.messages}
+          live={chat.live}
+          onStop={() => {
+            chat.stop();
+            document.getElementById('composer-input')?.focus();
+          }}
+          onRetry={() => {
+            chat.retry(tabContext());
+          }}
+          onOpenSource={(url) => {
+            focusOrOpen(url).catch(() => {
+              console.error('Sidekick: a page could not be opened.');
+            });
+          }}
+        />
         <ActionBar canSummarize={false} />
         <Composer
-          hasProvider={providers.some(isUsable)}
+          state={composerState}
+          busy={chat.busy}
+          onSend={(question) => {
+            chat.send(question, tabContext());
+          }}
+          onGrantAccess={grantSessionProvider}
           onOpenSettings={() => {
             settingsOpener.current = '#settings-link';
             setFocusPageAccess(false);

@@ -618,5 +618,58 @@
   "refreshFailed": {
     "message": "Die Seite konnte nicht aktualisiert werden. Öffne sie in einem Tab und versuch es noch mal.",
     "description": "Shown when refreshing a pin fails."
+  },
+  "chatQuestionLabel": {
+    "message": "Deine Frage",
+    "description": "Accessible name of a question in the chat transcript."
+  },
+  "chatAnswerLabel": {
+    "message": "Antwort",
+    "description": "Accessible name of an answer in the chat transcript."
+  },
+  "answerWaiting": {
+    "message": "Warte auf die Antwort…",
+    "description": "Shown while a question is sent and no text has arrived yet."
+  },
+  "stop": {
+    "message": "Stopp",
+    "description": "Button that stops the answer while it streams."
+  },
+  "answerStopped": {
+    "message": "Gestoppt",
+    "description": "Mark on an answer the user stopped; the partial text is kept."
+  },
+  "answerTrimmed": {
+    "message": "Ein Teil des Verlaufs oder der Seitentexte wurde weggelassen, damit alles ins Kontextbudget passt.",
+    "description": "One-line notice on an answer whose request was trimmed to the provider's context budget."
+  },
+  "currentTabSkipped": {
+    "message": "Der aktuelle Tab konnte nicht gelesen werden und wurde deshalb nicht einbezogen.",
+    "description": "One-line notice when the current tab could not be read at send time."
+  },
+  "retry": {
+    "message": "Erneut versuchen",
+    "description": "Button that sends the same question again after an error."
+  },
+  "citationLabel": {
+    "message": "Quelle $N$: $TITLE$",
+    "description": "Accessible name of a citation link [n] in an answer. $1 is the number, $2 the page title.",
+    "placeholders": {
+      "n": {
+        "content": "$1"
+      },
+      "title": {
+        "content": "$2"
+      }
+    }
+  },
+  "providerNoAccessComposer": {
+    "message": "Kein Zugriff auf $LABEL$. Erlaube den Zugriff, um Fragen zu stellen.",
+    "description": "Shown under the disabled input when the session's provider has no host access. $1 is the provider name.",
+    "placeholders": {
+      "label": {
+        "content": "$1"
+      }
+    }
   }
 }
