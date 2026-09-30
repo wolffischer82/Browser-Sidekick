@@ -256,7 +256,7 @@ Status: done (2026-09-30; gate-checker PASS-WITH-NOTES, CI green incl. e2e, Fire
 
 ## T09 PDF extractor
 
-Status: in progress (implemented, gate passed locally; awaiting gate-checker)
+Status: done (2026-09-30; gate-checker PASS-WITH-NOTES, npm audit clean, CI green incl. e2e, Firefox 140 load OK, orchestrator reviewed screenshots; real-viewer checks on owner checklist)
 
 ### Plan
 
