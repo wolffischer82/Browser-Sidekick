@@ -33,7 +33,7 @@ Status: done (2026-09-30, orchestrator). Owner loaded both builds on their deskt
 
 ## T02 Storage layer and data model
 
-Status: in progress (implementation complete; awaiting gate check)
+Status: done (2026-09-30; gate-checker PASS-WITH-NOTES, CI green, Firefox 140 load OK)
 
 ### Plan
 
