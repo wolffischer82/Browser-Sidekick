@@ -16,6 +16,11 @@ export interface SseEvent {
 
 export interface SseOptions {
   bareJsonLines?: boolean;
+  /**
+   * Aborting cancels the body and makes the iterator throw an `AbortError`,
+   * even if the body stream itself doesn't react to the abort.
+   */
+  signal?: AbortSignal;
 }
 
 function present(event: SseEvent | null): SseEvent[] {
@@ -32,6 +37,11 @@ export async function* readSseEvents(
   let eventName = '';
   let data: string[] = [];
   let done = false;
+  const { signal } = options;
+  const onAbort = (): void => {
+    reader.cancel().catch(() => undefined);
+  };
+  signal?.addEventListener('abort', onAbort);
 
   const dispatch = (): SseEvent | null => {
     const event = data.length > 0 ? { event: eventName || 'message', data: data.join('\n') } : null;
@@ -62,7 +72,9 @@ export async function* readSseEvents(
 
   try {
     while (!done) {
+      signal?.throwIfAborted();
       const result = await reader.read();
+      signal?.throwIfAborted();
       if (result.done) {
         done = true;
         buffer += decoder.decode();
@@ -88,6 +100,7 @@ export async function* readSseEvents(
     const last = dispatch();
     if (last) yield last;
   } finally {
+    signal?.removeEventListener('abort', onAbort);
     if (!done) await reader.cancel().catch(() => undefined);
     reader.releaseLock();
   }
