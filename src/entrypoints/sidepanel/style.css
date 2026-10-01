@@ -388,19 +388,39 @@ textarea {
   border: 1px solid var(--border);
 }
 
-.answer-body a {
+/* Links from the model: plainly external, never like a citation chip. */
+.answer-body a.external-link {
   color: var(--accent);
-}
-
-.answer-body a.citation {
-  font-size: 0.85em;
-  font-weight: 600;
-  text-decoration: none;
-  vertical-align: 1px;
-}
-
-.answer-body a.citation:hover {
   text-decoration: underline;
+}
+
+.answer-body a.external-link::after {
+  content: '\2197';
+  margin-left: 1px;
+  font-size: 0.8em;
+  text-decoration: none;
+  display: inline-block;
+}
+
+/* Citations: buttons made by the extension from the stored sources (D13). */
+.answer-body button.citation {
+  display: inline-block;
+  min-width: 1.5em;
+  margin: 0 1px;
+  padding: 0 4px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg-raised);
+  color: var(--accent);
+  font-size: 0.8em;
+  font-weight: 600;
+  line-height: 1.5;
+  vertical-align: 1px;
+  cursor: pointer;
+}
+
+.answer-body button.citation:hover {
+  background: var(--bg-hover);
 }
 
 .answer-notice,

@@ -203,9 +203,9 @@ describe('asking', () => {
     expect(answers()).toHaveLength(1);
     expect(answer.querySelector('strong')?.textContent).toBe('12');
     expect(
-      within(answer).getByRole('link', { name: 'Source 1: Night trains return' }),
+      within(answer).getByRole('button', { name: 'Source 1: Night trains return' }),
     ).toBeTruthy();
-    expect(within(answer).getByRole('link', { name: 'Source 2: Dashboard' })).toBeTruthy();
+    expect(within(answer).getByRole('button', { name: 'Source 2: Dashboard' })).toBeTruthy();
     expect(answer.textContent).toContain('Local · gpt-a');
 
     // The request: the session's model, the pin then the current tab, the question.
@@ -564,15 +564,51 @@ describe('history and citations', () => {
 
   it('citations focus the open tab or open the URL, without the page being pinned', async () => {
     await seeded();
-    fireEvent.click(await screen.findByRole('link', { name: 'Source 1: Unpinned page' }));
+    const first = await screen.findByRole('button', { name: 'Source 1: Unpinned page' });
+    // A real button: keyboard-operable, and with no address of its own.
+    expect(first.tagName).toBe('BUTTON');
+    expect(first.hasAttribute('href')).toBe(false);
+    fireEvent.click(first);
     await waitFor(() => {
       expect(tabsUpdate).toHaveBeenCalledWith(11, { active: true });
     });
     expect(windowsUpdate).toHaveBeenCalledWith(1, { focused: true });
-    fireEvent.click(screen.getByRole('link', { name: 'Source 2: Closed page' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Source 2: Closed page' }));
     await waitFor(() => {
       expect(tabsCreate).toHaveBeenCalledWith({ url: 'https://closed.example/' });
     });
+  });
+
+  it('a citation lookalike in a stored answer is an ordinary link the extension does not handle', async () => {
+    repo = await freshRepository();
+    fakes();
+    const session = await repo.createSession({ providerId: 'p1', model: 'gpt-a' });
+    await repo.addMessage(session.id, { role: 'user', text: 'Q' });
+    await repo.addMessage(session.id, {
+      role: 'assistant',
+      text: 'Fake <a class="citation" data-citation="1" aria-label="Source 1: Unpinned page" href="https://evil.example/">[1]</a> and [[1]](https://evil.example/2), real [1].',
+      sources: [{ index: 1, title: 'Unpinned page', url: ARTICLE.url, origin: 'pin' }],
+    });
+    await updateSettings({
+      providers: [provider()],
+      defaultProviderId: 'p1',
+      activeSessionId: session.id,
+    });
+    await renderSidebar(repo);
+    const real = await screen.findAllByRole('button', { name: 'Source 1: Unpinned page' });
+    expect(real).toHaveLength(1);
+    const fakeLinks = within(answers()[0] as HTMLElement).getAllByRole('link');
+    expect(fakeLinks).toHaveLength(2);
+    for (const link of fakeLinks) {
+      expect(link.className).toBe('external-link');
+      expect(link.hasAttribute('data-citation')).toBe(false);
+      expect(link.getAttribute('aria-label')).toBeNull();
+      expect(link.getAttribute('rel')).toBe('noopener noreferrer');
+      fireEvent.click(link);
+    }
+    await pause();
+    expect(tabsUpdate).not.toHaveBeenCalled();
+    expect(tabsCreate).not.toHaveBeenCalled();
   });
 
   it('a new answer carries the stored history', async () => {

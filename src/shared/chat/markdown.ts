@@ -7,9 +7,17 @@ import type { MessageSource } from '../model';
  * clickable citations (D13). Model output is untrusted: `marked` renders it,
  * DOMPurify keeps only the tags Markdown produces, and nothing loads by
  * itself (no images, media or frames), so an answer can't carry page data
- * to another server. Links open in a new tab without opener or referrer.
- * Citation links point at the stored source URL, never at model output; the
- * sidebar handles their clicks (focus the tab or open the URL).
+ * to another server.
+ *
+ * Model output can't produce anything that looks or reads like a citation:
+ * the sanitiser drops `class`, `data-*`, `aria-*`, `role` and buttons, and
+ * the genuine citations are created afterwards, from the stored source list
+ * only. A citation is a `<button class="citation">` carrying just its
+ * number: it has no address, so no click (middle, Ctrl) can bypass the
+ * sidebar, which looks the number up in the stored sources and focuses the
+ * tab or opens the URL. Links from the model are ordinary external links:
+ * marked as such (`external-link`), with the real address as tooltip, opened
+ * in a new tab without opener or referrer.
  */
 
 function escapeHtml(value: string): string {
@@ -75,18 +83,23 @@ function splitGroup(group: string): string[] {
   return group.split(/(\d+)/).filter((part) => part !== '');
 }
 
-function citationLink(doc: Document, source: MessageSource, label: CitationLabel, text: string) {
-  const a = doc.createElement('a');
-  a.className = 'citation';
-  a.href = source.url;
-  a.dataset.citation = String(source.index);
-  a.title = source.title;
-  a.setAttribute('aria-label', label(source.index, source.title));
-  a.textContent = text;
-  return a;
+/** Class of the genuine citation buttons; model output can't carry classes. */
+export const CITATION_CLASS = 'citation';
+/** Class put on every link that came from the model. */
+export const EXTERNAL_LINK_CLASS = 'external-link';
+
+function citationButton(doc: Document, source: MessageSource, label: CitationLabel, text: string) {
+  const button = doc.createElement('button');
+  button.type = 'button';
+  button.className = CITATION_CLASS;
+  button.dataset.citation = String(source.index);
+  button.title = source.title;
+  button.setAttribute('aria-label', label(source.index, source.title));
+  button.textContent = text;
+  return button;
 }
 
-/** Replaces `[n]` in one text node with links; numbers without a source stay text. */
+/** Replaces `[n]` in one text node with citation buttons; numbers without a source stay text. */
 function linkCitations(
   node: Text,
   sources: ReadonlyMap<number, MessageSource>,
@@ -108,12 +121,12 @@ function linkCitations(
     out.push(text.slice(last, match.index));
     const single = numbers.length === 1 ? sources.get(numbers[0] ?? -1) : undefined;
     if (single) {
-      out.push(citationLink(doc, single, label, match[0]));
+      out.push(citationButton(doc, single, label, match[0]));
     } else {
       out.push('[');
       for (const part of splitGroup(group)) {
         const source = /^\d+$/.test(part) ? sources.get(Number(part)) : undefined;
-        out.push(source ? citationLink(doc, source, label, part) : part);
+        out.push(source ? citationButton(doc, source, label, part) : part);
       }
       out.push(']');
     }
@@ -137,7 +150,8 @@ function textNodes(root: Node): Text[] {
 
 /**
  * Renders an answer to a sanitised DOM fragment. `sources` are the pages the
- * request carried; `[n]` links to source `n` when it exists and is a web page.
+ * request carried; `[n]` becomes a citation button for source `n` when it
+ * exists and is a web page.
  */
 export function renderAnswer(
   text: string,
@@ -149,15 +163,22 @@ export function renderAnswer(
     ALLOWED_TAGS,
     ALLOWED_ATTR,
     ALLOWED_URI_REGEXP: SAFE_HREF,
+    // Without these two, DOMPurify lets every `data-*` and `aria-*` through.
+    ALLOW_DATA_ATTR: false,
+    ALLOW_ARIA_ATTR: false,
     RETURN_DOM_FRAGMENT: true,
   });
   for (const a of fragment.querySelectorAll('a')) {
     const href = a.getAttribute('href');
     if (href && SAFE_HREF.test(href)) {
+      a.className = EXTERNAL_LINK_CLASS;
       a.setAttribute('target', '_blank');
       a.setAttribute('rel', 'noopener noreferrer');
+      // The tooltip is the real address, whatever title the model gave.
+      a.setAttribute('title', href);
     } else {
       a.removeAttribute('href');
+      a.removeAttribute('title');
     }
   }
   const byIndex = new Map(

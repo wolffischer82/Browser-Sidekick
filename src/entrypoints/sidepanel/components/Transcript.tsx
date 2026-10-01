@@ -1,5 +1,6 @@
-import { useLayoutEffect, useRef } from 'preact/hooks';
-import { renderAnswer } from '@/shared/chat/markdown';
+import { createContext } from 'preact';
+import { useContext, useLayoutEffect, useRef } from 'preact/hooks';
+import { CITATION_CLASS, renderAnswer } from '@/shared/chat/markdown';
 import { t } from '@/shared/i18n';
 import { LlmError } from '@/shared/llm';
 import { llmErrorText } from '@/shared/llm-messages';
@@ -14,19 +15,35 @@ interface Props {
   onStop: () => void;
   /** Resends the question of a failed answer. */
   onRetry: (failed: Message) => void;
-  /** A citation was clicked: focus the page's tab or open it (D13). */
+  /** A citation was clicked: focus the tab of that stored source, or open it (D13). */
   onOpenSource: (url: string) => void;
 }
 
 const citationLabel = (index: number, title: string) => t('citationLabel', String(index), title);
 
-/** Sanitised Markdown with citation links; re-rendered as the text grows. */
+/** Opens a cited page; provided by the transcript to every answer. */
+const OpenSource = createContext<(url: string) => void>(() => undefined);
+
+/**
+ * Sanitised Markdown with citation buttons; re-rendered as the text grows.
+ * A citation button carries only its number: the page comes from this
+ * answer's stored source list, never from the rendered output (D13).
+ */
 function AnswerBody({ text, sources }: { text: string; sources: MessageSource[] }) {
   const ref = useRef<HTMLDivElement>(null);
+  const openSource = useContext(OpenSource);
   useLayoutEffect(() => {
     ref.current?.replaceChildren(renderAnswer(text, sources, citationLabel));
   }, [text, sources]);
-  return <div class="answer-body" ref={ref} />;
+  const onClick = (event: MouseEvent) => {
+    const button = (event.target as Element | null)?.closest<HTMLElement>(
+      `button.${CITATION_CLASS}`,
+    );
+    if (!button) return;
+    const source = sources.find((s) => String(s.index) === button.dataset.citation);
+    if (source) openSource(source.url);
+  };
+  return <div class="answer-body" ref={ref} onClick={onClick} />;
 }
 
 function Question({ message }: { message: Pick<Message, 'kind' | 'text'> }) {
@@ -128,14 +145,6 @@ export function Transcript({ messages, live, errorOf, onStop, onRetry, onOpenSou
     if (el && follow.current) el.scrollTop = el.scrollHeight;
   });
 
-  const onClick = (event: MouseEvent) => {
-    const link = (event.target as Element | null)?.closest('a.citation');
-    const href = link?.getAttribute('href');
-    if (!href) return;
-    event.preventDefault();
-    onOpenSource(href);
-  };
-
   const empty = shown.length === 0 && live === null;
   return (
     <section
@@ -144,35 +153,36 @@ export function Transcript({ messages, live, errorOf, onStop, onRetry, onOpenSou
       onScroll={(event) => {
         follow.current = atEnd(event.currentTarget);
       }}
-      onClick={onClick}
     >
       {empty ? (
         <p class="muted transcript-empty">{t('transcriptEmpty')}</p>
       ) : (
-        <div class="chat-log" aria-live="polite">
-          {shown.map((m) =>
-            m.role === 'user' ? (
-              <Question key={m.id} message={m} />
-            ) : (
-              <Answer
-                key={m.id}
-                message={m}
-                error={errorOf(m.id)}
-                onRetry={
-                  m === last && live === null
-                    ? () => {
-                        onRetry(m);
-                      }
-                    : null
-                }
-              />
-            ),
-          )}
-          {live && !liveQuestionStored && (
-            <Question message={{ kind: 'ask', text: live.question }} />
-          )}
-          {live && <Live answer={live} onStop={onStop} />}
-        </div>
+        <OpenSource.Provider value={onOpenSource}>
+          <div class="chat-log" aria-live="polite">
+            {shown.map((m) =>
+              m.role === 'user' ? (
+                <Question key={m.id} message={m} />
+              ) : (
+                <Answer
+                  key={m.id}
+                  message={m}
+                  error={errorOf(m.id)}
+                  onRetry={
+                    m === last && live === null
+                      ? () => {
+                          onRetry(m);
+                        }
+                      : null
+                  }
+                />
+              ),
+            )}
+            {live && !liveQuestionStored && (
+              <Question message={{ kind: 'ask', text: live.question }} />
+            )}
+            {live && <Live answer={live} onStop={onStop} />}
+          </div>
+        </OpenSource.Provider>
       )}
     </section>
   );
