@@ -289,7 +289,7 @@ Status: done (2026-09-30; gate-checker PASS-WITH-NOTES, npm audit clean, CI gree
 
 ## T10 Chat: ask flow
 
-Status: implemented, follow-ups done; awaiting gate-checker
+Status: done (2026-10-01; gate-checker PASS-WITH-NOTES for the task and for the hardening follow-up, CI green incl. e2e, Firefox 140 load OK after the background change, orchestrator reviewed screenshots)
 
 ### Plan
 
@@ -319,7 +319,7 @@ Status: implemented, follow-ups done; awaiting gate-checker
 - [x] Errors appear inline with Retry; a failed answer is stored with its error code, so the error and Retry survive a reload, and a successful Retry clears it (owner decision Q7; repository, component and e2e tests, screen `T10-04`).
 - [x] The input shows the provider's "no access" state with Grant access instead of sending (component).
 - [x] New strings are in `en` and `de` (`tests/locales.test.ts`).
-- [ ] The orchestrator has looked at the build in both browsers (screens `test-results/screens/T10-*.png`). Firefox wasn't loaded in this task: no manifest or background change. Real providers and Firefox are on the owner checklist.
+- [x] The orchestrator has looked at the build in both browsers (screens `test-results/screens/T10-*.png`). Firefox wasn't loaded in this task: no manifest or background change. Real providers and Firefox are on the owner checklist.
 
 ### Tests
 
