@@ -1,7 +1,17 @@
 // @vitest-environment node
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { createProvider, LlmError, type LlmRequest, type LlmStreamEvent } from '../src/shared/llm';
-import { MOCK_MODELS, MOCK_REPLY, startMockLlm, type MockLlm } from './mock-llm/server';
+import {
+  MOCK_MODELS,
+  MOCK_PLAIN_MODEL,
+  MOCK_REJECTING_MODEL,
+  MOCK_REJECTION,
+  MOCK_REPLY,
+  MOCK_THINKING_MODEL,
+  MOCK_THINKING_MODELS,
+  startMockLlm,
+  type MockLlm,
+} from './mock-llm/server';
 
 // The mock server against the real OpenAI-compatible adapter, over loopback
 // only. Later tasks reuse the server; this pins its behaviour.
@@ -188,6 +198,80 @@ describe('mock OpenAI-compatible server', () => {
       expect((await collectEvents()).every((e) => e.type === 'text')).toBe(true);
     },
   );
+
+  describe('thinking levels (specs/thinking-levels.md T15)', () => {
+    const withLevel = (model: string, level: 'low' | 'medium' | 'high' | null): LlmRequest => ({
+      ...REQUEST,
+      model,
+      thinking: { level, info: undefined },
+    });
+
+    it('lists supported_parameters only for the entries that have them', async () => {
+      mock.setModels(MOCK_THINKING_MODELS);
+      const response = await fetch(`${mock.baseUrl}/models`, {
+        headers: { Authorization: `Bearer ${KEY}` },
+      });
+      const list = (await response.json()) as { data: Record<string, unknown>[] };
+      expect(list.data.map((m) => [m.id, m.supported_parameters])).toEqual([
+        ['mock-large', undefined],
+        [MOCK_THINKING_MODEL, ['max_tokens', 'reasoning', 'temperature']],
+        [MOCK_PLAIN_MODEL, ['max_tokens', 'temperature']],
+        [MOCK_REJECTING_MODEL, undefined],
+      ]);
+      expect(list.data.every((m) => 'supported_parameters' in m)).toBe(false);
+
+      // Through the adapter: supported, unsupported, and no entry for the unknown ones.
+      expect(await provider().listModels()).toEqual({
+        models: ['mock-large', MOCK_REJECTING_MODEL, MOCK_PLAIN_MODEL, MOCK_THINKING_MODEL].sort(),
+        info: {
+          [MOCK_THINKING_MODEL]: { thinking: 'supported' },
+          [MOCK_PLAIN_MODEL]: { thinking: 'unsupported' },
+        },
+      });
+    });
+
+    it('records the reasoning_effort of every completion request, and its absence', async () => {
+      await collect(KEY, withLevel('mock-large', 'high'));
+      await collect(KEY, withLevel('mock-large', null));
+      await collect();
+      await collect(KEY, withLevel('mock-small', 'low'));
+      await provider().listModels();
+      expect(mock.reasoningEfforts).toEqual(['high', undefined, undefined, 'low']);
+      expect(mock.requests[0]?.body).toMatchObject({ reasoning_effort: 'high' });
+      expect(mock.requests[1]?.body).not.toHaveProperty('reasoning_effort');
+      mock.reset();
+      expect(mock.reasoningEfforts).toEqual([]);
+    });
+
+    it('records the effort of a request it rejects for its key or its model', async () => {
+      expect((await failure(collect('sk-wrong', withLevel('mock-large', 'medium')))).code).toBe(
+        'invalid-key',
+      );
+      expect((await failure(collect(KEY, withLevel('nope', 'low')))).code).toBe('model-not-found');
+      expect(mock.reasoningEfforts).toEqual(['medium', 'low']);
+    });
+
+    it('the rejecting model answers 400 naming reasoning_effort, and answers without one', async () => {
+      mock.setModels(MOCK_THINKING_MODELS);
+      mock.script({ kind: 'stream', chunks: ['Scripted.'] });
+      const error = await failure(collect(KEY, withLevel(MOCK_REJECTING_MODEL, 'high')));
+      expect(error.code).toBe('thinking-unsupported');
+      expect(error.status).toBe(400);
+      expect(error.providerMessage).toBe(MOCK_REJECTION);
+      expect(MOCK_REJECTION).toContain('reasoning_effort');
+      // The rejection didn't use up the scripted reply; Default gets it.
+      expect(await collect(KEY, withLevel(MOCK_REJECTING_MODEL, null))).toBe('Scripted.');
+      expect(await collect(KEY, { ...REQUEST, model: MOCK_REJECTING_MODEL })).toBe(MOCK_REPLY);
+      expect(mock.reasoningEfforts).toEqual(['high', undefined, undefined]);
+    });
+
+    it('every other model accepts a reasoning_effort', async () => {
+      mock.setModels(MOCK_THINKING_MODELS);
+      for (const model of ['mock-large', MOCK_THINKING_MODEL]) {
+        expect(await collect(KEY, withLevel(model, 'high'))).toBe(MOCK_REPLY);
+      }
+    });
+  });
 
   it('keeps a hanging stream open until the client aborts', async () => {
     mock.script({ kind: 'stream', chunks: ['Partial'], hang: true });
