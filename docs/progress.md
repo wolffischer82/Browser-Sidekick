@@ -439,7 +439,7 @@ Status: done (2026-10-01; gate-checker PASS-WITH-NOTES)
 
 ## T15 Thinking-level control in the session header
 
-Status: done by the implementer (2026-10-01); gate-checker pending
+Status: done (2026-10-01; gate-checker PASS-WITH-NOTES)
 
 ### Plan
 
@@ -465,7 +465,7 @@ Status: done by the implementer (2026-10-01); gate-checker pending
 - [x] The header fits a 320 px sidebar with a 65-character model name; the level's value is never cut off (e2e at 320, 400 and 640 px; screens `T15-08`, `T15-09`, `T15-10`).
 - [x] New strings are in `en` and `de` (`tests/locales.test.ts`); the README has the Features line.
 - [x] No manifest, permission, dependency or message-protocol change; no stored data beyond spec 5.
-- [ ] The orchestrator has looked at the build in both browsers (screens `test-results/screens/T15-*.png`).
+- [x] The orchestrator has looked at the build in both browsers: the Chromium screens `test-results/screens/T15-*.png`, and `dist/firefox-ext` loaded headless in Firefox 140 ESR as a temporary add-on, without extension errors.
 
 Not as the spec's example has it: the control has no disabled state, because the model menu it follows has none (decisions.md T15-6). The owed "disabled state" test checks that both menus stay enabled while an answer streams and that a change applies to the next request only.
 
@@ -476,3 +476,20 @@ Not as the spec's example has it: the control has no disabled state, because the
 - `tests/sidepanel-thinking.test.tsx`: the control (label and name, options and current mark, selection, nothing written for the current level, reopening, new session and switching back, keyboard, outside click, German, save error); its hidden and shown states; while an answer streams; the requests (Ask per level and at Default, Summarize, title request, Test connection, hidden control; Anthropic effort, budget and unknown, Gemini supported and unknown); the rejection (message, Retry at the same level, Default then Retry, after reopening, German, the same 400 at Default).
 - `tests/provider-access.test.ts`: the text for `thinking-unsupported`. `tests/mock-llm.test.ts`: listed `supported_parameters`, the recorded efforts, the rejecting model.
 - `tests/e2e/thinking.spec.ts`: the flow of the plan and the header widths; screens `T15-01-no-provider-hidden`, `T15-02-control-closed` (+ `-dark`), `T15-03-control-open` (+ `-dark`), `T15-04-high-answered` (+ `-dark`), `T15-05-rejected` (+ `-dark`), `T15-06-default-retry-ok`, `T15-07-unsupported-hidden`, `T15-08-narrow-320`, `T15-08-narrow-400`, `T15-09-narrow-320-open` (+ `-dark`), `T15-10-wide-640`.
+
+## T16 Reasoning block, README, final report
+
+Status: in progress
+
+### Plan
+
+- `Transcript.tsx`: a reasoning block above the answer text for a stored answer (`Message.reasoning`) and for the live one (`LiveAnswer.reasoning`): a `<button>` row with `aria-expanded`, `aria-controls` and the chevron of the "Session tabs" toggle, collapsed by default; the body goes through the answer renderer without citation linking (`renderReasoning` in `markdown.ts`). Label "Thinking…" while the answer is live and has no text yet, else "Reasoning".
+- The open state is kept in the transcript, in memory only, keyed by the question the answer belongs to, so a block opened while streaming stays open when the answer is stored; it is gone with a session switch or a reload.
+- Auto-scroll: the transcript keeps following a growing block; opening or closing a block doesn't jump to the end.
+- `style.css`: the row, and the body in the secondary colour, slightly smaller, with a left border; no height limit.
+- Strings `reasoningThinking`, `reasoningLabel` in `en` and `de` (spec 4.7).
+- Tests: `tests/sidepanel-reasoning.test.tsx` (no reasoning, collapsed, expanded, both labels, stopped and failed answers, live update while open, keyboard, reopened session, German, injected markup); `tests/chat-markdown.test.ts` (sanitiser for reasoning, no citation buttons); the "not in the DOM" assertion in `tests/sidepanel-chat.test.tsx` changed to the new behaviour.
+- `tests/mock-llm/server.ts`: a scripted reply can hold the stream after its reasoning until the test releases it, so the "Thinking…" state is captured without sleeps; `tests/mock-llm.test.ts`.
+- e2e `tests/e2e/reasoning.spec.ts`: reasoning before the answer, "Thinking…" then "Reasoning", expand, reload and expand again, injected markup; screens `T16-*` (light and dark, one at 320 px).
+- README: one Features line, one Limits line. `docs/thinking-levels-report.md`. No manifest, permission or dependency change.
+- Open questions: none so far.
