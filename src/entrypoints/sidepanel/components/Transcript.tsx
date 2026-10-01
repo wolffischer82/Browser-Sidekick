@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef } from 'preact/hooks';
 import { renderAnswer } from '@/shared/chat/markdown';
 import { t } from '@/shared/i18n';
+import { LlmError } from '@/shared/llm';
 import { llmErrorText } from '@/shared/llm-messages';
 import type { Message, MessageSource } from '@/shared/model';
 import type { LiveAnswer } from '../chat/useChat';
@@ -8,8 +9,11 @@ import type { LiveAnswer } from '../chat/useChat';
 interface Props {
   messages: Message[];
   live: LiveAnswer | null;
+  /** The full error of an answer that failed in this sidebar, if still known. */
+  errorOf: (messageId: string) => LlmError | undefined;
   onStop: () => void;
-  onRetry: () => void;
+  /** Resends the question of a failed answer. */
+  onRetry: (failed: Message) => void;
   /** A citation was clicked: focus the page's tab or open it (D13). */
   onOpenSource: (url: string) => void;
 }
@@ -42,16 +46,37 @@ function Notices({ trimmed, tabSkipped }: { trimmed: boolean; tabSkipped?: boole
   );
 }
 
-function Answer({ message }: { message: Message }) {
+interface AnswerProps {
+  message: Message;
+  /** The full error, or `undefined` when only the stored code is known. */
+  error: LlmError | undefined;
+  /** Retry is offered on the newest message only. */
+  onRetry: (() => void) | null;
+}
+
+function Answer({ message, error, onRetry }: AnswerProps) {
+  const failure = message.error ? llmErrorText(error ?? new LlmError(message.error)) : null;
   return (
     <article
       class="chat-answer"
       aria-label={t('chatAnswerLabel')}
       data-stopped={message.stopped ? '' : undefined}
+      data-failed={failure ? '' : undefined}
     >
-      <AnswerBody text={message.text} sources={message.sources} />
+      {message.text !== '' && <AnswerBody text={message.text} sources={message.sources} />}
       {message.stopped && <p class="answer-mark">{t('answerStopped')}</p>}
       <Notices trimmed={message.trimmed} />
+      {failure && (
+        <div class="error answer-error" role="alert">
+          <p>{failure.message}</p>
+          {failure.detail && <p class="answer-error-detail">{failure.detail}</p>}
+          {onRetry && (
+            <button type="button" class="button" onClick={onRetry}>
+              {t('retry')}
+            </button>
+          )}
+        </div>
+      )}
       {message.model && (
         <p class="answer-meta">
           {message.providerLabel ? `${message.providerLabel} · ${message.model}` : message.model}
@@ -61,36 +86,20 @@ function Answer({ message }: { message: Message }) {
   );
 }
 
-function Live({
-  answer,
-  onStop,
-  onRetry,
-}: { answer: LiveAnswer } & Pick<Props, 'onStop' | 'onRetry'>) {
-  const error = answer.error ? llmErrorText(answer.error) : null;
+function Live({ answer, onStop }: { answer: LiveAnswer; onStop: () => void }) {
   return (
     <article
       class="chat-answer"
       aria-label={t('chatAnswerLabel')}
-      aria-busy={answer.status !== 'error'}
+      aria-busy="true"
       data-status={answer.status}
     >
       {answer.text !== '' && <AnswerBody text={answer.text} sources={answer.sources} />}
       {answer.status === 'waiting' && <p class="muted">{t('answerWaiting')}</p>}
       <Notices trimmed={answer.trimmed} tabSkipped={answer.tabSkipped} />
-      {answer.status !== 'error' && (
-        <button type="button" class="button stop-button" onClick={onStop}>
-          {t('stop')}
-        </button>
-      )}
-      {error && (
-        <div class="error answer-error" role="alert">
-          <p>{error.message}</p>
-          {error.detail && <p class="answer-error-detail">{error.detail}</p>}
-          <button type="button" class="button" onClick={onRetry}>
-            {t('retry')}
-          </button>
-        </div>
-      )}
+      <button type="button" class="button stop-button" onClick={onStop}>
+        {t('stop')}
+      </button>
     </article>
   );
 }
@@ -106,10 +115,13 @@ function atEnd(el: HTMLElement): boolean {
  * inline with Retry. It follows a streaming answer unless the user has
  * scrolled up.
  */
-export function Transcript({ messages, live, onStop, onRetry, onOpenSource }: Props) {
+export function Transcript({ messages, live, errorOf, onStop, onRetry, onOpenSource }: Props) {
   const ref = useRef<HTMLElement>(null);
   const follow = useRef(true);
-  const liveQuestionStored = live !== null && messages.some((m) => m.id === live.questionId);
+  // A retried answer is replaced by the one on its way.
+  const shown = live ? messages.filter((m) => m.id !== live.replacesId) : messages;
+  const liveQuestionStored = live !== null && shown.some((m) => m.id === live.questionId);
+  const last = shown.at(-1);
 
   useLayoutEffect(() => {
     const el = ref.current;
@@ -124,7 +136,7 @@ export function Transcript({ messages, live, onStop, onRetry, onOpenSource }: Pr
     onOpenSource(href);
   };
 
-  const empty = messages.length === 0 && live === null;
+  const empty = shown.length === 0 && live === null;
   return (
     <section
       class="transcript"
@@ -138,17 +150,28 @@ export function Transcript({ messages, live, onStop, onRetry, onOpenSource }: Pr
         <p class="muted transcript-empty">{t('transcriptEmpty')}</p>
       ) : (
         <div class="chat-log" aria-live="polite">
-          {messages.map((m) =>
+          {shown.map((m) =>
             m.role === 'user' ? (
               <Question key={m.id} message={m} />
             ) : (
-              <Answer key={m.id} message={m} />
+              <Answer
+                key={m.id}
+                message={m}
+                error={errorOf(m.id)}
+                onRetry={
+                  m === last && live === null
+                    ? () => {
+                        onRetry(m);
+                      }
+                    : null
+                }
+              />
             ),
           )}
           {live && !liveQuestionStored && (
             <Question message={{ kind: 'ask', text: live.question }} />
           )}
-          {live && <Live answer={live} onStop={onStop} onRetry={onRetry} />}
+          {live && <Live answer={live} onStop={onStop} />}
         </div>
       )}
     </section>

@@ -537,12 +537,13 @@ export function App({ repository }: Props) {
         <Transcript
           messages={chat.messages}
           live={chat.live}
+          errorOf={chat.errorOf}
           onStop={() => {
             chat.stop();
             document.getElementById('composer-input')?.focus();
           }}
-          onRetry={() => {
-            chat.retry(tabContext());
+          onRetry={(failed) => {
+            chat.retry(failed, tabContext());
           }}
           onOpenSource={(url) => {
             focusOrOpen(url).catch(() => {

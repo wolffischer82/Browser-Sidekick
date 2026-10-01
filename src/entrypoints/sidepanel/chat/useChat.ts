@@ -11,26 +11,28 @@ import type { Message, MessageSource, ProviderConfig, Session } from '@/shared/m
 
 /**
  * The ask flow (spec 5.6). Streaming lives in this sidebar: the answer
- * streams into memory and is stored once it finishes or is stopped, and
- * other sidebars showing the session then read the stored message
- * (`messages-changed`). A failed answer stays in memory with its error and
- * a Retry that resends the same question (decisions.md T10). Nothing about
- * the question, the pages or the answer is logged.
+ * streams into memory and is stored once it finishes, is stopped or fails,
+ * and other sidebars showing the session then read the stored message
+ * (`messages-changed`). A failed answer is stored with its error code
+ * (decisions.md T10), so the error and Retry survive a reload; Retry resends
+ * the same question and replaces the failed answer. Nothing about the
+ * question, the pages or the answer is logged.
  */
 
-/** An answer that isn't stored yet: waiting, streaming, or failed. */
+/** An answer on its way: waiting for the first text, or streaming. */
 export interface LiveAnswer {
   sessionId: string;
+  question: string;
   /** The stored question this answers; `null` until it is saved. */
   questionId: string | null;
-  question: string;
-  status: 'waiting' | 'streaming' | 'error';
+  /** The failed answer a Retry replaces; hidden while this one is on its way. */
+  replacesId: string | null;
+  status: 'waiting' | 'streaming';
   text: string;
   sources: MessageSource[];
   trimmed: boolean;
   /** The current tab should have been sent but couldn't be read. */
   tabSkipped: boolean;
-  error: LlmError | null;
 }
 
 /** What the sidebar shows about the current tab when a question is sent. */
@@ -49,13 +51,24 @@ interface Options {
 
 export interface Chat {
   messages: Message[];
-  /** The active session's unfinished or failed answer. */
+  /** The active session's answer that is on its way. */
   live: LiveAnswer | null;
   /** A question of the active session is on its way. */
   busy: boolean;
+  /**
+   * The full error of an answer that failed in this sidebar, for the
+   * provider's own message; only the code is stored.
+   */
+  errorOf: (messageId: string) => LlmError | undefined;
   send: (question: string, tab: TabContext) => void;
   stop: () => void;
-  retry: (tab: TabContext) => void;
+  /** Resends the question of the failed answer `failed`. */
+  retry: (failed: Message, tab: TabContext) => void;
+}
+
+interface Retry {
+  question: Message;
+  failed: Message;
 }
 
 function frame(callback: () => void): void {
@@ -69,6 +82,7 @@ export function useChat({ repo, session, providers, onTitleChanged }: Options): 
   const [, setVersion] = useState(0);
   const live = useRef(new Map<string, LiveAnswer>());
   const controllers = useRef(new Map<string, AbortController>());
+  const errors = useRef(new Map<string, LlmError>());
   const sessionId = session?.id ?? null;
   const shown = useRef<string | null>(null);
   shown.current = sessionId;
@@ -120,7 +134,7 @@ export function useChat({ repo, session, providers, onTitleChanged }: Options): 
     };
   }, [repo]);
 
-  const ask = (question: string, tab: TabContext, retryOf: Message | null) => {
+  const ask = (question: string, tab: TabContext, retry: Retry | null) => {
     if (!repo || !session) return;
     const provider = providers.find((p) => p.id === session.providerId);
     const model = session.model;
@@ -131,58 +145,28 @@ export function useChat({ repo, session, providers, onTitleChanged }: Options): 
     controllers.current.set(id, controller);
     const answer: LiveAnswer = {
       sessionId: id,
-      questionId: retryOf?.id ?? null,
       question,
+      questionId: retry?.question.id ?? null,
+      replacesId: retry?.failed.id ?? null,
       status: 'waiting',
       text: '',
       sources: [],
       trimmed: false,
       tabSkipped: false,
-      error: null,
     };
     live.current.set(id, answer);
     rerender();
 
     const llm = createProvider(provider);
-    const finish = async (stopped: boolean) => {
-      live.current.delete(id);
-      const earlier = await repo.listMessages(id);
-      await repo.addMessage(id, {
-        role: 'assistant',
-        kind: 'ask',
-        text: answer.text,
-        providerLabel: provider.label,
-        model,
-        sources: answer.sources,
-        stopped,
-        trimmed: answer.trimmed,
-      });
-      await reload(repo, id);
-      rerender();
-      await broadcast({ type: 'messages-changed', sessionId: id });
-      if (stopped || answer.text === '') return;
-      // D11: one title request after the first completed answer.
-      const stored = await repo.getSession(id);
-      if (stored?.titleSource !== 'fallback' || !isFirstAnswer(earlier)) return;
-      const applied = await generateSessionTitle({
-        repo,
-        provider: llm,
-        sessionId: id,
-        model,
-        question,
-        answer: answer.text,
-      });
-      if (!applied) return;
-      titleChanged.current(id);
-      await broadcast({ type: 'title-changed', sessionId: id });
-    };
 
-    void (async () => {
+    /** Sends the question and collects the answer; rejects with what stopped it. */
+    const stream = async () => {
       const userMessage =
-        retryOf ?? (await repo.addMessage(id, { role: 'user', kind: 'ask', text: question }));
+        retry?.question ??
+        (await repo.addMessage(id, { role: 'user', kind: 'ask', text: question }));
       answer.questionId = userMessage.id;
       await reload(repo, id);
-      if (!retryOf) await broadcast({ type: 'messages-changed', sessionId: id });
+      if (!retry) await broadcast({ type: 'messages-changed', sessionId: id });
 
       const [all, pins] = await Promise.all([repo.listMessages(id), repo.listPins(id)]);
       const history = all.filter((m) => m.position < userMessage.position);
@@ -206,26 +190,64 @@ export function useChat({ repo, session, providers, onTitleChanged }: Options): 
         answer.text += delta;
         rerenderSoon();
       }
-    })()
+    };
+
+    /** Stores the answer: finished, stopped (partial), or failed with its code. */
+    const store = async (stopped: boolean, error: LlmError | null) => {
+      const earlier = await repo.listMessages(id);
+      const fields = {
+        text: answer.text,
+        providerLabel: provider.label,
+        model,
+        sources: answer.sources,
+        stopped,
+        trimmed: answer.trimmed,
+        error: error?.code ?? null,
+      };
+      const stored =
+        (retry && (await repo.updateMessage(retry.failed.id, fields))) ||
+        (await repo.addMessage(id, { role: 'assistant', kind: 'ask', ...fields }));
+      if (error) errors.current.set(stored.id, error);
+      else errors.current.delete(stored.id);
+      await reload(repo, id);
+      // The answer is stored: the session can ask again (or retry) at once.
+      live.current.delete(id);
+      controllers.current.delete(id);
+      rerender();
+      await broadcast({ type: 'messages-changed', sessionId: id });
+      if (stopped || error || answer.text === '') return;
+      // D11: one title request after the first completed answer.
+      const current = await repo.getSession(id);
+      if (current?.titleSource !== 'fallback' || !isFirstAnswer(earlier)) return;
+      const applied = await generateSessionTitle({
+        repo,
+        provider: llm,
+        sessionId: id,
+        model,
+        question,
+        answer: answer.text,
+      });
+      if (!applied) return;
+      titleChanged.current(id);
+      await broadcast({ type: 'title-changed', sessionId: id });
+    };
+
+    stream()
       .then(
-        () => finish(false),
-        async (error: unknown) => {
+        () => store(false, null),
+        (error: unknown) => {
           const mapped = llm.mapError(error);
-          if (mapped.code === 'aborted') {
-            await finish(true);
-            return;
-          }
-          answer.status = 'error';
-          answer.error = mapped;
-          rerender();
+          return mapped.code === 'aborted' ? store(true, null) : store(false, mapped);
         },
       )
       .catch(() => {
         // Storing failed, e.g. the session was deleted meanwhile.
-        live.current.delete(id);
-        rerender();
+        console.error('Sidekick: an answer could not be stored.');
       })
       .finally(() => {
+        // Unless a new request of this session has started meanwhile.
+        if (controllers.current.get(id) !== controller) return;
+        live.current.delete(id);
         controllers.current.delete(id);
         rerender();
       });
@@ -236,26 +258,23 @@ export function useChat({ repo, session, providers, onTitleChanged }: Options): 
   return {
     messages,
     live: current,
-    busy: current !== null && current.status !== 'error',
+    busy: current !== null,
+    errorOf: (messageId) => errors.current.get(messageId),
     send: (question, tab) => {
       const text = question.trim();
-      if (!text || !sessionId) return;
-      // A new question replaces a failed answer's Retry.
-      if (live.current.get(sessionId)?.status === 'error') live.current.delete(sessionId);
-      ask(text, tab, null);
+      if (text) ask(text, tab, null);
     },
     stop: () => {
       if (sessionId) controllers.current.get(sessionId)?.abort();
     },
-    retry: (tab) => {
-      if (!current || current.status !== 'error') return;
-      const question = messages.find((m) => m.id === current.questionId);
-      if (!question) {
-        live.current.delete(current.sessionId);
-        ask(current.question, tab, null);
-        return;
-      }
-      ask(question.text, tab, question);
+    retry: (failed, tab) => {
+      const index = messages.findIndex((m) => m.id === failed.id);
+      const question = messages
+        .slice(0, Math.max(index, 0))
+        .reverse()
+        .find((m) => m.role === 'user');
+      if (index === -1 || !failed.error || !question) return;
+      ask(question.text, tab, { question, failed });
     },
   };
 }
