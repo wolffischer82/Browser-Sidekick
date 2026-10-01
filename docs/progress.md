@@ -403,7 +403,7 @@ Status: done (2026-10-01; gate-checker PASS-WITH-NOTES)
 
 ## T14 LLM layer: reasoning in the stream
 
-Status: done by the implementer (2026-10-01); gate-checker pending
+Status: done (2026-10-01; gate-checker PASS-WITH-NOTES)
 
 ### Plan
 
@@ -436,3 +436,20 @@ Status: done by the implementer (2026-10-01); gate-checker pending
 - `tests/chat-context.test.ts`: reasoning outside the turns, the system text and the budget. `tests/repository.test.ts`: add, update, clear, assistant messages only.
 - `tests/chat-title.test.ts`: reasoning events don't leak into the title or its runaway limit. `tests/sidepanel-settings.test.tsx`: Test connection with a reasoning-only reply.
 - `tests/mock-llm.test.ts`: scripted reasoning over the wire and through the adapter; none without it.
+
+## T15 Thinking-level control in the session header
+
+Status: in progress
+
+### Plan
+
+- `src/shared/model.ts`: `Session.thinkingLevel?: ThinkingLevel | null` (spec 5); the repository takes it in `updateSession`; a new session doesn't get the field (Default). Repository test first, incl. records without the field.
+- `src/shared/thinking.ts` (tests first): the model's info via `Object.hasOwn` (T13-3), whether the control shows (provider and model set, support not `unsupported`), and the `thinking: { level, info }` of a request (`level` is `null` while the control is hidden).
+- `useChat`: Ask and Summarize (and their Retry) put that `thinking` on the request, also at Default; title generation and Test connection stay without it.
+- `ThinkingMenu.tsx`: the `ModelMenu` listbox pattern and styling, in the header after the model menu; button "Thinking: <value>", options Default, Low, Medium, High. `style.css`: both menus in one group; the thinking control wraps below the model menu when they don't fit.
+- `llm-messages.ts`: its own key for `thinking-unsupported`, no provider text. Strings of spec 4.7 for the control and the error in `en` and `de`.
+- `tests/mock-llm/server.ts`: `reasoningEfforts` (one entry per chat request), a designated model id that answers 400 naming `reasoning_effort` when one is sent, and model-list entries that can carry `supported_parameters`.
+- Tests: `tests/thinking.test.ts`, `tests/repository.test.ts`, `tests/sidepanel-thinking.test.tsx` (control: options, selection, persistence, hidden states, keyboard, both locales, while an answer streams; ask flow: level and info on the request for all three provider kinds, hidden sends none, title and Test connection never), `tests/mock-llm.test.ts`, `tests/provider-access.test.ts` (error text).
+- e2e `tests/e2e/thinking.spec.ts`: set High, ask, the mock got `reasoning_effort: "high"`; new session at Default; switch back; reload; reject flow, then Default and Retry; hidden for an `unsupported` model; screens `T15-*` incl. a narrow width with a long model name.
+- README Features line. No manifest, permission or dependency change.
+- Open questions: the model menu has no disabled state today, so "follows the model menu's rules" (spec 4.1) leaves the control enabled while an answer streams; the spec's example assumes otherwise. Recorded in decisions.md, raised in the report.
