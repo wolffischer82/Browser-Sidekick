@@ -2,7 +2,7 @@
 
 Each entry names the task it blocks.
 
-5. **Feedback for a context-menu pin when no sidebar is open** (T07; **not blocking**, default applied). With the sidebar closed, a context-menu pin of a page that's already pinned, or of a page that can't be read (a web store, or a Firefox tab-strip click on an `about:` page), does nothing visible; an open sidebar showing the session shows "Already pinned". Keep this default, or show feedback outside the sidebar (e.g. a toolbar badge, which needs no new permission)? decisions.md T07-2, T07-10.
+None open.
 
 ## Closed
 
@@ -12,3 +12,4 @@ Each entry names the task it blocks.
 4. **D10 per-site request for tabs whose URL is hidden** (T06). Answered 2026-10-01: keep the hint on the "not accessible" row (context menu "Pin to Sidekick", or "Allow on all sites" in Settings); no `tabs` permission. decisions.md T06-4, T06-15.
 5. **Writing the ask-flow tests** (T10). The permission system had declined `tests/e2e/chat.spec.ts` and `tests/sidepanel-chat.test.tsx`. Answered 2026-10-01: yes, write both. Both exist now.
 6. **Store a failed answer's error code with the message** (T10), so the error and Retry survive a reload and a browser restart. Answered 2026-10-01: yes; an optional error-code field on `Message` (a code, never provider text). Implemented without a DB version bump; decisions.md T10-9.
+7. **Feedback for a context-menu pin when no sidebar is open** (T07). Answered 2026-10-01 (spec D17, section 5.4): the context-menu click also opens the sidebar if it's closed, so the pin, "Already pinned" or the failure is visible there. No toolbar badge. decisions.md T07-18 to T07-20.

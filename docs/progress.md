@@ -216,6 +216,7 @@ Status: done (2026-09-30; gate-checker PASS-WITH-NOTES, CI green incl. e2e, Fire
 - [x] The list reflects status changes live (broadcast protocol, decisions.md T07-3; component tests for background and other-session messages; e2e: extracting -> ready on a held-back page, and a menu pin with the sidebar open).
 - [x] The current tab appears once, whether pinned or not, and the eye toggle resets on tab switch (component tests incl. a pinned URL with a different fragment; e2e counts and marker; eye resets after switching tabs and back, and stays on navigation within the tab).
 - [x] The orchestrator has looked at the build in both browsers (screens `test-results/screens/T07-*.png`).
+- [x] Follow-up (D17, owner decision 2026-10-01): a context-menu pin also opens the sidebar, synchronously in the click (`sidePanel.open` in Chrome, `sidebarAction.open` in Firefox), and a sidebar that is just opening still shows "Already pinned" (`tests/pin-service.test.ts`, `tests/messages.test.ts`, `tests/sidepanel-session-tabs.test.tsx`, `tests/e2e/pinning.spec.ts`; decisions.md T07-18 to T07-20). No manifest change. The real right-click in both browsers is on the owner checklist.
 
 ### Tests
 
@@ -288,7 +289,7 @@ Status: done (2026-09-30; gate-checker PASS-WITH-NOTES, npm audit clean, CI gree
 
 ## T10 Chat: ask flow
 
-Status: implemented 2026-10-01; gate passes locally (exit 0). Waiting for the gate-checker, CI and the orchestrator's UI check in both browsers.
+Status: implemented, follow-ups done; awaiting gate-checker
 
 ### Plan
 
@@ -310,9 +311,10 @@ Status: implemented 2026-10-01; gate passes locally (exit 0). Waiting for the ga
 - [x] Trimming shows the notice: oldest history first, then page texts proportionally (unit); the notice on the answer, stored with it (component, e2e, screen `T10-05`).
 - [x] Stop keeps the partial answer, marked "Stopped" (component, e2e, screen `T10-03`).
 - [x] History restores when switching sessions, and after a sidebar reload (component, e2e).
-- [x] Citations link to the right tab or URL, and keep working after unpinning: `[n]` uses the answer's stored source list (unit: `tests/chat-markdown.test.ts`; component: focus an open tab, open a closed page, no pin present; e2e: `[1]` focuses the article's tab).
+- [x] Citations lead to the right tab or URL, and keep working after unpinning: `[n]` uses the answer's stored source list (unit: `tests/chat-markdown.test.ts`; component: focus an open tab, open a closed page, no pin present; e2e: `[1]` focuses the article's tab, by click, Ctrl-click and keyboard).
 - [x] The title is generated once, after the first answer, and never overwrites a manual rename (unit: `tests/chat-title.test.ts` incl. a rename during the request; component; e2e: one title request in the whole flow, screen `T10-06`).
 - [x] Requests go to the session's provider and model (component; e2e: `mock-large`, then `mock-small` after the header dropdown, with the provider's key).
+- [x] Follow-up (gate-checker): model output can't forge a citation (no `data-*`, `aria-*`, classes or buttons survive; `[[1]](url)` is an external link); genuine citations are buttons without an address, made from the stored sources; an answer with link, image, frame, style and media payloads causes no request (unit, component, e2e in Chromium; decisions.md T10-17 to T10-20).
 - [x] Injected `<script>`/`onerror` in model output does not execute (unit and component under the DOM shim; e2e in real Chromium: no `script` or `img` in the transcript, the flag stays unset).
 - [x] Errors appear inline with Retry; a failed answer is stored with its error code, so the error and Retry survive a reload, and a successful Retry clears it (owner decision Q7; repository, component and e2e tests, screen `T10-04`).
 - [x] The input shows the provider's "no access" state with Grant access instead of sending (component).
