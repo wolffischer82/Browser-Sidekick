@@ -5,7 +5,8 @@ export type { ModelInfo, ThinkingLevel };
 /**
  * LLM layer (spec 6 "LLM layer", 5.6, 5.7). One adapter per provider kind
  * implements `LlmProvider`. Adapters build requests, parse the provider's
- * stream into text deltas and map failures to `LlmError`. They never log.
+ * stream into text and reasoning deltas and map failures to `LlmError`. They
+ * never log.
  */
 
 /** One chat turn sent to the model. */
@@ -93,6 +94,13 @@ export class LlmError extends Error {
 export type ModelList =
   { models: string[]; info: Record<string, ModelInfo> } | { models: null; error: LlmError };
 
+/**
+ * One piece of a streamed answer, in arrival order: answer text, or the
+ * model's reasoning where the provider returns it (specs/thinking-levels.md
+ * 4.4). `delta` is never empty. Reasoning is user data like the answer.
+ */
+export type LlmStreamEvent = { type: 'text'; delta: string } | { type: 'reasoning'; delta: string };
+
 export interface LlmProvider {
   readonly kind: ProviderKind;
   /**
@@ -101,10 +109,11 @@ export interface LlmProvider {
    */
   listModels(signal?: AbortSignal): Promise<ModelList>;
   /**
-   * Streams the answer as text deltas. Rejects with an `LlmError`; on abort
-   * the code is `aborted` and the deltas already yielded are the partial answer.
+   * Streams the answer as text and reasoning events. Rejects with an
+   * `LlmError`; on abort the code is `aborted` and the events already yielded
+   * are the partial answer.
    */
-  stream(request: LlmRequest, signal: AbortSignal): AsyncIterable<string>;
+  stream(request: LlmRequest, signal: AbortSignal): AsyncIterable<LlmStreamEvent>;
   /** Maps anything thrown around a request to an `LlmError`. */
   mapError(error: unknown): LlmError;
 }

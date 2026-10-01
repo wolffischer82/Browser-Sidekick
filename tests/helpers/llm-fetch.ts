@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, expect, vi } from 'vitest';
-import type { FetchFn, LlmProvider, LlmRequest } from '../../src/shared/llm/types';
+import type { FetchFn, LlmProvider, LlmRequest, LlmStreamEvent } from '../../src/shared/llm/types';
 import { LlmError } from '../../src/shared/llm/types';
 
 /**
@@ -107,20 +107,45 @@ export const REQUEST: LlmRequest = {
   ],
 };
 
-/** Collects all deltas; on failure returns them with the error. */
+/** Collects all events, text and reasoning; on failure returns them with the error. */
+export async function collectEvents(
+  provider: LlmProvider,
+  request: LlmRequest = REQUEST,
+  signal: AbortSignal = new AbortController().signal,
+): Promise<{ events: LlmStreamEvent[]; error: LlmError | null }> {
+  const events: LlmStreamEvent[] = [];
+  try {
+    for await (const event of provider.stream(request, signal)) events.push(event);
+    return { events, error: null };
+  } catch (error) {
+    expect(error).toBeInstanceOf(LlmError);
+    return { events, error: error as LlmError };
+  }
+}
+
+/** Collects the text deltas (the answer); on failure returns them with the error. */
 export async function collect(
   provider: LlmProvider,
   request: LlmRequest = REQUEST,
   signal: AbortSignal = new AbortController().signal,
 ): Promise<{ deltas: string[]; error: LlmError | null }> {
-  const deltas: string[] = [];
-  try {
-    for await (const delta of provider.stream(request, signal)) deltas.push(delta);
-    return { deltas, error: null };
-  } catch (error) {
-    expect(error).toBeInstanceOf(LlmError);
-    return { deltas, error: error as LlmError };
+  const { events, error } = await collectEvents(provider, request, signal);
+  return { deltas: events.filter((e) => e.type === 'text').map((e) => e.delta), error };
+}
+
+/** Shorthands for expected events. */
+export const text = (delta: string): LlmStreamEvent => ({ type: 'text', delta });
+export const reasoning = (delta: string): LlmStreamEvent => ({ type: 'reasoning', delta });
+
+/** Joins neighbouring events of the same type, so a test holds for any chunking. */
+export function merged(events: readonly LlmStreamEvent[]): LlmStreamEvent[] {
+  const out: LlmStreamEvent[] = [];
+  for (const event of events) {
+    const last = out.at(-1);
+    if (last?.type === event.type) last.delta += event.delta;
+    else out.push({ ...event });
   }
+  return out;
 }
 
 /** Asserts the key appears only in `header` of every call. */

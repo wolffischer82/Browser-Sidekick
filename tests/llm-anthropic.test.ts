@@ -3,13 +3,17 @@ import { describe, expect, it } from 'vitest';
 import { ANTHROPIC_DEFAULT_MAX_TOKENS, createAnthropicProvider } from '../src/shared/llm/anthropic';
 import {
   collect,
+  collectEvents,
   guardGlobalFetch,
   jsonResponse,
   KEY,
+  merged,
   mockFetch,
+  reasoning,
   REQUEST,
   splitEvery,
   sseResponse,
+  text,
 } from './helpers/llm-fetch';
 
 guardGlobalFetch();
@@ -22,6 +26,13 @@ const textDelta = (text: string): string =>
     index: 0,
     delta: { type: 'text_delta', text },
   });
+const blockDelta = (index: number, delta: Record<string, unknown>): string =>
+  event('content_block_delta', { type: 'content_block_delta', index, delta });
+const thinkingDelta = (thinking: unknown, index = 0): string =>
+  blockDelta(index, { type: 'thinking_delta', thinking });
+const signatureDelta = (index = 0): string =>
+  blockDelta(index, { type: 'signature_delta', signature: 'EqQBCgIYAhIM' });
+const STOP = event('message_stop', { type: 'message_stop' });
 
 /** A recorded-style stream per the Messages streaming docs. */
 const STREAM = [
@@ -109,13 +120,82 @@ describe('Anthropic request shape', () => {
 });
 
 describe('Anthropic stream parsing', () => {
-  it('yields only text deltas, ignoring thinking, pings and unknown events, for any chunking', async () => {
+  const events = async (...chunks: string[]) =>
+    collectEvents(
+      createAnthropicProvider({ apiKey: KEY }, mockFetch(() => sseResponse(chunks)).fetch),
+    );
+
+  it('yields reasoning, then text, ignoring signatures, pings and unknown events, for any chunking', async () => {
     for (const size of [1, 2, 5, 64, STREAM.length]) {
       const { fetch } = mockFetch(() => sseResponse(splitEvery(STREAM, size)));
-      const { deltas, error } = await collect(createAnthropicProvider({ apiKey: KEY }, fetch));
-      expect(error).toBeNull();
-      expect(deltas.join('')).toBe('Grüße, world [1].');
+      const result = await collectEvents(createAnthropicProvider({ apiKey: KEY }, fetch));
+      expect(result).toEqual({
+        events: [reasoning('Let me think'), text('Grüße, '), text('world [1].')],
+        error: null,
+      });
     }
+  });
+
+  it('yields reasoning only when no text follows', async () => {
+    expect(
+      await events(thinkingDelta('First, '), thinkingDelta('the pages.'), signatureDelta(), STOP),
+    ).toEqual({ events: [reasoning('First, '), reasoning('the pages.')], error: null });
+  });
+
+  it('keeps interleaved reasoning and text in arrival order', async () => {
+    const result = await events(
+      thinkingDelta('Plan. ', 0),
+      signatureDelta(0),
+      textDelta('Part one. '),
+      thinkingDelta('Check. ', 2),
+      thinkingDelta('Done.', 2),
+      signatureDelta(2),
+      textDelta('Part two.'),
+      STOP,
+    );
+    expect(result.error).toBeNull();
+    expect(result.events).toEqual([
+      reasoning('Plan. '),
+      text('Part one. '),
+      reasoning('Check. '),
+      reasoning('Done.'),
+      text('Part two.'),
+    ]);
+    expect(merged(result.events)).toEqual([
+      reasoning('Plan. '),
+      text('Part one. '),
+      reasoning('Check. Done.'),
+      text('Part two.'),
+    ]);
+  });
+
+  it('yields nothing for signatures, empty thinking and thinking that is not a string', async () => {
+    const result = await events(
+      event('content_block_start', {
+        type: 'content_block_start',
+        index: 0,
+        content_block: { type: 'thinking', thinking: 'not a delta' },
+      }),
+      thinkingDelta(''),
+      thinkingDelta(null),
+      thinkingDelta(42),
+      thinkingDelta({ text: 'nested' }),
+      blockDelta(0, { type: 'thinking_delta' }),
+      signatureDelta(),
+      blockDelta(0, { type: 'redacted_thinking_delta', data: 'opaque' }),
+      textDelta('Answer.'),
+      STOP,
+    );
+    expect(result).toEqual({ events: [text('Answer.')], error: null });
+  });
+
+  it('keeps the reasoning that arrived before an error event', async () => {
+    const result = await events(
+      thinkingDelta('Half a thought'),
+      event('error', { type: 'error', error: { type: 'overloaded_error', message: 'Overloaded' } }),
+    );
+    expect(result.events).toEqual([reasoning('Half a thought')]);
+    expect(result.error?.code).toBe('server');
   });
 
   it('stops at message_stop', async () => {

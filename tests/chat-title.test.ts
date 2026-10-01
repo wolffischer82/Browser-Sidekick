@@ -9,7 +9,7 @@ import {
   titleRequest,
 } from '@/shared/chat/title';
 import { openRepository, type Repository } from '@/shared/db/repository';
-import { LlmError, type LlmProvider, type LlmRequest } from '@/shared/llm';
+import { LlmError, type LlmProvider, type LlmRequest, type LlmStreamEvent } from '@/shared/llm';
 import type { Message } from '@/shared/model';
 
 // The LLM session title (D11, spec 5.6): one request after the first answer,
@@ -28,7 +28,7 @@ afterEach(() => {
 });
 
 function provider(
-  reply: (request: LlmRequest, signal: AbortSignal) => AsyncIterable<string>,
+  reply: (request: LlmRequest, signal: AbortSignal) => AsyncIterable<LlmStreamEvent>,
 ): LlmProvider & { calls: LlmRequest[] } {
   const calls: LlmRequest[] = [];
   return {
@@ -43,12 +43,18 @@ function provider(
   };
 }
 
-async function* chunks(...parts: string[]): AsyncIterable<string> {
+const text = (delta: string): LlmStreamEvent => ({ type: 'text', delta });
+const reasoning = (delta: string): LlmStreamEvent => ({ type: 'reasoning', delta });
+
+async function* events(...parts: LlmStreamEvent[]): AsyncIterable<LlmStreamEvent> {
   for (const part of parts) {
     await Promise.resolve();
     yield part;
   }
 }
+
+/** A reply of text deltas only. */
+const chunks = (...parts: string[]) => events(...parts.map(text));
 
 describe('titleRequest', () => {
   it('carries the question and the first 2,000 characters of the answer', () => {
@@ -185,6 +191,51 @@ describe('generateSessionTitle', () => {
     expect((await repo.getSession(session.id))?.titleSource).toBe('fallback');
   });
 
+  it('keeps reasoning events out of the title', async () => {
+    const session = await repo.createSession({ providerId: 'p', model: 'm' });
+    let seen: AbortSignal | undefined;
+    const p = provider((_request, signal) => {
+      seen = signal;
+      return events(
+        // Longer than the runaway limit: reasoning doesn't count towards it.
+        reasoning('The user wants a short title. '.repeat(20)),
+        text('Night '),
+        reasoning('Shorter? No.\n'),
+        text('trains'),
+        reasoning(' Done.'),
+      );
+    });
+    const applied = await generateSessionTitle({
+      repo,
+      provider: p,
+      sessionId: session.id,
+      model: 'm',
+      question: 'Q',
+      answer: 'A',
+    });
+    expect(applied).toBe(true);
+    expect(seen?.aborted).toBe(false);
+    const stored = await repo.getSession(session.id);
+    expect(stored?.title).toBe('Night trains');
+    expect(stored?.titleSource).toBe('llm');
+  });
+
+  it('keeps the fallback title when only reasoning arrives', async () => {
+    const session = await repo.createSession({ providerId: 'p', model: 'm' });
+    const applied = await generateSessionTitle({
+      repo,
+      provider: provider(() => events(reasoning('A title made of thoughts'))),
+      sessionId: session.id,
+      model: 'm',
+      question: 'Q',
+      answer: 'A',
+    });
+    expect(applied).toBe(false);
+    const stored = await repo.getSession(session.id);
+    expect(stored?.title).toBe('');
+    expect(stored?.titleSource).toBe('fallback');
+  });
+
   it('makes no request when the user already renamed the session', async () => {
     const session = await repo.createSession({ providerId: 'p', model: 'm' });
     await repo.setSessionTitle(session.id, 'Mine', 'user');
@@ -205,10 +256,10 @@ describe('generateSessionTitle', () => {
   it('never overwrites a rename that lands while the title request runs', async () => {
     const session = await repo.createSession({ providerId: 'p', model: 'm' });
     const p = provider(async function* () {
-      yield 'LLM ';
+      yield text('LLM ');
       // The user renames the session mid-request.
       await repo.setSessionTitle(session.id, 'Renamed meanwhile', 'user');
-      yield 'title';
+      yield text('title');
     });
     const applied = await generateSessionTitle({
       repo,
@@ -247,7 +298,7 @@ describe('generateSessionTitle', () => {
       for (let i = 0; i < 1000; i += 1) {
         await Promise.resolve();
         yielded += 1;
-        yield 'word ';
+        yield text('word ');
       }
     });
     const applied = await generateSessionTitle({

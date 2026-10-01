@@ -9,7 +9,14 @@ import {
   sseEvents,
   trimSlashes,
 } from './http';
-import type { FetchFn, LlmProvider, LlmRequest, ModelInfo, ThinkingLevel } from './types';
+import type {
+  FetchFn,
+  LlmProvider,
+  LlmRequest,
+  LlmStreamEvent,
+  ModelInfo,
+  ThinkingLevel,
+} from './types';
 
 /**
  * OpenAI-compatible adapter: OpenAI Chat Completions streaming and
@@ -40,6 +47,22 @@ const REASONING_PARAMETERS = ['reasoning', 'reasoning_effort'];
 
 function textOf(value: unknown): string {
   return typeof value === 'string' ? value : '';
+}
+
+/**
+ * The events of one delta or message: its reasoning, then its content
+ * (specs/thinking-levels.md 4.4). Reasoning is `reasoning_content`
+ * (DeepSeek, Groq, llama.cpp) or `reasoning` (OpenRouter, Ollama) when it is
+ * a non-empty string; other shapes, tool calls and usage are ignored.
+ */
+function eventsOf(part: unknown): LlmStreamEvent[] {
+  if (!isRecord(part)) return [];
+  const events: LlmStreamEvent[] = [];
+  const reasoning = textOf(part.reasoning_content) || textOf(part.reasoning);
+  if (reasoning) events.push({ type: 'reasoning', delta: reasoning });
+  const text = textOf(part.content);
+  if (text) events.push({ type: 'text', delta: text });
+  return events;
 }
 
 /** The level to send, or `null` for Default and for a model known not to take one. */
@@ -75,7 +98,7 @@ export function createOpenAiProvider(
     return body;
   }
 
-  async function* stream(request: LlmRequest, signal: AbortSignal): AsyncGenerator<string> {
+  async function* stream(request: LlmRequest, signal: AbortSignal): AsyncGenerator<LlmStreamEvent> {
     const response = await send(
       fetchFn,
       `${base}/chat/completions`,
@@ -96,9 +119,7 @@ export function createOpenAiProvider(
       if (isRecord(json) && json.error !== undefined) throw errorFromPayload(json.error, apiKey);
       const choice =
         isRecord(json) && Array.isArray(json.choices) ? (json.choices[0] as unknown) : undefined;
-      const text =
-        isRecord(choice) && isRecord(choice.message) ? textOf(choice.message.content) : '';
-      if (text) yield text;
+      yield* eventsOf(isRecord(choice) ? choice.message : undefined);
       return;
     }
 
@@ -108,9 +129,7 @@ export function createOpenAiProvider(
       if (!chunk) continue;
       if (chunk.error !== undefined) throw errorFromPayload(chunk.error, apiKey);
       const choice = Array.isArray(chunk.choices) ? (chunk.choices[0] as unknown) : undefined;
-      // Only visible content; `reasoning`, tool calls and usage are ignored.
-      const text = isRecord(choice) && isRecord(choice.delta) ? textOf(choice.delta.content) : '';
-      if (text) yield text;
+      yield* eventsOf(isRecord(choice) ? choice.delta : undefined);
     }
   }
 

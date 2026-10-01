@@ -187,8 +187,8 @@ export function ProviderForm({ existing, onDone }: Props) {
         turns: [{ role: 'user' as const, content: 'Hi' }],
         maxOutputTokens: 1,
       };
-      for await (const delta of provider.stream(request, controller.signal)) {
-        if (delta) break;
+      for await (const event of provider.stream(request, controller.signal)) {
+        if (event.type === 'text') break;
       }
     })()
       .then(

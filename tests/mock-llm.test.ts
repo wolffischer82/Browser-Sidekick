@@ -38,7 +38,9 @@ function provider(apiKey = KEY) {
 
 async function collect(apiKey = KEY, request = REQUEST, signal = new AbortController().signal) {
   let text = '';
-  for await (const delta of provider(apiKey).stream(request, signal)) text += delta;
+  for await (const event of provider(apiKey).stream(request, signal)) {
+    if (event.type === 'text') text += event.delta;
+  }
   return text;
 }
 
@@ -120,8 +122,8 @@ describe('mock OpenAI-compatible server', () => {
     let text = '';
     const error = await failure(
       (async () => {
-        for await (const delta of provider().stream(REQUEST, controller.signal)) {
-          text += delta;
+        for await (const event of provider().stream(REQUEST, controller.signal)) {
+          text += event.delta;
           controller.abort();
         }
       })(),

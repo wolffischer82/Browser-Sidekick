@@ -8,12 +8,21 @@ import {
   send,
   sseEvents,
 } from './http';
-import type { FetchFn, LlmProvider, LlmRequest, ModelInfo, ThinkingLevel } from './types';
+import type {
+  FetchFn,
+  LlmProvider,
+  LlmRequest,
+  LlmStreamEvent,
+  ModelInfo,
+  ThinkingLevel,
+} from './types';
 
 /**
  * Anthropic adapter: Messages API streaming and `GET /v1/models`
- * (decisions.md T04). Unknown event types and delta types (thinking,
- * signatures, tool input) are ignored, as the API's versioning policy asks.
+ * (decisions.md T04). Text deltas are the answer and thinking deltas its
+ * reasoning (specs/thinking-levels.md 4.4). Unknown event types and delta
+ * types (signatures, tool input) are ignored, as the API's versioning policy
+ * asks.
  */
 
 export const ANTHROPIC_BASE_URL = 'https://api.anthropic.com';
@@ -141,7 +150,7 @@ export function createAnthropicProvider(
     };
   }
 
-  async function* stream(request: LlmRequest, signal: AbortSignal): AsyncGenerator<string> {
+  async function* stream(request: LlmRequest, signal: AbortSignal): AsyncGenerator<LlmStreamEvent> {
     const thinking = thinkingFields(request);
     const response = await send(
       fetchFn,
@@ -161,14 +170,16 @@ export function createAnthropicProvider(
       const type = data.type ?? event.event;
       if (type === 'error') throw errorFromPayload(data.error ?? data, apiKey);
       if (type === 'message_stop') return;
-      if (
-        type === 'content_block_delta' &&
-        isRecord(data.delta) &&
-        data.delta.type === 'text_delta' &&
-        typeof data.delta.text === 'string' &&
-        data.delta.text !== ''
+      if (type !== 'content_block_delta' || !isRecord(data.delta)) continue;
+      const delta = data.delta;
+      if (delta.type === 'text_delta' && typeof delta.text === 'string' && delta.text !== '') {
+        yield { type: 'text', delta: delta.text };
+      } else if (
+        delta.type === 'thinking_delta' &&
+        typeof delta.thinking === 'string' &&
+        delta.thinking !== ''
       ) {
-        yield data.delta.text;
+        yield { type: 'reasoning', delta: delta.thinking };
       }
     }
   }

@@ -3,13 +3,16 @@ import { describe, expect, it } from 'vitest';
 import { createGeminiProvider } from '../src/shared/llm/gemini';
 import {
   collect,
+  collectEvents,
   guardGlobalFetch,
   jsonResponse,
   KEY,
   mockFetch,
+  reasoning,
   REQUEST,
   splitEvery,
   sseResponse,
+  text,
 } from './helpers/llm-fetch';
 
 guardGlobalFetch();
@@ -58,8 +61,13 @@ describe('Gemini request shape', () => {
 });
 
 describe('Gemini stream parsing', () => {
-  it('yields part texts, skips thoughts and usage-only chunks, for any chunking', async () => {
-    const text = [
+  const events = async (...chunks: string[]) =>
+    collectEvents(
+      createGeminiProvider({ apiKey: KEY }, mockFetch(() => sseResponse(chunks)).fetch),
+    );
+
+  it('yields thoughts as reasoning and part texts as text, skipping usage-only chunks, for any chunking', async () => {
+    const stream = [
       parts({ text: 'Thinking about it', thought: true }),
       parts({ text: 'Hallo ' }, { text: 'Welt' }),
       data({ usageMetadata: { promptTokenCount: 5 } }),
@@ -68,13 +76,66 @@ describe('Gemini stream parsing', () => {
         candidates: [{ content: { role: 'model', parts: [{ text: '' }] }, finishReason: 'STOP' }],
       }),
     ].join('');
-    for (const size of [1, 4, 33, text.length]) {
-      const { fetch } = mockFetch(() => sseResponse(splitEvery(text, size)));
-      expect(await collect(createGeminiProvider({ apiKey: KEY }, fetch))).toEqual({
-        deltas: ['Hallo Welt', ' [2].'],
+    for (const size of [1, 4, 33, stream.length]) {
+      const { fetch } = mockFetch(() => sseResponse(splitEvery(stream, size)));
+      expect(await collectEvents(createGeminiProvider({ apiKey: KEY }, fetch))).toEqual({
+        events: [reasoning('Thinking about it'), text('Hallo Welt'), text(' [2].')],
         error: null,
       });
     }
+  });
+
+  it('yields reasoning only when no text follows', async () => {
+    expect(
+      await events(
+        parts({ text: 'First, ', thought: true }),
+        parts({ text: 'the pages.', thought: true }),
+      ),
+    ).toEqual({ events: [reasoning('First, '), reasoning('the pages.')], error: null });
+  });
+
+  it('keeps interleaved thoughts and text in arrival order, also inside one chunk', async () => {
+    const result = await events(
+      parts(
+        { text: 'Plan. ', thought: true },
+        { text: 'More plan. ', thought: true },
+        { text: 'Part one. ' },
+        { text: 'Check.', thought: true },
+      ),
+      parts({ text: 'Part two.' }, { text: ' Done.', thought: true, thoughtSignature: 'abc' }),
+    );
+    expect(result).toEqual({
+      events: [
+        reasoning('Plan. More plan. '),
+        text('Part one. '),
+        reasoning('Check.'),
+        text('Part two.'),
+        reasoning(' Done.'),
+      ],
+      error: null,
+    });
+  });
+
+  it('yields nothing for empty thoughts, signatures and parts without a text', async () => {
+    const result = await events(
+      parts({ text: '', thought: true }),
+      parts({ thought: true }),
+      parts({ thought: true, text: 42 }),
+      parts({ thoughtSignature: 'abc' }),
+      parts({ text: 'a', thought: 'true' }),
+      parts({ functionCall: { name: 'x' } }),
+    );
+    // Only `thought: true` marks reasoning; anything else with a text is the answer.
+    expect(result).toEqual({ events: [text('a')], error: null });
+  });
+
+  it('keeps the reasoning that arrived before an error object', async () => {
+    const result = await events(
+      parts({ text: 'Half a thought', thought: true }),
+      data({ error: { code: 503, message: 'The model is overloaded.', status: 'UNAVAILABLE' } }),
+    );
+    expect(result.events).toEqual([reasoning('Half a thought')]);
+    expect(result.error?.code).toBe('server');
   });
 
   it('maps an error object in the stream', async () => {

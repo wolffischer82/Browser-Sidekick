@@ -222,8 +222,8 @@ export function useChat({ repo, session, providers, onTitleChanged }: Options): 
       answer.status = 'streaming';
       rerender();
       const request = { model, system: context.system, turns: context.turns };
-      for await (const delta of llm.stream(request, controller.signal)) {
-        answer.text += delta;
+      for await (const event of llm.stream(request, controller.signal)) {
+        if (event.type === 'text') answer.text += event.delta;
         rerenderSoon();
       }
     };

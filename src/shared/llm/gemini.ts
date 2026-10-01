@@ -8,12 +8,20 @@ import {
   send,
   sseEvents,
 } from './http';
-import type { FetchFn, LlmProvider, LlmRequest, ModelInfo, ThinkingLevel } from './types';
+import type {
+  FetchFn,
+  LlmProvider,
+  LlmRequest,
+  LlmStreamEvent,
+  ModelInfo,
+  ThinkingLevel,
+} from './types';
 
 /**
  * Google Gemini adapter: `models.streamGenerateContent?alt=sse` and
  * `models.list` on the v1beta REST API (decisions.md T04). The key goes in
- * the `x-goog-api-key` header, never in the URL.
+ * the `x-goog-api-key` header, never in the URL. Parts marked `thought: true`
+ * are the model's reasoning (specs/thinking-levels.md 4.4).
  */
 
 export const GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com';
@@ -79,7 +87,7 @@ export function createGeminiProvider(
     };
   }
 
-  async function* stream(request: LlmRequest, signal: AbortSignal): AsyncGenerator<string> {
+  async function* stream(request: LlmRequest, signal: AbortSignal): AsyncGenerator<LlmStreamEvent> {
     const thinking = thinkingConfig(request);
     const response = await send(
       fetchFn,
@@ -102,14 +110,16 @@ export function createGeminiProvider(
         : undefined;
       const content = isRecord(candidate) ? candidate.content : undefined;
       const parts = isRecord(content) && Array.isArray(content.parts) ? content.parts : [];
-      let text = '';
+      // One event per run of parts of the same kind, in the order they came.
+      const events: LlmStreamEvent[] = [];
       for (const part of parts) {
-        // Thought summaries are not part of the answer.
-        if (isRecord(part) && part.thought !== true && typeof part.text === 'string') {
-          text += part.text;
-        }
+        if (!isRecord(part) || typeof part.text !== 'string' || part.text === '') continue;
+        const type = part.thought === true ? 'reasoning' : 'text';
+        const last = events.at(-1);
+        if (last?.type === type) last.delta += part.text;
+        else events.push({ type, delta: part.text });
       }
-      if (text) yield text;
+      yield* events;
     }
   }
 

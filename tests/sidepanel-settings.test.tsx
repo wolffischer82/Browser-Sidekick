@@ -366,6 +366,27 @@ describe('Test connection and model list', () => {
     expect(new Headers(init?.headers).get('Authorization')).toBe(`Bearer ${KEY}`);
   });
 
+  it('reports success for a model that answers with reasoning only, and shows none of it', async () => {
+    const body =
+      `data: ${JSON.stringify({ choices: [{ delta: { reasoning_content: 'Secret thought' } }] })}\n\n` +
+      'data: [DONE]\n\n';
+    const fetchMock = stubFetch(
+      () => new Response(body, { headers: { 'Content-Type': 'text/event-stream' } }),
+    );
+    await openForm();
+    fireEvent.click(screen.getByRole('button', { name: 'Test connection' }));
+    expect(await screen.findByText('The connection works.')).toBeTruthy();
+    expect(screen.queryByText(/Secret thought/)).toBeNull();
+    // The request is the one sent before reasoning existed: no thinking field.
+    const [, init] = fetchMock.mock.calls[0] ?? [];
+    expect(JSON.parse(init?.body as string)).toEqual({
+      model: 'gpt-a',
+      messages: [{ role: 'user', content: 'Hi' }],
+      stream: true,
+      max_completion_tokens: 1,
+    });
+  });
+
   it('reports an invalid key', async () => {
     stubFetch(() => new Response('{"error":{"message":"bad key"}}', { status: 401 }));
     await openForm();
