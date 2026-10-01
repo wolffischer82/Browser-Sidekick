@@ -1,11 +1,12 @@
 import { createContext } from 'preact';
-import { useContext, useLayoutEffect, useRef } from 'preact/hooks';
-import { CITATION_CLASS, renderAnswer } from '@/shared/chat/markdown';
+import { useContext, useLayoutEffect, useRef, useState } from 'preact/hooks';
+import { CITATION_CLASS, renderAnswer, renderReasoning } from '@/shared/chat/markdown';
 import { t } from '@/shared/i18n';
 import { LlmError } from '@/shared/llm';
 import { llmErrorText } from '@/shared/llm-messages';
 import type { Message, MessageSource } from '@/shared/model';
 import type { LiveAnswer } from '../chat/useChat';
+import { ChevronIcon } from './icons';
 
 interface Props {
   messages: Message[];
@@ -46,6 +47,58 @@ function AnswerBody({ text, sources }: { text: string; sources: MessageSource[] 
   return <div class="answer-body" ref={ref} onClick={onClick} />;
 }
 
+/** Which reasoning blocks are open, and how one is toggled; kept by the transcript. */
+interface ReasoningState {
+  isOpen: (key: string) => boolean;
+  toggle: (key: string) => void;
+}
+
+const Reasoning = createContext<ReasoningState>({ isOpen: () => false, toggle: () => undefined });
+
+interface ReasoningBlockProps {
+  /** Identifies the block's open state: the question this answer belongs to. */
+  blockKey: string;
+  text: string;
+  /** Reasoning is arriving and no answer text has arrived yet. */
+  thinking: boolean;
+}
+
+/**
+ * The model's reasoning above an answer (specs/thinking-levels.md 4.5): a
+ * toggle row, collapsed by default, and below it the reasoning as sanitised
+ * Markdown without citations. The text is rendered only while the block is
+ * open, and re-rendered as it grows.
+ */
+function ReasoningBlock({ blockKey, text, thinking }: ReasoningBlockProps) {
+  const { isOpen, toggle } = useContext(Reasoning);
+  const open = isOpen(blockKey);
+  const bodyId = `reasoning-${blockKey}`;
+  const body = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    if (open) body.current?.replaceChildren(renderReasoning(text));
+    else body.current?.replaceChildren();
+  }, [open, text]);
+  return (
+    <div class="reasoning">
+      <button
+        type="button"
+        class="reasoning-toggle"
+        aria-expanded={open}
+        aria-controls={bodyId}
+        onClick={() => {
+          toggle(blockKey);
+        }}
+      >
+        <span class="chevron">
+          <ChevronIcon />
+        </span>
+        {t(thinking ? 'reasoningThinking' : 'reasoningLabel')}
+      </button>
+      <div id={bodyId} class="answer-body reasoning-body" ref={body} hidden={!open} />
+    </div>
+  );
+}
+
 function Question({ message }: { message: Pick<Message, 'kind' | 'text'> }) {
   return (
     <article class="chat-question" aria-label={t('chatQuestionLabel')}>
@@ -72,13 +125,15 @@ function Notices({ trimmed, tabSkipped, pinsSkipped }: NoticesProps) {
 
 interface AnswerProps {
   message: Message;
+  /** Key of the answer's reasoning block. */
+  blockKey: string;
   /** The full error, or `undefined` when only the stored code is known. */
   error: LlmError | undefined;
   /** Retry is offered on the newest message only. */
   onRetry: (() => void) | null;
 }
 
-function Answer({ message, error, onRetry }: AnswerProps) {
+function Answer({ message, blockKey, error, onRetry }: AnswerProps) {
   const failure = message.error ? llmErrorText(error ?? new LlmError(message.error)) : null;
   return (
     <article
@@ -87,6 +142,9 @@ function Answer({ message, error, onRetry }: AnswerProps) {
       data-stopped={message.stopped ? '' : undefined}
       data-failed={failure ? '' : undefined}
     >
+      {message.reasoning && (
+        <ReasoningBlock blockKey={blockKey} text={message.reasoning} thinking={false} />
+      )}
       {message.text !== '' && <AnswerBody text={message.text} sources={message.sources} />}
       {message.stopped && <p class="answer-mark">{t('answerStopped')}</p>}
       <Notices trimmed={message.trimmed} />
@@ -110,6 +168,9 @@ function Answer({ message, error, onRetry }: AnswerProps) {
   );
 }
 
+/** Block key of a live answer whose question isn't stored yet (it has no reasoning then). */
+const LIVE_KEY = 'live';
+
 function Live({ answer, onStop }: { answer: LiveAnswer; onStop: () => void }) {
   return (
     <article
@@ -118,6 +179,13 @@ function Live({ answer, onStop }: { answer: LiveAnswer; onStop: () => void }) {
       aria-busy="true"
       data-status={answer.status}
     >
+      {answer.reasoning !== '' && (
+        <ReasoningBlock
+          blockKey={answer.questionId ?? LIVE_KEY}
+          text={answer.reasoning}
+          thinking={answer.text === ''}
+        />
+      )}
       {answer.text !== '' && <AnswerBody text={answer.text} sources={answer.sources} />}
       {answer.status === 'waiting' && (
         <p class="muted">{t(answer.waitingForPins ? 'answerWaitingPins' : 'answerWaiting')}</p>
@@ -143,11 +211,17 @@ function atEnd(el: HTMLElement): boolean {
  * Chat transcript (spec 5.2 item 4): questions, answers as sanitised
  * Markdown with clickable citations (D13), Stop while streaming, errors
  * inline with Retry. It follows a streaming answer unless the user has
- * scrolled up.
+ * scrolled up. An answer's reasoning sits above it in a collapsed block
+ * (specs/thinking-levels.md 4.5); which blocks are open is kept here, in
+ * memory only, so a block opened while its answer streams stays open once
+ * the answer is stored.
  */
 export function Transcript({ messages, live, errorOf, onStop, onRetry, onOpenSource }: Props) {
   const ref = useRef<HTMLElement>(null);
   const follow = useRef(true);
+  const [open, setOpen] = useState<ReadonlySet<string>>(new Set());
+  /** A reasoning block was just opened or closed. */
+  const toggled = useRef(false);
   // A retried answer is replaced by the one on its way.
   const shown = live ? messages.filter((m) => m.id !== live.replacesId) : messages;
   const liveQuestionStored = live !== null && shown.some((m) => m.id === live.questionId);
@@ -155,8 +229,36 @@ export function Transcript({ messages, live, errorOf, onStop, onRetry, onOpenSou
 
   useLayoutEffect(() => {
     const el = ref.current;
-    if (el && follow.current) el.scrollTop = el.scrollHeight;
+    if (!el) return;
+    if (toggled.current) {
+      // Opening or closing a block leaves the view where it is, so the
+      // reasoning can be read from its start.
+      toggled.current = false;
+      follow.current = atEnd(el);
+      return;
+    }
+    if (follow.current) el.scrollTop = el.scrollHeight;
   });
+
+  const reasoning: ReasoningState = {
+    isOpen: (key) => open.has(key),
+    toggle: (key) => {
+      toggled.current = true;
+      setOpen((current) => {
+        const next = new Set(current);
+        if (!next.delete(key)) next.add(key);
+        return next;
+      });
+    },
+  };
+  // An answer's block is keyed by its question, which a live answer and the
+  // stored one (also after a Retry) share.
+  const blockKeys = new Map<string, string>();
+  let question: string | null = null;
+  for (const m of shown) {
+    if (m.role === 'user') question = m.id;
+    else blockKeys.set(m.id, question ?? m.id);
+  }
 
   const empty = shown.length === 0 && live === null;
   return (
@@ -171,30 +273,33 @@ export function Transcript({ messages, live, errorOf, onStop, onRetry, onOpenSou
         <p class="muted transcript-empty">{t('transcriptEmpty')}</p>
       ) : (
         <OpenSource.Provider value={onOpenSource}>
-          <div class="chat-log" aria-live="polite">
-            {shown.map((m) =>
-              m.role === 'user' ? (
-                <Question key={m.id} message={m} />
-              ) : (
-                <Answer
-                  key={m.id}
-                  message={m}
-                  error={errorOf(m.id)}
-                  onRetry={
-                    m === last && live === null
-                      ? () => {
-                          onRetry(m);
-                        }
-                      : null
-                  }
-                />
-              ),
-            )}
-            {live && !liveQuestionStored && (
-              <Question message={{ kind: live.kind, text: live.question }} />
-            )}
-            {live && <Live answer={live} onStop={onStop} />}
-          </div>
+          <Reasoning.Provider value={reasoning}>
+            <div class="chat-log" aria-live="polite">
+              {shown.map((m) =>
+                m.role === 'user' ? (
+                  <Question key={m.id} message={m} />
+                ) : (
+                  <Answer
+                    key={m.id}
+                    message={m}
+                    blockKey={blockKeys.get(m.id) ?? m.id}
+                    error={errorOf(m.id)}
+                    onRetry={
+                      m === last && live === null
+                        ? () => {
+                            onRetry(m);
+                          }
+                        : null
+                    }
+                  />
+                ),
+              )}
+              {live && !liveQuestionStored && (
+                <Question message={{ kind: live.kind, text: live.question }} />
+              )}
+              {live && <Live answer={live} onStop={onStop} />}
+            </div>
+          </Reasoning.Provider>
         </OpenSource.Provider>
       )}
     </section>

@@ -566,6 +566,8 @@ export function App({ repository }: Props) {
           }}
         />
         <Transcript
+          // A new transcript per session: open reasoning blocks don't carry over.
+          key={active.id}
           messages={chat.messages}
           live={chat.live}
           errorOf={chat.errorOf}

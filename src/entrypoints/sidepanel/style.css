@@ -423,6 +423,44 @@ textarea {
   background: var(--bg-hover);
 }
 
+/* Reasoning block (thinking-levels 4.5): a toggle row above the answer. */
+.reasoning {
+  width: 100%;
+  min-width: 0;
+}
+
+.reasoning-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: -4px;
+  padding: 2px 6px 2px 0;
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  color: var(--fg-muted);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.reasoning-toggle:hover {
+  background: var(--bg-hover);
+}
+
+.reasoning-toggle[aria-expanded='true'] .chevron {
+  transform: rotate(90deg);
+}
+
+/* Subdued against the answer; as long as the reasoning is, it scrolls with the transcript. */
+.reasoning-body {
+  box-sizing: border-box;
+  margin: 4px 0 6px 4px;
+  padding-left: 10px;
+  border-left: 2px solid var(--border);
+  color: var(--fg-muted);
+  font-size: 0.85rem;
+}
+
 .answer-notice,
 .answer-meta {
   margin: 0;
