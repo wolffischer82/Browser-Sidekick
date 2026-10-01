@@ -439,7 +439,7 @@ Status: done (2026-10-01; gate-checker PASS-WITH-NOTES)
 
 ## T15 Thinking-level control in the session header
 
-Status: in progress
+Status: done by the implementer (2026-10-01); gate-checker pending
 
 ### Plan
 
@@ -453,3 +453,26 @@ Status: in progress
 - e2e `tests/e2e/thinking.spec.ts`: set High, ask, the mock got `reasoning_effort: "high"`; new session at Default; switch back; reload; reject flow, then Default and Retry; hidden for an `unsupported` model; screens `T15-*` incl. a narrow width with a long model name.
 - README Features line. No manifest, permission or dependency change.
 - Open questions: the model menu has no disabled state today, so "follows the model menu's rules" (spec 4.1) leaves the control enabled while an answer streams; the spec's example assumes otherwise. Recorded in decisions.md, raised in the report.
+
+### Acceptance
+
+- [x] The control shows the session's level, changes it, and the change persists across reopening the side panel and switching sessions (`tests/sidepanel-thinking.test.tsx`, `tests/repository.test.ts`; e2e incl. a reload; screens `T15-02`, `T15-03`, `T15-04`).
+- [x] A new session starts at Default: the record has no level (`tests/repository.test.ts`, component, e2e).
+- [x] The control is hidden with no provider or model and for an `unsupported` model, shown for `supported` and `unknown`; a hidden control sends no level and keeps the stored one (`tests/thinking.test.ts`, component, e2e with the mock's `supported_parameters`; screens `T15-01`, `T15-07`).
+- [x] Ask and Summarize send the level; Test connection and title generation never do (component tests for all three provider kinds; e2e on the mock's `reasoningEfforts`).
+- [x] A provider rejection shows the `thinking-unsupported` message with Retry; after setting Default, Retry succeeds (component, e2e; screens `T15-05`, `T15-06`). No automatic retry; the provider's text is not shown.
+- [x] The control is keyboard operable and has its accessible name in both locales (component tests in `en` and `de`; e2e sets High with the keyboard only).
+- [x] The header fits a 320 px sidebar with a 65-character model name; the level's value is never cut off (e2e at 320, 400 and 640 px; screens `T15-08`, `T15-09`, `T15-10`).
+- [x] New strings are in `en` and `de` (`tests/locales.test.ts`); the README has the Features line.
+- [x] No manifest, permission, dependency or message-protocol change; no stored data beyond spec 5.
+- [ ] The orchestrator has looked at the build in both browsers (screens `test-results/screens/T15-*.png`).
+
+Not as the spec's example has it: the control has no disabled state, because the model menu it follows has none (decisions.md T15-6). The owed "disabled state" test checks that both menus stay enabled while an answer streams and that a change applies to the next request only.
+
+### Tests
+
+- `tests/repository.test.ts` (`thinkingLevel`): a new session without the field, each level stored and read back, `null` for Default, kept across model and title changes, a record without the field, deletion.
+- `tests/thinking.test.ts`: the session's level incl. damaged data; the model's info (own keys only, damaged entries, a provider cached before the feature); when the control shows; what a request carries.
+- `tests/sidepanel-thinking.test.tsx`: the control (label and name, options and current mark, selection, nothing written for the current level, reopening, new session and switching back, keyboard, outside click, German, save error); its hidden and shown states; while an answer streams; the requests (Ask per level and at Default, Summarize, title request, Test connection, hidden control; Anthropic effort, budget and unknown, Gemini supported and unknown); the rejection (message, Retry at the same level, Default then Retry, after reopening, German, the same 400 at Default).
+- `tests/provider-access.test.ts`: the text for `thinking-unsupported`. `tests/mock-llm.test.ts`: listed `supported_parameters`, the recorded efforts, the rejecting model.
+- `tests/e2e/thinking.spec.ts`: the flow of the plan and the header widths; screens `T15-01-no-provider-hidden`, `T15-02-control-closed` (+ `-dark`), `T15-03-control-open` (+ `-dark`), `T15-04-high-answered` (+ `-dark`), `T15-05-rejected` (+ `-dark`), `T15-06-default-retry-ok`, `T15-07-unsupported-hidden`, `T15-08-narrow-320`, `T15-08-narrow-400`, `T15-09-narrow-320-open` (+ `-dark`), `T15-10-wide-640`.
