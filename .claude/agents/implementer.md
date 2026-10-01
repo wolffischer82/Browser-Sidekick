@@ -28,6 +28,8 @@ Whenever the task touches anything the spec's working method lists under "stop a
 ## Before reporting
 Run the full verification gate the spec's definition of done prescribes and include the output verbatim. If the spec prescribes none, run the `lint`, `typecheck`, `test` and `build` scripts that `package.json` defines, for both Chrome and Firefox targets if the build distinguishes them. Then mark the task's acceptance criteria in the progress log and commit.
 
+The loadable builds in `dist/chrome-ext` and `dist/firefox-ext` are committed. After your last source change, run the `build` script and commit the changed `dist/` files on their own as `build: update committed builds [Txx]`, before the gate: the `check:dist` script fails while `dist/` differs from what is committed. Never edit files in `dist/` by hand, and never commit anything else from `dist/`.
+
 ## Final report (under 20 lines)
 - Spec path, task id, one-line status: DONE / BLOCKED / PARTIAL.
 - Commits made (hash + subject).

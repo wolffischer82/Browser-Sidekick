@@ -1,5 +1,9 @@
 node_modules/
-dist/
+# The loadable builds dist/chrome-ext and dist/firefox-ext are committed (owner
+# decision 2026-10-01). Everything else in dist/, such as dev builds, is not.
+dist/*
+!dist/chrome-ext/
+!dist/firefox-ext/
 build/
 .output/
 web-ext-artifacts/

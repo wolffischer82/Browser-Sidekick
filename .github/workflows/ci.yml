@@ -47,10 +47,17 @@ jobs:
         if: steps.detect.outputs.present == 'true'
         run: npm run --if-present test
 
-      # Compile check only: the packaged extension is not uploaded.
+      # Nothing is uploaded from CI. The loadable builds are committed in
+      # dist/chrome-ext and dist/firefox-ext instead.
       - name: build
         if: steps.detect.outputs.present == 'true'
         run: npm run --if-present build
+
+      # The committed builds must match the build from the step above: the
+      # step lists any file in dist/ that differs and fails.
+      - name: check:dist
+        if: steps.detect.outputs.present == 'true'
+        run: npm run --if-present check:dist
 
       # web-ext lint on the unpacked Firefox build from the step above.
       - name: lint:firefox

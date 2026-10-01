@@ -433,10 +433,13 @@ Style rules for other strings:
 - The verification gate passes.
 - New strings are in both locales.
 - The logs are updated.
+- The committed builds in `dist/chrome-ext` and `dist/firefox-ext` are rebuilt from the task's final source and committed (owner decision 2026-10-01).
 - For UI tasks, the orchestrator has looked at the build in both browsers.
 
 ### Verification gate
-`npm run lint && npm run typecheck && npm run test && npm run build && npm run lint:firefox`. From T03 onwards, `npm run e2e` is added.
+`npm run lint && npm run typecheck && npm run test && npm run build && npm run check:dist && npm run lint:firefox`. From T03 onwards, `npm run e2e` is added.
+
+`npm run check:dist` fails if `dist/` differs from what is committed, so commit the rebuilt `dist/` (as `build: update committed builds [Txx]`) before running the gate.
 
 ### Browser automation (owner decision 2026-09-30)
 - From T03 on, every UI task extends the Playwright Chrome e2e suite (`tests/e2e/`) with the user flow it delivers. The suite loads `dist/chrome-ext` into Playwright's Chromium and drives the sidebar page (`chrome-extension://<id>/sidepanel.html`).

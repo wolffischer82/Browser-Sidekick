@@ -28,6 +28,7 @@ Every spec used here defines an ordered task list, a working method (task loop, 
 - Conventional commits carrying the task id, e.g. `feat(popup): pin current tab [T07]`.
 - Commits use the GitHub noreply address `75468956+wolffischer82@users.noreply.github.com` (set repo-locally); pushes with any other address are rejected.
 - GitHub hosts the repository and issue tracker only. All CI and builds run on the self-hosted runner on `lenovo-ai-server` (`runs-on: [self-hosted, Linux, X64]`); no GitHub-hosted runners, no setup/cache actions, no uploaded build artifacts.
+- The loadable builds are committed: `dist/chrome-ext` and `dist/firefox-ext` are tracked in git so the owner can load them straight from a checkout. Every task ends with `dist/` rebuilt from its final source and committed (`build: update committed builds [Txx]`); CI runs `npm run check:dist` and fails when the committed builds differ from a fresh build. Never edit files in `dist/` by hand.
 - Request the narrowest manifest permissions that work; every new permission is an owner decision.
 - Never log, print, or transmit page content, URLs, browsing history, or other user data.
 
