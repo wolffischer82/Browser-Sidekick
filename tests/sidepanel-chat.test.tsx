@@ -823,8 +823,21 @@ describe('reasoning', () => {
       stopped: false,
       error: null,
     });
-    // Nothing renders reasoning yet (T16), and it is not part of the answer text.
+    // The answer has its reasoning in a collapsed block (T16): the text is only
+    // in the page once the block is opened, and never part of the answer text.
     expect(document.body.textContent).not.toMatch(/Plan the answer|Check it|Title thoughts/);
+    const toggle = within(answers()[0] as HTMLElement).getByRole('button', { name: 'Reasoning' });
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+    fireEvent.click(toggle);
+    expect(toggle.getAttribute('aria-expanded')).toBe('true');
+    const block = document.getElementById(toggle.getAttribute('aria-controls') ?? '');
+    expect(block?.textContent).toContain('Plan the answer. Check it.');
+    expect(document.body.textContent).not.toContain('Title thoughts');
+    expect(answers()[0]?.querySelector('.answer-body:not(.reasoning-body)')?.textContent).toBe(
+      'Trains are back [1].\n',
+    );
+    fireEvent.click(toggle);
+    expect(document.body.textContent).not.toMatch(/Plan the answer|Check it/);
     // The title request carries the answer text only.
     expect(bodies[1]?.messages.at(-1)?.content).toContain('Trains are back [1].');
 
