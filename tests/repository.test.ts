@@ -266,6 +266,7 @@ describe('messages', () => {
       sources: [],
       stopped: false,
       trimmed: false,
+      error: null,
     });
     expect(answer).toMatchObject({
       position: 1,
@@ -308,6 +309,36 @@ describe('messages', () => {
     const stopped = await repo.updateMessage(answer.id, { text: 'Partial', stopped: true });
     expect(stopped).toEqual({ ...answer, text: 'Partial', stopped: true });
     expect(await repo.listMessages(s.id)).toEqual([stopped]);
+  });
+
+  it('stores a failed answer with its error code, and a retry clears it', async () => {
+    const s = await repo.createSession({ providerId: 'p1', model: 'm1' });
+    await repo.addMessage(s.id, { role: 'user', text: 'Q' });
+    const failed = await repo.addMessage(s.id, {
+      role: 'assistant',
+      text: 'Partial',
+      error: 'rate-limit',
+    });
+    expect(failed.error).toBe('rate-limit');
+    expect((await repo.listMessages(s.id))[1]?.error).toBe('rate-limit');
+
+    const again = await repo.updateMessage(failed.id, { error: 'network', text: '' });
+    expect(again).toMatchObject({ id: failed.id, position: 1, error: 'network', text: '' });
+
+    const fixed = await repo.updateMessage(failed.id, {
+      text: 'Answer',
+      error: null,
+      model: 'm2',
+      providerLabel: 'P',
+    });
+    expect(fixed).toMatchObject({ id: failed.id, position: 1, text: 'Answer', error: null });
+    expect((await repo.listMessages(s.id)).map((m) => m.error)).toEqual([null, null]);
+  });
+
+  it('an update that leaves the error out keeps it', async () => {
+    const s = await repo.createSession({ providerId: 'p1', model: 'm1' });
+    const failed = await repo.addMessage(s.id, { role: 'assistant', text: '', error: 'server' });
+    expect((await repo.updateMessage(failed.id, { trimmed: true }))?.error).toBe('server');
   });
 
   it('returns undefined when updating an unknown message', async () => {

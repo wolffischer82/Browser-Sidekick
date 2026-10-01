@@ -105,6 +105,7 @@ describe('isFirstAnswer', () => {
   it('is true when no earlier answer completed', () => {
     expect(isFirstAnswer([])).toBe(true);
     expect(isFirstAnswer([msg({ role: 'user' }), msg({ stopped: true })])).toBe(true);
+    expect(isFirstAnswer([msg({ role: 'user' }), msg({ error: 'server' })])).toBe(true);
   });
 
   it('is false after a completed answer', () => {

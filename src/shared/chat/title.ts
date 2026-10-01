@@ -54,9 +54,9 @@ export function cleanTitle(raw: string): string | null {
   return /[\p{L}\p{N}]/u.test(title) ? title : null;
 }
 
-/** Whether no earlier answer of the session completed (a stopped one doesn't count). */
+/** Whether no earlier answer of the session completed (a stopped or failed one doesn't count). */
 export function isFirstAnswer(earlier: readonly Message[]): boolean {
-  return !earlier.some((m) => m.role === 'assistant' && !m.stopped && m.text !== '');
+  return !earlier.some((m) => m.role === 'assistant' && !m.stopped && !m.error && m.text !== '');
 }
 
 export interface TitleInput {

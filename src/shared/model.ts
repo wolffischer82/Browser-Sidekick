@@ -6,6 +6,8 @@
  * (`src/shared/settings.ts`). Timestamps are milliseconds since the epoch.
  */
 
+import type { LlmErrorCode } from './llm/types';
+
 /** Where the session title came from (D11). A `user` title is never overwritten. */
 export type TitleSource = 'fallback' | 'llm' | 'user';
 
@@ -88,6 +90,14 @@ export interface Message {
   stopped: boolean;
   /** Pages or history were trimmed to fit the context budget (spec 5.6). */
   trimmed: boolean;
+  /**
+   * Why the answer failed: an `LlmError` code, never the provider's text.
+   * `null` for a question and for an answer that didn't fail; missing in
+   * records written before the field existed, which means the same
+   * (owner decision 2026-10-01, decisions.md T10). `text` is what had
+   * arrived before the failure. A successful Retry clears it.
+   */
+  error?: LlmErrorCode | null;
 }
 
 export type ProviderKind = 'openai-compatible' | 'anthropic' | 'gemini';

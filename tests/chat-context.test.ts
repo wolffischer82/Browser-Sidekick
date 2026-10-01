@@ -248,6 +248,8 @@ describe('historyPairs', () => {
       message('assistant', 'answer'),
       message('user', 'stopped with nothing'),
       message('assistant', '', { stopped: true }),
+      message('user', 'failed with partial text'),
+      message('assistant', 'half an ans', { error: 'network' }),
       message('user', 'dangling'),
     ]);
     expect(turns).toEqual([

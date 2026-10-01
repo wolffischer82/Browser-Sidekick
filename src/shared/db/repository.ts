@@ -51,11 +51,12 @@ export interface NewMessage {
   sources?: MessageSource[];
   stopped?: boolean;
   trimmed?: boolean;
+  error?: Message['error'];
 }
 
-/** Fields that change while an answer streams and completes. */
+/** Fields that change while an answer streams and completes, or when it is retried. */
 export type MessageUpdate = Partial<
-  Pick<Message, 'text' | 'providerLabel' | 'model' | 'sources' | 'stopped' | 'trimmed'>
+  Pick<Message, 'text' | 'providerLabel' | 'model' | 'sources' | 'stopped' | 'trimmed' | 'error'>
 >;
 
 export interface RepositoryOptions extends OpenDbOptions {
@@ -283,6 +284,7 @@ export async function openRepository(options: RepositoryOptions = {}): Promise<R
         sources: input.sources ?? [],
         stopped: input.stopped ?? false,
         trimmed: input.trimmed ?? false,
+        error: input.error ?? null,
       };
       await Promise.all([
         messages.add(message),

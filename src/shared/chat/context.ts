@@ -96,14 +96,15 @@ function systemText(pages: readonly Page[], texts: readonly string[]): string {
 
 /**
  * The history as alternating turns: each question with the answer that
- * followed it. Questions without an answer text (failed, or stopped before
- * any text) are left out.
+ * followed it. Questions without an answer text (stopped before any text)
+ * and failed answers, with whatever text had arrived, are left out.
  */
 export function historyPairs(history: readonly Message[]): ChatTurn[] {
   const turns: ChatTurn[] = [];
   history.forEach((message, i) => {
     const next = history[i + 1];
-    if (message.role !== 'user' || next?.role !== 'assistant' || next.text === '') return;
+    if (message.role !== 'user' || next?.role !== 'assistant') return;
+    if (next.text === '' || next.error) return;
     turns.push({ role: 'user', content: message.text }, { role: 'assistant', content: next.text });
   });
   return turns;
