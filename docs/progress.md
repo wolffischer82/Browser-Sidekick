@@ -371,7 +371,7 @@ Spec: `specs/thinking-levels.md` (GitHub issue #4). Branch `feature/thinking-lev
 
 ## T13 LLM layer: thinking level in requests and capability discovery
 
-Status: in progress (2026-10-01)
+Status: done by the implementer (2026-10-01); gate-checker pending
 
 ### Plan
 
@@ -384,3 +384,19 @@ Status: in progress (2026-10-01)
 - Callers and fakes of `listModels` updated (`tests/chat-title.test.ts`, `tests/mock-llm.test.ts`).
 - No UI change, no locale string, no stream-interface change (T14), no manifest or dependency change.
 - Open questions: none so far.
+
+### Acceptance
+
+- [x] Requests without thinking information produce byte-identical bodies to before, for all three adapters (`tests/llm-request-bodies.test.ts`, committed before the source changed and still passing unchanged).
+- [x] Every row of the three mapping tables in 4.3 produces exactly the stated body fields, including the Anthropic `max_tokens` and budget rules (`tests/llm-thinking.test.ts`, whole-body comparisons).
+- [x] `listModels` reports support per 4.2 for each adapter (`tests/llm-model-info.test.ts`), and the settings code stores it in `modelInfo` next to `cachedModels` (`tests/sidepanel-settings.test.tsx`, `tests/settings.test.ts`).
+- [x] A 400 that mentions reasoning, thinking or effort on a request with a level maps to `thinking-unsupported`; the same 400 on a request without a level maps as before (`tests/llm-thinking.test.ts`, unit and per adapter).
+- [x] No UI change, no locale string, no stream-interface change, no manifest or dependency change.
+
+### Tests
+
+- `tests/llm-request-bodies.test.ts`: the exact body strings without thinking information (7 rows over the three adapters).
+- `tests/llm-thinking.test.ts`: the mapping tables per adapter (Anthropic 16 rows, Gemini 17, OpenAI-compatible 10 on four hosts); Anthropic `max_tokens` (cap below, at and above 32000, unknown cap, unknown model, caller limit, no thinking parameter) and budget (12 rows: lowered, left alone, dropped, caller limit); `thinking-unsupported` in `errorFromResponse` and per adapter, with and without a level.
+- `tests/llm-model-info.test.ts`: per adapter supported, unsupported, unknown and malformed capability data.
+- `tests/sidepanel-settings.test.tsx`: `modelInfo` stored on save, kept, replaced by a reload, cleared when loading fails or the base URL changes, not invented for older providers. `tests/settings.test.ts`: the storage round trip.
+- `tests/provider-access.test.ts`: the error text for the new code. Existing `listModels` expectations updated for the new shape.
