@@ -333,7 +333,7 @@ Status: done (2026-10-01; gate-checker PASS-WITH-NOTES for the task and for the 
 
 ## T11 Summarize
 
-Status: implemented (2026-10-01); waiting for the gate-checker and the orchestrator's UI check
+Status: done (2026-10-01; gate-checker PASS-WITH-NOTES, CI green incl. e2e, orchestrator reviewed screenshots)
 
 ### Plan
 
@@ -356,7 +356,7 @@ Status: implemented (2026-10-01); waiting for the gate-checker and the orchestra
 - [x] A pin still extracting is waited for (10 s), visibly; after that it is left out with a notice (unit, component; decisions.md T11-4).
 - [x] New strings are in `en` and `de` (`tests/locales.test.ts`).
 - [x] No manifest, background, message-protocol or stored-data-shape change; no new dependency.
-- [ ] The orchestrator has looked at the build in both browsers (screens `test-results/screens/T11-*.png`).
+- [x] The orchestrator has looked at the build in both browsers (screens `test-results/screens/T11-*.png`).
 
 ### Tests
 
