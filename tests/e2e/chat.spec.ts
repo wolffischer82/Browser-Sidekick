@@ -184,12 +184,11 @@ test.describe('chat', () => {
     const first = answers(sidebar).first();
     await expect(first.locator('li')).toHaveCount(2);
     await expect(first.locator('pre code')).toContainText('Departure 21:04');
-    await expect(first.locator('a.citation')).toHaveText(['[1]', '[1]', '[2]']);
+    await expect(first.locator('button.citation')).toHaveText(['[1]', '[1]', '[2]']);
     await expect(first).toContainText('stays plain [7].');
-    await expect(first.getByRole('link', { name: `Source 2: ${DASHBOARD}` })).toHaveAttribute(
-      'href',
-      server.url('non-article.html'),
-    );
+    // Citations are buttons without an address; the answer has no links at all.
+    await expect(first.getByRole('button', { name: `Source 2: ${DASHBOARD}` })).toBeVisible();
+    await expect(first.locator('a, [href]')).toHaveCount(0);
     await expect(first).toContainText('Mock server · mock-large');
 
     // Injected script and onerror in model output don't run (real Chromium).
@@ -226,9 +225,19 @@ test.describe('chat', () => {
 
     // 4. Citation [1] focuses the pinned article's tab.
     expect(await activeTabUrl(browser)).toBe(server.url('non-article.html'));
-    await first.locator('a.citation', { hasText: '[1]' }).first().click();
+    await first.locator('button.citation', { hasText: '[1]' }).first().click();
     await expect.poll(() => activeTabUrl(browser)).toBe(server.url('article.html'));
     await expect(pinRow(sidebar, ARTICLE)).toHaveAttribute('data-current', '');
+    // Ctrl-click and middle-click can't bypass the handler: no new tab opens.
+    const tabCount = browser.pages().length;
+    await first.locator('button.citation', { hasText: '[2]' }).click({ modifiers: ['Control'] });
+    await expect.poll(() => activeTabUrl(browser)).toBe(server.url('non-article.html'));
+    await first.locator('button.citation', { hasText: '[1]' }).first().click({ button: 'middle' });
+    // The keyboard works too.
+    await first.locator('button.citation', { hasText: '[1]' }).first().focus();
+    await sidebar.keyboard.press('Enter');
+    await expect.poll(() => activeTabUrl(browser)).toBe(server.url('article.html'));
+    expect(browser.pages()).toHaveLength(tabCount);
 
     // 2. With the eye, the current tab is left out of the next request.
     await dashboard.bringToFront();
@@ -356,7 +365,7 @@ test.describe('chat', () => {
     await expect(answers(sidebar).nth(1)).toContainText('Stopped');
     await expect(answers(sidebar).nth(5)).toContainText(TRIMMED);
     await expect(answers(sidebar).nth(3)).not.toContainText(TRIMMED);
-    await expect(answers(sidebar).first().locator('a.citation')).toHaveCount(3);
+    await expect(answers(sidebar).first().locator('button.citation')).toHaveCount(3);
 
     // Only the first answer asked for a title.
     const titleRequests = chats(mock).filter((r) =>
@@ -390,5 +399,53 @@ test.describe('chat', () => {
 
     // Nothing of the current tab is stored: the session has no pin.
     await expect(sidebar.locator('li.pin-row')).toHaveCount(0);
+  });
+
+  test('an answer loads nothing by itself: no stylesheet, image, frame or import request', async () => {
+    const profile = await newProfile();
+    removeProfile = profile.remove;
+    const browser = await launchWithGrantedOrigins(profile.dir, ['<all_urls>']);
+    context = browser;
+    const id = await extensionId(browser);
+    const tab = browser.pages()[0] ?? (await browser.newPage());
+    await tab.goto(server.url('article.html'));
+    const sidebar = await openSidebarWindow(browser, id);
+    await seedProvider(sidebar, mock);
+    await sidebar.reload();
+    await expect(input(sidebar)).toBeEnabled();
+    // The log works: the page itself was requested.
+    expect(server.requests).toContain('/article.html');
+
+    const leak = (name: string) => server.url(`leak/${name}`);
+    const payload = [
+      'Before.',
+      `<link rel="stylesheet" href="${leak('link.css')}">`,
+      `<img src="${leak('img.png')}" srcset="${leak('srcset.png')} 2x">`,
+      `<iframe src="${leak('frame.html')}"></iframe>`,
+      `<style>@import url("${leak('import.css')}"); p { background: url("${leak('bg.png')}") }</style>`,
+      `<video src="${leak('video.mp4')}" poster="${leak('poster.png')}"></video>`,
+      `<object data="${leak('object.bin')}"></object><embed src="${leak('embed.bin')}">`,
+      `<svg><image href="${leak('svg.png')}" /></svg>`,
+      `<p style="background:url(${leak('inline-style.png')})">styled</p>`,
+      `<script src="${leak('script.js')}"></script>`,
+      `<a href="${leak('prefetch.html')}" ping="${leak('ping')}">link</a>`,
+      `![alt text](${leak('markdown.png')})`,
+      'After.',
+    ].join('\n\n');
+    mock.script({ kind: 'stream', chunks: chunkText(payload, 16), delayMs: 5 });
+    await ask(sidebar, 'Show me everything.');
+    await expect(answers(sidebar).first()).toContainText('After.');
+    await expect(stopButton(sidebar)).toHaveCount(0);
+    await expect(
+      sidebar.locator(
+        '.chat-log :is(link, img, iframe, style, video, object, embed, svg, script, [style], [ping])',
+      ),
+    ).toHaveCount(0);
+    // Give anything that would load time to do so, during streaming and after.
+    await sidebar.waitForTimeout(1000);
+    await sidebar.reload();
+    await expect(answers(sidebar).first()).toContainText('After.');
+    await sidebar.waitForTimeout(500);
+    expect(server.requests.filter((path) => path.startsWith('/leak/'))).toEqual([]);
   });
 });

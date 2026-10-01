@@ -16,6 +16,8 @@ const HUGE_PDF_BYTES = 31 * 1024 * 1024;
 export interface FixtureServer {
   /** `http://127.0.0.1:<port>` */
   origin: string;
+  /** The path of every request received, in order (paths only). */
+  requests: string[];
   url(page: string): string;
   /**
    * Holds back the body of `/slow.html` (its head and title arrive at once)
@@ -35,8 +37,10 @@ const SLOW_BODY =
 
 export async function startFixtureServer(): Promise<FixtureServer> {
   let slowGate: Promise<void> = Promise.resolve();
+  const requests: string[] = [];
   const server = createServer((req, res) => {
     const path = new URL(req.url ?? '/', 'http://x').pathname;
+    requests.push(path);
     const name = basename(path);
     if (path === '/pdf/huge.pdf') {
       res.writeHead(200, {
@@ -84,6 +88,7 @@ export async function startFixtureServer(): Promise<FixtureServer> {
   const origin = `http://127.0.0.1:${String(port)}`;
   return {
     origin,
+    requests,
     url: (page) => `${origin}/${page}`,
     holdSlowPage: () => {
       let release: () => void = () => undefined;
