@@ -172,13 +172,18 @@ describe('llmErrorText', () => {
     expect(llmErrorText(new LlmError('context-too-long')).detail).toBeNull();
   });
 
-  it('shows the generic rejection for a refused thinking level, without the provider text', () => {
+  it('tells the user to set thinking back to Default, without the provider text', () => {
     expect(
       llmErrorText(
         new LlmError('thinking-unsupported', { status: 400, providerMessage: 'no effort here' }),
       ),
     ).toEqual({
-      message: 'The provider rejected the request. Check the settings and try again.',
+      message: "This model doesn't accept a thinking level. Set thinking to Default and try again.",
+      detail: null,
+    });
+    // The stored code alone (after a reload) gives the same text.
+    expect(llmErrorText(new LlmError('thinking-unsupported'))).toEqual({
+      message: "This model doesn't accept a thinking level. Set thinking to Default and try again.",
       detail: null,
     });
   });
