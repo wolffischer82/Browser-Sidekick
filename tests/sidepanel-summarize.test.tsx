@@ -305,6 +305,11 @@ describe('the Summarize button', () => {
     fireEvent.click(button());
     await screen.findByRole('button', { name: 'Stop' });
     await disabledWith('Wait for the answer to finish, or stop it.');
+    // Stop shows before the request leaves (the message is stored and the
+    // pages are read first), so wait for the request itself.
+    await waitFor(() => {
+      expect(bodies).toHaveLength(1);
+    });
     fireEvent.click(button());
     await pause();
     expect(bodies).toHaveLength(1);
