@@ -27,6 +27,7 @@ const TITLE = 'Night trains in Europe';
 /** Words only one fixture page has, to find it in a request. */
 const ARTICLE_MARK = 'Vienna to Amsterdam';
 const DASHBOARD_MARK = 'Printer offline';
+const PDF_MARK = 'Operators plan more cross-border connections';
 
 const ANSWER = [
   'Night trains are coming back across Europe [1].',
@@ -97,6 +98,32 @@ async function activeTabUrl(context: BrowserContext): Promise<string | undefined
   });
 }
 
+/** Stores a provider pointing at the mock server (the settings flow is T05's e2e). */
+async function seedProvider(sidebar: Page, mock: MockLlm): Promise<void> {
+  await sidebar.evaluate(
+    async ({ baseUrl, key, models }) => {
+      const chrome = (globalThis as unknown as { chrome: ChromeApi }).chrome;
+      await chrome.storage.local.set({
+        providers: [
+          {
+            id: 'mock',
+            kind: 'openai-compatible',
+            label: 'Mock server',
+            baseUrl,
+            apiKey: key,
+            defaultModel: 'mock-large',
+            contextBudget: 100_000,
+            cachedModels: models,
+            hasAccess: true,
+          },
+        ],
+        defaultProviderId: 'mock',
+      });
+    },
+    { baseUrl: mock.baseUrl, key: KEY, models: MOCK_MODELS },
+  );
+}
+
 test.describe('chat', () => {
   let server: FixtureServer;
   let mock: MockLlm;
@@ -128,29 +155,7 @@ test.describe('chat', () => {
     await article.goto(server.url('article.html'));
     const sidebar = await openSidebarWindow(browser, id);
 
-    // A provider pointing at the mock server (the settings flow is T05's e2e).
-    await sidebar.evaluate(
-      async ({ baseUrl, key, models }) => {
-        const chrome = (globalThis as unknown as { chrome: ChromeApi }).chrome;
-        await chrome.storage.local.set({
-          providers: [
-            {
-              id: 'mock',
-              kind: 'openai-compatible',
-              label: 'Mock server',
-              baseUrl,
-              apiKey: key,
-              defaultModel: 'mock-large',
-              contextBudget: 100_000,
-              cachedModels: models,
-              hasAccess: true,
-            },
-          ],
-          defaultProviderId: 'mock',
-        });
-      },
-      { baseUrl: mock.baseUrl, key: KEY, models: MOCK_MODELS },
-    );
+    await seedProvider(sidebar, mock);
     await sidebar.reload();
     await expect(input(sidebar)).toBeEnabled();
     await expect(modelButton(sidebar)).toHaveText('mock-large');
@@ -358,5 +363,32 @@ test.describe('chat', () => {
       system(r.body as ChatBody).includes('Write a title'),
     );
     expect(titleRequests).toHaveLength(1);
+  });
+
+  test('a PDF in the current tab is read in the sidebar and sent with the question', async () => {
+    const profile = await newProfile();
+    removeProfile = profile.remove;
+    const browser = await launchWithGrantedOrigins(profile.dir, ['<all_urls>']);
+    context = browser;
+    const id = await extensionId(browser);
+    const tab = browser.pages()[0] ?? (await browser.newPage());
+    await tab.goto(server.url('pdf/text.pdf'));
+    const sidebar = await openSidebarWindow(browser, id);
+    await seedProvider(sidebar, mock);
+    await sidebar.reload();
+    await expect(input(sidebar)).toBeEnabled();
+    await expect(currentRow(sidebar)).toContainText('Current tab');
+    await expect(currentRow(sidebar).getByRole('button', { name: 'Pin to session' })).toBeVisible();
+
+    await ask(sidebar, 'What does the PDF say?');
+    await expect(answers(sidebar).first()).toContainText(MOCK_REPLY);
+    await expect(answers(sidebar).first()).not.toContainText("couldn't be read");
+    const sent = system(body(mock, 0));
+    expect(sent.includes('<<<PAGE 1>>>'), 'current tab delimiter').toBe(true);
+    expect(sent.includes('Source: current tab'), 'current tab label').toBe(true);
+    expect(sent.includes(PDF_MARK), 'PDF text').toBe(true);
+
+    // Nothing of the current tab is stored: the session has no pin.
+    await expect(sidebar.locator('li.pin-row')).toHaveCount(0);
   });
 });
