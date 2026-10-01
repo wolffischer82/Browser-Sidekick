@@ -17,6 +17,7 @@ Given a spec path, task id, and git range, do all of the following:
 5. **Strings**: every new user-facing string exists in all locale files (`_locales/*/messages.json` or whatever the spec prescribes).
 6. **Diff review**: `git diff <range> --stat` and read the changed files. For each acceptance criterion, say whether the diff plausibly satisfies it and point to the evidence (file:line). Flag scope beyond the task row or features not in the spec.
 7. **Logs**: the progress log marks the task done; any deviation you spot in the code is present in the decision log.
+8. **README**: `README.md` tells visitors what the extension does (Features), what it can't do (Limits) and how to load or build it (Install). If the diff adds, removes or visibly changes a feature a user would notice in normal use, changes a limit, or changes the install or build steps, check that the README says so. A missing mention is a note. A README statement the diff makes false (for example a wrong load step, browser version or size cap) is a FAIL. Internal changes and small UI details need no mention.
 
 Report format (under 20 lines):
 - VERDICT: PASS / FAIL / PASS-WITH-NOTES
@@ -24,4 +25,5 @@ Report format (under 20 lines):
 - Owed tests: "all present" or the missing names.
 - Hygiene, permissions and strings: violations with file:line, or "clean".
 - AC: list only criteria not met or not verifiable, with evidence; say "all met" otherwise.
+- README: "current", or what is missing or wrong.
 - Notes for the orchestrator (omit if none).
