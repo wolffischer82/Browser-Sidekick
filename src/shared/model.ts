@@ -26,6 +26,12 @@ export interface Session {
   createdAt: number;
   /** Last activity; bumped whenever a pin or message is added. */
   updatedAt: number;
+  /**
+   * The session's thinking level (specs/thinking-levels.md 4.1, 5). Missing
+   * or `null` is Default: no level is sent. A new session has none, and
+   * records written before the field existed mean the same.
+   */
+  thinkingLevel?: ThinkingLevel | null;
 }
 
 /** Extractor kind, shown as the Page / YouTube / PDF badge (spec 5.2, 5.5). */

@@ -18,7 +18,8 @@ export interface NewSession {
   titleSource?: TitleSource;
 }
 
-export type SessionUpdate = Partial<Pick<Session, 'providerId' | 'model'>>;
+/** `thinkingLevel: null` sets the session back to Default; left out keeps it. */
+export type SessionUpdate = Partial<Pick<Session, 'providerId' | 'model' | 'thinkingLevel'>>;
 
 export interface NewPin {
   url: string;

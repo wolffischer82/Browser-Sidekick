@@ -92,6 +92,70 @@ describe('sessions', () => {
     expect(await repo.listSessions()).toEqual([]);
   });
 
+  describe('thinkingLevel (specs/thinking-levels.md 5)', () => {
+    it('a new session has no level: the field is missing, which is Default', async () => {
+      const session = await repo.createSession({ providerId: 'p1', model: 'm1' });
+      expect('thinkingLevel' in session).toBe(false);
+      expect((await repo.getSession(session.id))?.thinkingLevel).toBeUndefined();
+    });
+
+    it.each(['low', 'medium', 'high'] as const)('stores %s and reads it back', async (level) => {
+      const a = await repo.createSession({ providerId: 'p1', model: 'm1' });
+      const b = await repo.createSession({ providerId: 'p1', model: 'm1' });
+      const updated = await repo.updateSession(a.id, { thinkingLevel: level });
+      expect(updated).toEqual({ ...a, thinkingLevel: level });
+      expect(await repo.getSession(a.id)).toEqual(updated);
+      expect((await repo.listSessions()).find((s) => s.id === a.id)?.thinkingLevel).toBe(level);
+      // Only this session, and without touching its last activity.
+      expect(await repo.getSession(b.id)).toEqual(b);
+      expect(updated?.updatedAt).toBe(a.updatedAt);
+    });
+
+    it('null sets the session back to Default', async () => {
+      const a = await repo.createSession({ providerId: 'p1', model: 'm1' });
+      await repo.updateSession(a.id, { thinkingLevel: 'high' });
+      const updated = await repo.updateSession(a.id, { thinkingLevel: null });
+      expect(updated?.thinkingLevel).toBeNull();
+      expect((await repo.getSession(a.id))?.thinkingLevel).toBeNull();
+    });
+
+    it('a change of model keeps the level, and a change of level keeps the model', async () => {
+      const a = await repo.createSession({ providerId: 'p1', model: 'm1' });
+      await repo.updateSession(a.id, { thinkingLevel: 'medium' });
+      expect(await repo.updateSession(a.id, { providerId: 'p2', model: 'm2' })).toMatchObject({
+        providerId: 'p2',
+        model: 'm2',
+        thinkingLevel: 'medium',
+      });
+      expect(await repo.updateSession(a.id, { thinkingLevel: 'low' })).toMatchObject({
+        providerId: 'p2',
+        model: 'm2',
+        thinkingLevel: 'low',
+      });
+      // A title change keeps it too.
+      await repo.setSessionTitle(a.id, 'Named', 'user');
+      expect((await repo.getSession(a.id))?.thinkingLevel).toBe('low');
+    });
+
+    it('a record written before the field existed reads as Default and can take a level', async () => {
+      const a = await repo.createSession({ providerId: 'p1', model: 'm1' });
+      const stored = await repo.getSession(a.id);
+      expect(stored).toEqual(a);
+      expect(Object.keys(stored ?? {})).not.toContain('thinkingLevel');
+      expect(await repo.updateSession(a.id, { model: 'm2' })).toEqual({ ...a, model: 'm2' });
+      expect((await repo.updateSession(a.id, { thinkingLevel: 'high' }))?.thinkingLevel).toBe(
+        'high',
+      );
+    });
+
+    it('the level goes with the session when it is deleted', async () => {
+      const a = await repo.createSession({ providerId: 'p1', model: 'm1' });
+      await repo.updateSession(a.id, { thinkingLevel: 'high' });
+      await repo.deleteSession(a.id);
+      expect(await repo.getSession(a.id)).toBeUndefined();
+    });
+  });
+
   describe('setSessionTitle', () => {
     it('applies llm and user titles', async () => {
       const s = await repo.createSession({ providerId: null, model: null });
