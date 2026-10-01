@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <!-- Placeholder artwork: a browser window with a sidebar holding a pin needle. -->
+  <rect x="8" y="16" width="112" height="96" rx="14" fill="#ffffff" stroke="#1f4e8c" stroke-width="8"/>
+  <path d="M72 20 H106 A10 10 0 0 1 116 30 V98 A10 10 0 0 1 106 108 H72 Z" fill="#2f6fc4"/>
+  <line x1="72" y1="20" x2="72" y2="108" stroke="#1f4e8c" stroke-width="8"/>
+  <rect x="22" y="34" width="36" height="8" rx="4" fill="#9db6d8"/>
+  <rect x="22" y="52" width="30" height="8" rx="4" fill="#9db6d8"/>
+  <rect x="22" y="70" width="36" height="8" rx="4" fill="#9db6d8"/>
+  <!-- Pin needle: head, collar and needle. -->
+  <circle cx="94" cy="46" r="12" fill="#ffffff"/>
+  <rect x="88" y="56" width="12" height="8" rx="2" fill="#ffffff"/>
+  <path d="M91 64 H97 L94 94 Z" fill="#ffffff"/>
+</svg>

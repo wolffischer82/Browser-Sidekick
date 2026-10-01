@@ -1,0 +1,445 @@
+{
+ "responseContext": {
+  "mainAppWebResponseContext": {
+   "loggedOut": true
+  }
+ },
+ "content": {
+  "engagementPanelSectionListRenderer": {
+   "header": {
+    "engagementPanelTitleHeaderRenderer": {
+     "title": {
+      "runs": [
+       {
+        "text": "Transcript"
+       }
+      ]
+     }
+    }
+   },
+   "content": {
+    "sectionListRenderer": {
+     "contents": [
+      {
+       "itemSectionRenderer": {
+        "contents": [
+         {
+          "macroMarkersPanelItemViewModel": {
+           "item": {
+            "timelineItemViewModel": {
+             "timestamp": "0:01",
+             "contentItems": [
+              {
+               "transcriptSegmentViewModel": {
+                "simpleText": "This is a synthetic first sentence.",
+                "style": "TRANSCRIPT_SEGMENT_STYLE_DEFAULT",
+                "timestamp": "0:01",
+                "timestampUtf16Length": 4,
+                "textUtf16Length": 35,
+                "accessibilityHint": "Double tap to seek",
+                "timestampA11yLabel": "1 seconds"
+               }
+              }
+             ],
+             "style": "TIMELINE_ITEM_STYLE_DEFAULT"
+            }
+           },
+           "index": 0,
+           "markersEngagementPanelSyncEntityKey": "SYNC_KEY_PLACEHOLDER",
+           "panelId": "PAmodern_transcript_view",
+           "onTap": {
+            "innertubeCommand": {
+             "clickTrackingParams": "TRACKING_PLACEHOLDER",
+             "commandMetadata": {
+              "webCommandMetadata": {
+               "url": "/watch?v=VIDEO000001&t=1s",
+               "webPageType": "WEB_PAGE_TYPE_WATCH",
+               "rootVe": 3832
+              }
+             },
+             "watchEndpoint": {
+              "videoId": "VIDEO000001",
+              "continuePlayback": true,
+              "startTimeSeconds": 1
+             }
+            }
+           }
+          }
+         },
+         {
+          "macroMarkersPanelItemViewModel": {
+           "item": {
+            "timelineItemViewModel": {
+             "timestamp": "0:09",
+             "contentItems": [
+              {
+               "transcriptSegmentViewModel": {
+                "simpleText": "It stands in for real captions.",
+                "style": "TRANSCRIPT_SEGMENT_STYLE_DEFAULT",
+                "timestamp": "0:09",
+                "timestampUtf16Length": 4,
+                "textUtf16Length": 31,
+                "accessibilityHint": "Double tap to seek",
+                "timestampA11yLabel": "9 seconds"
+               }
+              }
+             ],
+             "style": "TIMELINE_ITEM_STYLE_DEFAULT"
+            }
+           },
+           "index": 1,
+           "markersEngagementPanelSyncEntityKey": "SYNC_KEY_PLACEHOLDER",
+           "panelId": "PAmodern_transcript_view",
+           "onTap": {
+            "innertubeCommand": {
+             "clickTrackingParams": "TRACKING_PLACEHOLDER",
+             "commandMetadata": {
+              "webCommandMetadata": {
+               "url": "/watch?v=VIDEO000001&t=9s",
+               "webPageType": "WEB_PAGE_TYPE_WATCH",
+               "rootVe": 3832
+              }
+             },
+             "watchEndpoint": {
+              "videoId": "VIDEO000001",
+              "continuePlayback": true,
+              "startTimeSeconds": 9
+             }
+            }
+           }
+          }
+         },
+         {
+          "macroMarkersPanelItemViewModel": {
+           "item": {
+            "timelineItemViewModel": {
+             "timestamp": "0:17",
+             "contentItems": [
+              {
+               "transcriptSegmentViewModel": {
+                "simpleText": "Each segment has a timestamp.",
+                "style": "TRANSCRIPT_SEGMENT_STYLE_DEFAULT",
+                "timestamp": "0:17",
+                "timestampUtf16Length": 4,
+                "textUtf16Length": 29,
+                "accessibilityHint": "Double tap to seek",
+                "timestampA11yLabel": "17 seconds"
+               }
+              }
+             ],
+             "style": "TIMELINE_ITEM_STYLE_DEFAULT"
+            }
+           },
+           "index": 2,
+           "markersEngagementPanelSyncEntityKey": "SYNC_KEY_PLACEHOLDER",
+           "panelId": "PAmodern_transcript_view",
+           "onTap": {
+            "innertubeCommand": {
+             "clickTrackingParams": "TRACKING_PLACEHOLDER",
+             "commandMetadata": {
+              "webCommandMetadata": {
+               "url": "/watch?v=VIDEO000001&t=17s",
+               "webPageType": "WEB_PAGE_TYPE_WATCH",
+               "rootVe": 3832
+              }
+             },
+             "watchEndpoint": {
+              "videoId": "VIDEO000001",
+              "continuePlayback": true,
+              "startTimeSeconds": 17
+             }
+            }
+           }
+          }
+         },
+         {
+          "macroMarkersPanelItemViewModel": {
+           "item": {
+            "timelineItemViewModel": {
+             "timestamp": "0:26",
+             "contentItems": [
+              {
+               "transcriptSegmentViewModel": {
+                "simpleText": "Markers appear about every thirty seconds.",
+                "style": "TRANSCRIPT_SEGMENT_STYLE_DEFAULT",
+                "timestamp": "0:26",
+                "timestampUtf16Length": 4,
+                "textUtf16Length": 42,
+                "accessibilityHint": "Double tap to seek",
+                "timestampA11yLabel": "26 seconds"
+               }
+              }
+             ],
+             "style": "TIMELINE_ITEM_STYLE_DEFAULT"
+            }
+           },
+           "index": 3,
+           "markersEngagementPanelSyncEntityKey": "SYNC_KEY_PLACEHOLDER",
+           "panelId": "PAmodern_transcript_view",
+           "onTap": {
+            "innertubeCommand": {
+             "clickTrackingParams": "TRACKING_PLACEHOLDER",
+             "commandMetadata": {
+              "webCommandMetadata": {
+               "url": "/watch?v=VIDEO000001&t=26s",
+               "webPageType": "WEB_PAGE_TYPE_WATCH",
+               "rootVe": 3832
+              }
+             },
+             "watchEndpoint": {
+              "videoId": "VIDEO000001",
+              "continuePlayback": true,
+              "startTimeSeconds": 26
+             }
+            }
+           }
+          }
+         },
+         {
+          "macroMarkersPanelItemViewModel": {
+           "item": {
+            "timelineItemViewModel": {
+             "timestamp": "0:33",
+             "contentItems": [
+              {
+               "transcriptSegmentViewModel": {
+                "simpleText": "This line starts a new block.",
+                "style": "TRANSCRIPT_SEGMENT_STYLE_DEFAULT",
+                "timestamp": "0:33",
+                "timestampUtf16Length": 4,
+                "textUtf16Length": 29,
+                "accessibilityHint": "Double tap to seek",
+                "timestampA11yLabel": "33 seconds"
+               }
+              }
+             ],
+             "style": "TIMELINE_ITEM_STYLE_DEFAULT"
+            }
+           },
+           "index": 4,
+           "markersEngagementPanelSyncEntityKey": "SYNC_KEY_PLACEHOLDER",
+           "panelId": "PAmodern_transcript_view",
+           "onTap": {
+            "innertubeCommand": {
+             "clickTrackingParams": "TRACKING_PLACEHOLDER",
+             "commandMetadata": {
+              "webCommandMetadata": {
+               "url": "/watch?v=VIDEO000001&t=33s",
+               "webPageType": "WEB_PAGE_TYPE_WATCH",
+               "rootVe": 3832
+              }
+             },
+             "watchEndpoint": {
+              "videoId": "VIDEO000001",
+              "continuePlayback": true,
+              "startTimeSeconds": 33
+             }
+            }
+           }
+          }
+         },
+         {
+          "macroMarkersPanelItemViewModel": {
+           "item": {
+            "timelineItemViewModel": {
+             "timestamp": "0:41",
+             "contentItems": [
+              {
+               "transcriptSegmentViewModel": {
+                "simpleText": "Whitespace   is\ncollapsed.",
+                "style": "TRANSCRIPT_SEGMENT_STYLE_DEFAULT",
+                "timestamp": "0:41",
+                "timestampUtf16Length": 4,
+                "textUtf16Length": 26,
+                "accessibilityHint": "Double tap to seek",
+                "timestampA11yLabel": "41 seconds"
+               }
+              }
+             ],
+             "style": "TIMELINE_ITEM_STYLE_DEFAULT"
+            }
+           },
+           "index": 5,
+           "markersEngagementPanelSyncEntityKey": "SYNC_KEY_PLACEHOLDER",
+           "panelId": "PAmodern_transcript_view",
+           "onTap": {
+            "innertubeCommand": {
+             "clickTrackingParams": "TRACKING_PLACEHOLDER",
+             "commandMetadata": {
+              "webCommandMetadata": {
+               "url": "/watch?v=VIDEO000001&t=41s",
+               "webPageType": "WEB_PAGE_TYPE_WATCH",
+               "rootVe": 3832
+              }
+             },
+             "watchEndpoint": {
+              "videoId": "VIDEO000001",
+              "continuePlayback": true,
+              "startTimeSeconds": 41
+             }
+            }
+           }
+          }
+         },
+         {
+          "macroMarkersPanelItemViewModel": {
+           "item": {
+            "timelineItemViewModel": {
+             "timestamp": "1:05",
+             "contentItems": [
+              {
+               "transcriptSegmentViewModel": {
+                "simpleText": "A later block begins here.",
+                "style": "TRANSCRIPT_SEGMENT_STYLE_DEFAULT",
+                "timestamp": "1:05",
+                "timestampUtf16Length": 4,
+                "textUtf16Length": 26,
+                "accessibilityHint": "Double tap to seek",
+                "timestampA11yLabel": "65 seconds"
+               }
+              }
+             ],
+             "style": "TIMELINE_ITEM_STYLE_DEFAULT"
+            }
+           },
+           "index": 6,
+           "markersEngagementPanelSyncEntityKey": "SYNC_KEY_PLACEHOLDER",
+           "panelId": "PAmodern_transcript_view",
+           "onTap": {
+            "innertubeCommand": {
+             "clickTrackingParams": "TRACKING_PLACEHOLDER",
+             "commandMetadata": {
+              "webCommandMetadata": {
+               "url": "/watch?v=VIDEO000001&t=65s",
+               "webPageType": "WEB_PAGE_TYPE_WATCH",
+               "rootVe": 3832
+              }
+             },
+             "watchEndpoint": {
+              "videoId": "VIDEO000001",
+              "continuePlayback": true,
+              "startTimeSeconds": 65
+             }
+            }
+           }
+          }
+         },
+         {
+          "macroMarkersPanelItemViewModel": {
+           "item": {
+            "timelineItemViewModel": {
+             "timestamp": "1:40",
+             "contentItems": [
+              {
+               "transcriptSegmentViewModel": {
+                "simpleText": "The last synthetic line.",
+                "style": "TRANSCRIPT_SEGMENT_STYLE_DEFAULT",
+                "timestamp": "1:40",
+                "timestampUtf16Length": 4,
+                "textUtf16Length": 24,
+                "accessibilityHint": "Double tap to seek",
+                "timestampA11yLabel": "100 seconds"
+               }
+              }
+             ],
+             "style": "TIMELINE_ITEM_STYLE_DEFAULT"
+            }
+           },
+           "index": 7,
+           "markersEngagementPanelSyncEntityKey": "SYNC_KEY_PLACEHOLDER",
+           "panelId": "PAmodern_transcript_view",
+           "onTap": {
+            "innertubeCommand": {
+             "clickTrackingParams": "TRACKING_PLACEHOLDER",
+             "commandMetadata": {
+              "webCommandMetadata": {
+               "url": "/watch?v=VIDEO000001&t=100s",
+               "webPageType": "WEB_PAGE_TYPE_WATCH",
+               "rootVe": 3832
+              }
+             },
+             "watchEndpoint": {
+              "videoId": "VIDEO000001",
+              "continuePlayback": true,
+              "startTimeSeconds": 100
+             }
+            }
+           }
+          }
+         }
+        ],
+        "sectionIdentifier": "timeline_item_section0"
+       }
+      }
+     ],
+     "header": {
+      "searchInputViewModel": {
+       "placeholderText": "Search transcript"
+      }
+     },
+     "targetId": "PAmodern_transcript_view"
+    }
+   },
+   "identifier": {
+    "surface": "ENGAGEMENT_PANEL_SURFACE_SHORTS",
+    "tag": "PAmodern_transcript_view"
+   }
+  }
+ },
+ "frameworkUpdates": {
+  "entityBatchUpdate": {
+   "mutations": [
+    {
+     "entityKey": "SYNC_KEY_PLACEHOLDER",
+     "type": "ENTITY_MUTATION_TYPE_REPLACE",
+     "payload": {
+      "timedMarkersListSyncEntity": {
+       "key": "SYNC_KEY_PLACEHOLDER",
+       "timedListData": {
+        "sections": [
+         {
+          "sectionId": "timeline_item_section0",
+          "timedSyncDataList": [
+           {
+            "videoTimeMs": "1000",
+            "syncItemId": "timeline_item_view_model_0"
+           },
+           {
+            "videoTimeMs": "9000",
+            "syncItemId": "timeline_item_view_model_1"
+           },
+           {
+            "videoTimeMs": "17000",
+            "syncItemId": "timeline_item_view_model_2"
+           },
+           {
+            "videoTimeMs": "26000",
+            "syncItemId": "timeline_item_view_model_3"
+           },
+           {
+            "videoTimeMs": "33000",
+            "syncItemId": "timeline_item_view_model_4"
+           },
+           {
+            "videoTimeMs": "41000",
+            "syncItemId": "timeline_item_view_model_5"
+           },
+           {
+            "videoTimeMs": "65000",
+            "syncItemId": "timeline_item_view_model_6"
+           },
+           {
+            "videoTimeMs": "100000",
+            "syncItemId": "timeline_item_view_model_7"
+           }
+          ]
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  }
+ }
+}

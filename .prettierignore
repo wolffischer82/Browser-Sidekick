@@ -1,0 +1,14 @@
+dist/
+.output/
+.wxt/
+node_modules/
+coverage/
+playwright-report/
+test-results/
+package-lock.json
+tests/__snapshots__/
+specs/
+.claude/
+CLAUDE.md
+# Recorded-structure YouTube payloads keep YouTube's single-line layout (decisions.md T08).
+tests/fixtures/youtube/

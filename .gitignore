@@ -11,3 +11,6 @@ coverage/
 .env
 .env.*
 .DS_Store
+.wxt/
+playwright-report/
+test-results/
