@@ -115,6 +115,28 @@ describe('providers', () => {
     ]);
   });
 
+  it('stores model info with the cached models and drops it with them', async () => {
+    const modelInfo = {
+      'claude-x': { thinking: 'supported', thinkingMode: 'effort', maxOutputTokens: 64000 },
+      'claude-y': { thinking: 'unsupported' },
+    } as const;
+    await saveProvider(provider({ cachedModels: ['claude-x', 'claude-y', 'claude-z'], modelInfo }));
+    const [withInfo] = (await getSettings()).providers;
+    expect(withInfo?.cachedModels).toEqual(['claude-x', 'claude-y', 'claude-z']);
+    expect(withInfo?.modelInfo).toEqual(modelInfo);
+
+    await saveProvider(provider({ cachedModels: null }));
+    const [cleared] = (await getSettings()).providers;
+    expect(cleared?.cachedModels).toBeNull();
+    expect(cleared).not.toHaveProperty('modelInfo');
+  });
+
+  it('reads a provider stored before model info existed', async () => {
+    await saveProvider(provider({ cachedModels: ['llama3'] }));
+    const [stored] = (await getSettings()).providers;
+    expect(stored?.modelInfo).toBeUndefined();
+  });
+
   it('deletes a provider and clears the default when it was the default', async () => {
     await saveProvider(provider());
     await saveProvider(provider({ id: 'p2' }));
