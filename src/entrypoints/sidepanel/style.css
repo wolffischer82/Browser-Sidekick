@@ -496,7 +496,7 @@ textarea {
 }
 
 .tooltip-anchor:hover .tooltip,
-.tooltip-anchor:focus-within .tooltip {
+.tooltip-anchor > :focus-visible + .tooltip {
   visibility: visible;
 }
 
