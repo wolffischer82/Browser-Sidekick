@@ -364,3 +364,23 @@ Status: done (2026-10-01; gate-checker PASS-WITH-NOTES, CI green incl. e2e, orch
 - `tests/sidepanel-summarize.test.tsx`: button states and tooltips (ready, nothing, failed and extracting pins on a browser page, the eye, a pin turning ready, no provider, no access, streaming a summary, streaming a question, German); the request per D4 combination; the flow (message, stream, stored kinds and sources, title, reload), history, Stop, error with Retry after a reload, trimming notice, German prompt; the wait (included, left out with the notice, Stop).
 - `tests/sidepanel-app.test.tsx`: the first-run button state, updated for the new tooltip.
 - `tests/e2e/summarize.spec.ts`: the flow of decisions.md T11-8; screens `T11-01-disabled-tooltip` (+ `-dark`), `T11-02-streaming`, `T11-03-summary` (+ `-dark`), `T11-04-first-action-title` (+ `-dark`), `T11-05-current-tab-excluded`, `T11-06-empty-session-disabled`.
+
+# Thinking levels
+
+Spec: `specs/thinking-levels.md` (GitHub issue #4). Branch `feature/thinking-levels`. Status values as above.
+
+## T13 LLM layer: thinking level in requests and capability discovery
+
+Status: in progress (2026-10-01)
+
+### Plan
+
+- `src/shared/model.ts`: `ThinkingLevel`, `ModelInfo`, optional `ProviderConfig.modelInfo` (spec 5); re-exported from `src/shared/llm/types.ts`, which gains `LlmRequest.thinking?: { level, info }`, `ModelList` with per-model `info`, and the `thinking-unsupported` code.
+- First a test that pins today's request bodies as exact strings for all three adapters, committed before any source change, so "byte-identical without thinking information" is proven against the old code.
+- `listModels` per adapter (tests first): Anthropic `capabilities` and `max_tokens`, Gemini `thinking`, OpenAI-compatible `supported_parameters`; `listOrFallback` carries the info.
+- Request mapping per adapter (tests first, table-driven, one row per row of spec 4.3), incl. Anthropic `max_tokens` and budget rules.
+- `errors.ts`/`http.ts`: a 400/422 on a request that sent a level and whose message matches `/reasoning|thinking|effort/i` maps to `thinking-unsupported`; `llm-messages.ts` shows the generic bad-request string until T15.
+- `ProviderForm`: keep `modelInfo` next to the loaded model list, write it on save, clear it wherever the list is cleared; component test.
+- Callers and fakes of `listModels` updated (`tests/chat-title.test.ts`, `tests/mock-llm.test.ts`).
+- No UI change, no locale string, no stream-interface change (T14), no manifest or dependency change.
+- Open questions: none so far.
