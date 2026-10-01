@@ -29,6 +29,9 @@ A sidebar extension for Chrome and Firefox. The user configures an LLM provider 
 | D14 | **Settings live inside the sidebar** (gear icon). There is no separate options page. |
 | D15 | **Model per session.** Settings marks one provider/model as the default, and each new session starts with it. A dropdown in the session header changes that session's provider/model at any time. Each stored answer records which model produced it. |
 | D16 | **Wording.** Primary strings are fixed in §8. The implementer writes secondary strings (empty states, errors) following the §8 style rules, and the owner reviews all strings in both languages in T12. |
+| D17 | **Right-click pin opens the sidebar** (owner decision 2026-10-01). No toolbar badge. |
+| D18 | **Failed answers keep their error and Retry** across reloads: an error code is stored with the message (owner decision 2026-10-01). |
+| D19 | **No `tabs` permission.** When the current tab's address is hidden, the row shows the hint from T06 instead of a per-site request (owner decision 2026-10-01; narrows D10). |
 
 ## 3. Assumptions pending owner confirmation
 
@@ -84,6 +87,7 @@ Cross-device sync; export or import; search across sessions; automatic deletion 
   - Chrome: contexts `page` and `frame`.
   - Firefox: also context `tab`, i.e. right-clicking a tab in the tab strip.
 - It pins into the **active session**, and the sidebar need not be open.
+- A context-menu pin also **opens the sidebar** if it's closed, so the pin, or its "Already pinned" or failure message, is visible (D17). The open call is made synchronously in the menu click: `sidePanel.open` in Chrome, `sidebarAction.open` in Firefox.
 - The needle icon on the current-tab row in Session tabs pins the current tab.
 - Pinning creates a pin with status `extracting`, runs the extractor (§5.5), then stores the snapshot and sets `ready`, or sets `failed` with a reason.
 - Pinning a URL already in the session (normalised: fragment stripped) does not duplicate. It shows "Already pinned" and offers to refresh.
