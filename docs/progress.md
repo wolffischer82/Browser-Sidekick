@@ -371,7 +371,7 @@ Spec: `specs/thinking-levels.md` (GitHub issue #4). Branch `feature/thinking-lev
 
 ## T13 LLM layer: thinking level in requests and capability discovery
 
-Status: done by the implementer (2026-10-01); gate-checker pending
+Status: done (2026-10-01; gate-checker PASS-WITH-NOTES)
 
 ### Plan
 
@@ -400,3 +400,20 @@ Status: done by the implementer (2026-10-01); gate-checker pending
 - `tests/llm-model-info.test.ts`: per adapter supported, unsupported, unknown and malformed capability data.
 - `tests/sidepanel-settings.test.tsx`: `modelInfo` stored on save, kept, replaced by a reload, cleared when loading fails or the base URL changes, not invented for older providers. `tests/settings.test.ts`: the storage round trip.
 - `tests/provider-access.test.ts`: the error text for the new code. Existing `listModels` expectations updated for the new shape.
+
+## T14 LLM layer: reasoning in the stream
+
+Status: in progress
+
+### Plan
+
+- `src/shared/llm/types.ts`: `LlmStreamEvent = { type: 'text'; delta } | { type: 'reasoning'; delta }` (orchestrator decision); `LlmProvider.stream` returns `AsyncIterable<LlmStreamEvent>`.
+- Adapters (tests first, replacing the "thinking is dropped" tests): Anthropic `thinking_delta` (nothing for `signature_delta` or empty thinking), Gemini `thought: true` parts, OpenAI-compatible `delta.reasoning_content` or `delta.reasoning` when a non-empty string; events in arrival order.
+- Callers: title generation and Test connection read text events only; `tests/helpers/llm-fetch.ts` keeps `collect` (text) and gains `collectEvents`; the fakes in `tests/chat-title.test.ts` and `tests/mock-llm.test.ts` follow.
+- `src/shared/model.ts`: `Message.reasoning?: string | null` (spec 5); the repository takes it on add and update, without a DB version bump.
+- `useChat`: `LiveAnswer.reasoning` grows with the reasoning events, next to the partial text (T16 renders it); stored on completion, Stop and failure; a Retry replaces it. Nothing renders it yet.
+- `tests/mock-llm/server.ts`: a scripted stream reply can carry reasoning chunks, under either field name; replies without them are unchanged.
+- Tests: per-adapter stream tests (reasoning only, interleaved, both OpenAI field names, non-string reasoning), ask-flow tests (stored on completion, Stop, failure, Retry; not in the next request's turns, not in the budget), a title test, a repository test, a mock-server test.
+- `docs/decisions.md`: T04-8 superseded with a dated entry; the mock trigger recorded.
+- No dependency, manifest, locale or README change; nothing passes thinking information yet (T15).
+- Open questions: none so far.
