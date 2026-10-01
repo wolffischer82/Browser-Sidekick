@@ -167,6 +167,23 @@ describe('handleMenuClick', () => {
     ]);
   });
 
+  it('announces a duplicate through `announce`, for a sidebar that is just opening (D17)', async () => {
+    await handleMenuClick(deps, { menuItemId: PIN_MENU_ID }, ARTICLE);
+    const announce = vi.fn(() => Promise.resolve(true));
+    const again = await handleMenuClick(
+      { ...deps, announce },
+      { menuItemId: PIN_MENU_ID },
+      ARTICLE,
+    );
+    expect(again?.status).toBe('duplicate');
+    expect(announce).toHaveBeenCalledExactlyOnceWith({
+      type: 'already-pinned',
+      sessionId: expect.any(String) as string,
+      pinId: again?.status === 'duplicate' ? again.pin.id : '',
+    });
+    expect(sent.filter((m) => m.type === 'already-pinned')).toHaveLength(0);
+  });
+
   it('ignores other menu items and tabs without a visible URL', async () => {
     expect(await handleMenuClick(deps, { menuItemId: 'other' }, ARTICLE)).toBeNull();
     expect(
@@ -304,14 +321,21 @@ describe('onRequestMessage', () => {
 });
 
 describe('startPinService', () => {
-  it('creates the menu on install and pins on click', async () => {
-    let onClicked: ((info: { menuItemId: string }, tab?: Tab) => void) | undefined;
+  type Clicked = (info: { menuItemId: string }, tab?: Tab) => void;
+
+  function captureMenuListener(): () => Clicked {
+    let onClicked: Clicked | undefined;
     vi.spyOn(fakeBrowser.contextMenus.onClicked, 'addListener').mockImplementation((l) => {
-      onClicked = l as typeof onClicked;
+      onClicked = l as Clicked;
     });
+    return () => onClicked as Clicked;
+  }
+
+  it('creates the menu on install and pins on click', async () => {
+    const listener = captureMenuListener();
     vi.spyOn(fakeBrowser.contextMenus, 'removeAll').mockResolvedValue();
     const create = vi.spyOn(fakeBrowser.contextMenus, 'create').mockReturnValue(PIN_MENU_ID);
-    startPinService(true, deps);
+    startPinService(true, { ...deps, openSidebar: vi.fn() });
 
     await fakeBrowser.runtime.onInstalled.trigger({ reason: 'install', temporary: false });
     await vi.waitFor(() => {
@@ -319,10 +343,95 @@ describe('startPinService', () => {
     });
     expect(create.mock.calls[0]?.[0].contexts).toEqual(['page', 'frame', 'tab']);
 
-    onClicked?.({ menuItemId: PIN_MENU_ID }, ARTICLE);
+    listener()({ menuItemId: PIN_MENU_ID }, ARTICLE);
     await vi.waitFor(async () => {
       const { activeSessionId } = await getSettings();
       expect(await repo.listPins(activeSessionId ?? '')).toHaveLength(1);
+    });
+  });
+
+  describe('the menu click opens the sidebar (D17)', () => {
+    async function pinned(): Promise<void> {
+      await vi.waitFor(async () => {
+        const { activeSessionId } = await getSettings();
+        expect(await repo.listPins(activeSessionId ?? '')).toHaveLength(1);
+      });
+    }
+
+    it('synchronously in the handler, before the pin starts', async () => {
+      const listener = captureMenuListener();
+      const openSidebar = vi.fn();
+      const repoOpened = vi.fn(deps.repo);
+      startPinService(false, { ...deps, repo: repoOpened, openSidebar });
+      listener()({ menuItemId: PIN_MENU_ID }, ARTICLE);
+      // Already called when the listener returns: nothing was awaited first.
+      expect(openSidebar).toHaveBeenCalledExactlyOnceWith(1);
+      expect(openSidebar.mock.invocationCallOrder[0]).toBeLessThan(
+        repoOpened.mock.invocationCallOrder[0] ?? Infinity,
+      );
+      await pinned();
+    });
+
+    it('not for other menu items', () => {
+      const listener = captureMenuListener();
+      const openSidebar = vi.fn();
+      startPinService(false, { ...deps, openSidebar });
+      listener()({ menuItemId: 'other' }, ARTICLE);
+      expect(openSidebar).not.toHaveBeenCalled();
+    });
+
+    it("Chrome: sidePanel.open for the clicked tab's window", async () => {
+      const listener = captureMenuListener();
+      const open = vi.fn(() => Promise.resolve());
+      Object.assign(fakeBrowser, { sidePanel: { open } });
+      startPinService(false, deps);
+      listener()({ menuItemId: PIN_MENU_ID }, ARTICLE);
+      expect(open).toHaveBeenCalledExactlyOnceWith({ windowId: 1 });
+      await pinned();
+    });
+
+    it('Firefox: sidebarAction.open, also for a tab-strip click', async () => {
+      const listener = captureMenuListener();
+      const open = vi.fn(() => Promise.resolve());
+      Object.assign(fakeBrowser, { sidebarAction: { open } });
+      startPinService(true, deps);
+      listener()({ menuItemId: PIN_MENU_ID }, { ...ARTICLE, active: false });
+      expect(open).toHaveBeenCalledExactlyOnceWith();
+      await pinned();
+    });
+
+    it.each([
+      ['Chrome', false],
+      ['Firefox', true],
+    ])(
+      '%s: the pin goes ahead when the browser refuses to open the sidebar',
+      async (_n, firefox) => {
+        const listener = captureMenuListener();
+        const open = vi.fn(() => Promise.reject(new Error('No user gesture')));
+        Object.assign(fakeBrowser, { sidePanel: { open }, sidebarAction: { open } });
+        startPinService(firefox, deps);
+        listener()({ menuItemId: PIN_MENU_ID }, ARTICLE);
+        expect(open).toHaveBeenCalledOnce();
+        await pinned();
+      },
+    );
+
+    it('the pin goes ahead when the browser has no such call', async () => {
+      const listener = captureMenuListener();
+      Object.assign(fakeBrowser, { sidePanel: {}, sidebarAction: {} });
+      startPinService(false, deps);
+      startPinService(true, deps);
+      listener()({ menuItemId: PIN_MENU_ID }, ARTICLE);
+      await pinned();
+    });
+
+    it('Chrome: makes no call without a window', () => {
+      const listener = captureMenuListener();
+      const open = vi.fn(() => Promise.resolve());
+      Object.assign(fakeBrowser, { sidePanel: { open } });
+      startPinService(false, deps);
+      listener()({ menuItemId: PIN_MENU_ID }, undefined);
+      expect(open).not.toHaveBeenCalled();
     });
   });
 });

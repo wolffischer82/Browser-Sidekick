@@ -110,6 +110,29 @@ export async function broadcast(message: SidekickBroadcast): Promise<void> {
   }
 }
 
+/**
+ * Like `broadcast`, but while no page is listening it tries again for a
+ * short while: a context-menu click opens the sidebar (D17), which takes a
+ * moment to load and listen. Resolves whether a page heard it.
+ */
+export async function broadcastWhenHeard(
+  message: SidekickBroadcast,
+  options: { tries?: number; delayMs?: number } = {},
+): Promise<boolean> {
+  const tries = options.tries ?? 16;
+  const delayMs = options.delayMs ?? 250;
+  for (let attempt = 0; attempt < tries; attempt += 1) {
+    try {
+      await browser.runtime.sendMessage(message);
+      return true;
+    } catch {
+      // No page is listening yet.
+      if (attempt < tries - 1) await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
+  }
+  return false;
+}
+
 /** Sends a request to the background and checks its answer. */
 export async function sendToBackground(message: SidekickRequest): Promise<PinOutcome> {
   const reply: unknown = await browser.runtime.sendMessage(message);

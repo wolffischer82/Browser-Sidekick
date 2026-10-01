@@ -2,10 +2,18 @@ import { browser, type Browser } from 'wxt/browser';
 import { openRepository, type Repository } from './db/repository';
 import { extractTab } from './extract';
 import { t } from './i18n';
-import { broadcast, isSidekickMessage, type PinOutcome, type SidekickRequest } from './messages';
+import {
+  broadcast,
+  broadcastWhenHeard,
+  isSidekickMessage,
+  type PinOutcome,
+  type SidekickBroadcast,
+  type SidekickRequest,
+} from './messages';
 import { findOpenTab } from './open-tabs';
 import { startPin, startRefresh, type PageRef, type PinDeps, type PinStart } from './pins';
 import { openActiveSession } from './sessions';
+import { openSidebarInUserAction } from './sidebar-toggle';
 
 /**
  * The background's pinning service (spec 5.4, 6 "Contexts"): the "Pin to
@@ -57,10 +65,17 @@ export function lazyRepository(): () => Promise<Repository> {
 
 export interface ServiceDeps extends Omit<PinDeps, 'repo'> {
   repo: () => Promise<Repository>;
+  /** Opens the sidebar of that window; defaults to the browser's own call (D17). */
+  openSidebar?: (windowId: number | undefined) => void;
+  /**
+   * Announces a menu click's "Already pinned" to a sidebar that may only
+   * just be opening (D17); defaults to `broadcast`.
+   */
+  announce?: (message: SidekickBroadcast) => Promise<unknown>;
 }
 
 export function defaultServiceDeps(): ServiceDeps {
-  return { repo: lazyRepository(), extract: extractTab, broadcast };
+  return { repo: lazyRepository(), extract: extractTab, broadcast, announce: broadcastWhenHeard };
 }
 
 async function pinDeps(deps: ServiceDeps): Promise<PinDeps> {
@@ -69,7 +84,8 @@ async function pinDeps(deps: ServiceDeps): Promise<PinDeps> {
 
 /**
  * The menu click (spec 5.4): pins the clicked page into the active session,
- * creating one if needed, whether or not a sidebar is open. The click grants
+ * creating one if needed, whether or not a sidebar is open (the listener in
+ * `startPinService` opens it, D17). The click grants
  * `activeTab` for that tab, so its URL is visible and it can be read. A
  * duplicate is announced to open sidebars, which show "Already pinned".
  */
@@ -85,7 +101,8 @@ export async function handleMenuClick(
   const session = await openActiveSession(pins.repo);
   const start = await startPin(pins, session.id, page);
   if (start.status === 'duplicate') {
-    await deps.broadcast({ type: 'already-pinned', sessionId: session.id, pinId: start.pin.id });
+    const announce = deps.announce ?? deps.broadcast;
+    await announce({ type: 'already-pinned', sessionId: session.id, pinId: start.pin.id });
   }
   return start;
 }
@@ -146,7 +163,16 @@ export function startPinService(isFirefox: boolean, deps = defaultServiceDeps())
       console.error('Sidekick: the context menu could not be created.');
     });
   });
+  const openSidebar =
+    deps.openSidebar ??
+    ((windowId: number | undefined) => {
+      openSidebarInUserAction(isFirefox, windowId);
+    });
   browser.contextMenus.onClicked.addListener((info, tab) => {
+    // D17: the click also opens the sidebar, so the pin or its message is
+    // visible. This has to be the first thing in the handler, before any
+    // `await`: the browsers only allow it while the click is being handled.
+    if (info.menuItemId === PIN_MENU_ID) openSidebar(tab?.windowId);
     handleMenuClick(deps, info, tab).catch(() => {
       console.error('Sidekick: a page could not be pinned.');
     });

@@ -604,6 +604,10 @@ describe('history and citations', () => {
       expect(link.hasAttribute('data-citation')).toBe(false);
       expect(link.getAttribute('aria-label')).toBeNull();
       expect(link.getAttribute('rel')).toBe('noopener noreferrer');
+      // The test DOM would follow the link; a browser opens it in a new tab.
+      link.addEventListener('click', (event) => {
+        event.preventDefault();
+      });
       fireEvent.click(link);
     }
     await pause();

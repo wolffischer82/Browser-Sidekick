@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { fakeBrowser } from 'wxt/testing/fake-browser';
 import {
   broadcast,
+  broadcastWhenHeard,
   isPinOutcome,
   isSidekickMessage,
   sendToBackground,
@@ -113,5 +114,28 @@ describe('sendToBackground', () => {
     await expect(
       sendToBackground({ type: 'pin-tab', sessionId: 's1', tabId: 1 }),
     ).rejects.toThrow();
+  });
+});
+
+describe('broadcastWhenHeard', () => {
+  const message = { type: 'already-pinned', sessionId: 's1', pinId: 'p1' } as const;
+
+  it('tries again until a page listens', async () => {
+    const send = vi
+      .spyOn(fakeBrowser.runtime, 'sendMessage')
+      .mockRejectedValueOnce(new Error('Receiving end does not exist.'))
+      .mockRejectedValueOnce(new Error('Receiving end does not exist.'))
+      .mockResolvedValue(undefined);
+    expect(await broadcastWhenHeard(message, { delayMs: 1 })).toBe(true);
+    expect(send).toHaveBeenCalledTimes(3);
+    expect(send).toHaveBeenLastCalledWith(message);
+  });
+
+  it('gives up quietly when no page ever listens', async () => {
+    const send = vi
+      .spyOn(fakeBrowser.runtime, 'sendMessage')
+      .mockRejectedValue(new Error('Receiving end does not exist.'));
+    expect(await broadcastWhenHeard(message, { tries: 3, delayMs: 1 })).toBe(false);
+    expect(send).toHaveBeenCalledTimes(3);
   });
 });

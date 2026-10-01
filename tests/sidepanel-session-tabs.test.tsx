@@ -6,7 +6,7 @@ import type { Repository } from '@/shared/db/repository';
 import type { ExtractionResult } from '@/shared/extract';
 import { isSidekickMessage, type SidekickMessage } from '@/shared/messages';
 import { handleRequest, type ServiceDeps } from '@/shared/pin-service';
-import { getSettings } from '@/shared/settings';
+import { getSettings, updateSettings } from '@/shared/settings';
 import { readMessages } from './helpers/i18n';
 import { NATIVE_HOSTS, fakePermissions, type FakePermissions } from './helpers/permissions';
 import { freshRepository, renderSidebar, titleButton } from './helpers/sidebar';
@@ -457,6 +457,30 @@ describe('already pinned', () => {
     await fromBackground({ type: 'already-pinned', sessionId: id, pinId: pin.id });
     fireEvent.click(await screen.findByRole('button', { name: 'Dismiss' }));
     expect(screen.queryByText('Already pinned')).toBeNull();
+  });
+
+  it('shows the notice when it was announced while the sidebar was still opening (D17)', async () => {
+    const r = await freshRepository();
+    repo = r;
+    perms = fakePermissions([...NATIVE_HOSTS, '<all_urls>']);
+    fakeBrowserModel();
+    const session = await r.createSession({ providerId: null, model: null });
+    await updateSettings({ activeSessionId: session.id });
+    const pin = await r.addPin(session.id, {
+      url: ARTICLE.url,
+      title: 'Night trains return',
+      kind: 'page',
+    });
+    let finishOpening: (opened: Repository) => void = () => undefined;
+    const opening = new Promise<Repository>((resolve) => {
+      finishOpening = resolve;
+    });
+    render(<App repository={opening} />);
+    // The context-menu click opened the sidebar; its storage isn't open yet.
+    await fromBackground({ type: 'already-pinned', sessionId: session.id, pinId: pin.id });
+    finishOpening(r);
+    const notice = await screen.findByRole('status');
+    expect(notice.textContent).toContain('Already pinned');
   });
 
   it('ignores notices and changes for another session', async () => {

@@ -103,6 +103,8 @@ export function App({ repository }: Props) {
   activeId.current = active?.id ?? null;
   /** A broadcast arrived before the session was loaded. */
   const missedSync = useRef(false);
+  /** An "Already pinned" that arrived before the session was loaded (D17). */
+  const missedAlreadyPinned = useRef<{ sessionId: string; pinId: string } | null>(null);
   /** Only the latest pin read is applied. */
   const pinsRead = useRef(0);
   /** A pin whose Unpin button gets focus once it is listed. */
@@ -151,6 +153,10 @@ export function App({ repository }: Props) {
         missedSync.current = false;
         void reloadPins(opened, session.id);
       }
+      if (missedAlreadyPinned.current?.sessionId === session.id) {
+        setAlreadyPinnedId(missedAlreadyPinned.current.pinId);
+      }
+      missedAlreadyPinned.current = null;
       setTabsExpanded(settings.sessionTabsExpanded);
       setProviders(settings.providers);
       setDefaultProviderId(settings.defaultProviderId);
@@ -195,6 +201,7 @@ export function App({ repository }: Props) {
       const id = activeId.current;
       if (id === null) {
         missedSync.current = true;
+        if (message.type === 'already-pinned') missedAlreadyPinned.current = message;
         return;
       }
       if (message.sessionId !== id) return;

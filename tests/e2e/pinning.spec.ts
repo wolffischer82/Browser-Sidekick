@@ -25,11 +25,59 @@ const SLOW = 'Quarterly rail report';
 const MENU_ID = 'sidekick-pin';
 
 interface ChromeApi {
-  tabs: { query(q: object): Promise<{ id?: number; url?: string }[]> };
+  tabs: { query(q: object): Promise<{ id?: number; windowId?: number; url?: string }[]> };
   contextMenus: {
     update(id: string, props: object): Promise<void>;
     onClicked: { dispatch(info: object, tab: object): void };
   };
+  sidePanel: { open(options: { windowId?: number }): Promise<void> };
+}
+
+/**
+ * Records `sidePanel.open` calls in the background instead of making them:
+ * a dispatched click is no user gesture, so Chrome would refuse the real
+ * call, and headless Chromium has no side panel to look at (D17).
+ */
+async function recordSidePanelOpens(context: BrowserContext): Promise<void> {
+  const worker = context.serviceWorkers()[0] ?? (await context.waitForEvent('serviceworker'));
+  await worker.evaluate(() => {
+    const scope = globalThis as unknown as {
+      chrome: ChromeApi;
+      sidePanelOpens: { windowId?: number }[];
+    };
+    scope.sidePanelOpens = [];
+    scope.chrome.sidePanel.open = (options) => {
+      scope.sidePanelOpens.push({ ...options });
+      return Promise.resolve();
+    };
+  });
+}
+
+/** Fires the menu listener and returns the `sidePanel.open` calls made before it returned. */
+async function menuClickOpens(
+  context: BrowserContext,
+  url: string,
+): Promise<(number | undefined)[]> {
+  const worker = context.serviceWorkers()[0] ?? (await context.waitForEvent('serviceworker'));
+  return worker.evaluate(
+    async ({ u, id }) => {
+      const scope = globalThis as unknown as {
+        chrome: ChromeApi;
+        sidePanelOpens: { windowId?: number }[];
+      };
+      const [tab] = await scope.chrome.tabs.query({ url: u });
+      if (!tab) return [];
+      scope.sidePanelOpens.length = 0;
+      scope.chrome.contextMenus.onClicked.dispatch(
+        { menuItemId: id, pageUrl: u, editable: false },
+        tab,
+      );
+      // Read synchronously after the dispatch: only calls made in the
+      // handler itself, before any await, are in the list by now.
+      return scope.sidePanelOpens.map((o) => o.windowId);
+    },
+    { u: url, id: MENU_ID },
+  );
 }
 
 const currentRow = (page: Page) => page.locator('.tab-row[data-current]');
@@ -198,7 +246,12 @@ test.describe('pinning', () => {
     await page.goto(server.url('article.html'));
 
     // No sidebar has ever been open: the background creates the active session.
-    expect(await menuClick(context, server.url('article.html'))).toBe(true);
+    // The click also asks the browser to open the side panel of that window,
+    // synchronously in the handler (D17).
+    await recordSidePanelOpens(context);
+    const opens = await menuClickOpens(context, server.url('article.html'));
+    expect(opens).toHaveLength(1);
+    expect(typeof opens[0]).toBe('number');
     const sidebar = await openSidebarWindow(context, id);
     await expect(pinRow(sidebar, ARTICLE)).toHaveAttribute('data-status', 'ready');
     await expect(pinRow(sidebar, ARTICLE)).toHaveAttribute('data-current', '');
@@ -208,11 +261,19 @@ test.describe('pinning', () => {
     await sidebar.close();
     const dashboard = await context.newPage();
     await dashboard.goto(server.url('non-article.html'));
-    expect(await menuClick(context, server.url('non-article.html'))).toBe(true);
+    expect(await menuClickOpens(context, server.url('non-article.html'))).toHaveLength(1);
     const again = await openSidebarWindow(context, id);
     await expect(pinRow(again, DASHBOARD)).toHaveAttribute('data-status', 'ready');
     await expect(again.locator('li.pin-row')).toHaveCount(2);
     // The first pin's title stays the session title.
     await expect(again.getByRole('button', { name: `Session title: ${ARTICLE}` })).toBeVisible();
+
+    // A duplicate with the sidebar closed: the sidebar the click opens still
+    // gets "Already pinned", although it starts listening after the click.
+    await again.close();
+    expect(await menuClickOpens(context, server.url('non-article.html'))).toHaveLength(1);
+    const reopened = await openSidebarWindow(context, id);
+    await expect(reopened.getByRole('status')).toContainText('Already pinned');
+    await expect(reopened.locator('li.pin-row')).toHaveCount(2);
   });
 });
