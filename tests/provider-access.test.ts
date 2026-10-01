@@ -171,4 +171,15 @@ describe('llmErrorText', () => {
     });
     expect(llmErrorText(new LlmError('context-too-long')).detail).toBeNull();
   });
+
+  it('shows the generic rejection for a refused thinking level, without the provider text', () => {
+    expect(
+      llmErrorText(
+        new LlmError('thinking-unsupported', { status: 400, providerMessage: 'no effort here' }),
+      ),
+    ).toEqual({
+      message: 'The provider rejected the request. Check the settings and try again.',
+      detail: null,
+    });
+  });
 });

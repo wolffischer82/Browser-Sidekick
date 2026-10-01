@@ -1,4 +1,4 @@
-import { errorFromResponse, errorFromThrown } from './errors';
+import { errorFromResponse, errorFromThrown, type RequestFacts } from './errors';
 import { readSseEvents, type SseEvent, type SseOptions } from './sse';
 import { LlmError, type FetchFn, type ModelInfo, type ModelList } from './types';
 
@@ -23,13 +23,17 @@ async function readText(response: Response): Promise<string> {
   }
 }
 
-/** Sends the request and returns the OK response, or throws the mapped error. */
+/**
+ * Sends the request and returns the OK response, or throws the mapped error.
+ * `request` says what the body carried, for errors that depend on it.
+ */
 export async function send(
   fetchFn: FetchFn,
   url: string,
   init: RequestInit,
   apiKey: string,
   signal: AbortSignal | undefined,
+  request: RequestFacts = {},
 ): Promise<Response> {
   if (signal?.aborted) throw new LlmError('aborted');
   let response: Response;
@@ -41,7 +45,7 @@ export async function send(
   if (!response.ok) {
     const body = await readText(response);
     if (signal?.aborted) throw new LlmError('aborted');
-    throw errorFromResponse(response.status, body, apiKey);
+    throw errorFromResponse(response.status, body, apiKey, request);
   }
   return response;
 }

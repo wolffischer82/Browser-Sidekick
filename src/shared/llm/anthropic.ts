@@ -8,7 +8,7 @@ import {
   send,
   sseEvents,
 } from './http';
-import type { FetchFn, LlmProvider, LlmRequest, ModelInfo } from './types';
+import type { FetchFn, LlmProvider, LlmRequest, ModelInfo, ThinkingLevel } from './types';
 
 /**
  * Anthropic adapter: Messages API streaming and `GET /v1/models`
@@ -20,6 +20,19 @@ export const ANTHROPIC_BASE_URL = 'https://api.anthropic.com';
 export const ANTHROPIC_VERSION = '2023-06-01';
 /** `max_tokens` is required; used when the request sets no limit. */
 export const ANTHROPIC_DEFAULT_MAX_TOKENS = 4096;
+/**
+ * `max_tokens` when a `thinking` parameter is sent and the caller set no
+ * limit: reasoning counts against it (specs/thinking-levels.md 4.3).
+ */
+export const ANTHROPIC_THINKING_MAX_TOKENS = 32_000;
+/** `budget_tokens` per level for models that take a budget instead of an effort. */
+export const ANTHROPIC_BUDGET_TOKENS: Readonly<Record<ThinkingLevel, number>> = {
+  low: 2048,
+  medium: 8192,
+  high: 16_384,
+};
+/** The API's smallest budget; also the room kept for the answer when a budget is lowered. */
+const MIN_BUDGET_TOKENS = 1024;
 /** Safety bound on model-list pagination. */
 const MAX_PAGES = 10;
 
@@ -52,6 +65,59 @@ function modelInfoOf(model: Record<string, unknown>): ModelInfo | null {
   return { thinking: 'unsupported', ...maxOutputTokens };
 }
 
+interface ThinkingFields {
+  maxTokens: number;
+  /** `thinking` and `output_config`, or nothing. */
+  fields: Record<string, unknown>;
+  /** Whether `fields` carries the session's level. */
+  levelSent: boolean;
+}
+
+/**
+ * The thinking part of a Messages request (specs/thinking-levels.md 4.3).
+ * Never `temperature`, `top_p`, `top_k` or `thinking: {type: "disabled"}`.
+ */
+function thinkingFields(request: LlmRequest): ThinkingFields {
+  const plain: ThinkingFields = {
+    maxTokens: request.maxOutputTokens ?? ANTHROPIC_DEFAULT_MAX_TOKENS,
+    fields: {},
+    levelSent: false,
+  };
+  if (!request.thinking) return plain;
+  const { level, info } = request.thinking;
+  if (info?.thinking === 'unsupported') return plain;
+  // A supported model without a mode is handled like an unknown one.
+  const mode = info?.thinkingMode ?? 'unknown';
+  if (level === null && mode !== 'effort') return plain;
+
+  const cap = info?.maxOutputTokens;
+  const maxTokens =
+    request.maxOutputTokens ??
+    (cap !== undefined
+      ? Math.min(ANTHROPIC_THINKING_MAX_TOKENS, cap)
+      : ANTHROPIC_THINKING_MAX_TOKENS);
+
+  if (level !== null && mode === 'budget') {
+    let budget = ANTHROPIC_BUDGET_TOKENS[level];
+    // `budget_tokens` must stay below `max_tokens`.
+    if (maxTokens <= budget) budget = maxTokens - MIN_BUDGET_TOKENS;
+    if (budget < MIN_BUDGET_TOKENS) return plain;
+    return {
+      maxTokens,
+      fields: { thinking: { type: 'enabled', budget_tokens: budget } },
+      levelSent: true,
+    };
+  }
+  return {
+    maxTokens,
+    fields: {
+      thinking: { type: 'adaptive', display: 'summarized' },
+      ...(level !== null ? { output_config: { effort: level } } : {}),
+    },
+    levelSent: level !== null,
+  };
+}
+
 export function createAnthropicProvider(
   config: AnthropicConfig,
   fetchFn: FetchFn = globalFetch,
@@ -64,27 +130,30 @@ export function createAnthropicProvider(
     ...(apiKey ? { 'x-api-key': apiKey } : {}),
   };
 
-  function buildBody(request: LlmRequest): Record<string, unknown> {
+  function buildBody(request: LlmRequest, thinking: ThinkingFields): Record<string, unknown> {
     return {
       model: request.model,
-      max_tokens: request.maxOutputTokens ?? ANTHROPIC_DEFAULT_MAX_TOKENS,
+      max_tokens: thinking.maxTokens,
       ...(request.system ? { system: request.system } : {}),
       messages: request.turns.map((turn) => ({ role: turn.role, content: turn.content })),
       stream: true,
+      ...thinking.fields,
     };
   }
 
   async function* stream(request: LlmRequest, signal: AbortSignal): AsyncGenerator<string> {
+    const thinking = thinkingFields(request);
     const response = await send(
       fetchFn,
       `${ANTHROPIC_BASE_URL}/v1/messages`,
       {
         method: 'POST',
         headers: { 'content-type': 'application/json', ...headers },
-        body: JSON.stringify(buildBody(request)),
+        body: JSON.stringify(buildBody(request, thinking)),
       },
       apiKey,
       signal,
+      { thinkingLevel: thinking.levelSent },
     );
     for await (const event of sseEvents(response, signal)) {
       const data = parseEventData(event.data);

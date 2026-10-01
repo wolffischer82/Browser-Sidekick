@@ -9,7 +9,7 @@ import {
   sseEvents,
   trimSlashes,
 } from './http';
-import type { FetchFn, LlmProvider, LlmRequest, ModelInfo } from './types';
+import type { FetchFn, LlmProvider, LlmRequest, ModelInfo, ThinkingLevel } from './types';
 
 /**
  * OpenAI-compatible adapter: OpenAI Chat Completions streaming and
@@ -42,6 +42,13 @@ function textOf(value: unknown): string {
   return typeof value === 'string' ? value : '';
 }
 
+/** The level to send, or `null` for Default and for a model known not to take one. */
+function reasoningEffort(request: LlmRequest): ThinkingLevel | null {
+  const thinking = request.thinking;
+  if (!thinking || thinking.info?.thinking === 'unsupported') return null;
+  return thinking.level;
+}
+
 export function createOpenAiProvider(
   config: OpenAiConfig,
   fetchFn: FetchFn = globalFetch,
@@ -62,6 +69,9 @@ export function createOpenAiProvider(
       const key = isOfficialOpenAi(base) ? 'max_completion_tokens' : 'max_tokens';
       body[key] = request.maxOutputTokens;
     }
+    // One field for every host (specs/thinking-levels.md 4.3); Default sends nothing.
+    const level = reasoningEffort(request);
+    if (level) body.reasoning_effort = level;
     return body;
   }
 
@@ -76,6 +86,7 @@ export function createOpenAiProvider(
       },
       apiKey,
       signal,
+      { thinkingLevel: reasoningEffort(request) !== null },
     );
 
     const contentType = response.headers.get('content-type') ?? '';

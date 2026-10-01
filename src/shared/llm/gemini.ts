@@ -8,7 +8,7 @@ import {
   send,
   sseEvents,
 } from './http';
-import type { FetchFn, LlmProvider, LlmRequest, ModelInfo } from './types';
+import type { FetchFn, LlmProvider, LlmRequest, ModelInfo, ThinkingLevel } from './types';
 
 /**
  * Google Gemini adapter: `models.streamGenerateContent?alt=sse` and
@@ -20,6 +20,27 @@ export const GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com';
 const API = `${GEMINI_BASE_URL}/v1beta`;
 /** Safety bound on model-list pagination. */
 const MAX_PAGES = 10;
+
+/** `thinkingBudget` per level, for the models that take a budget (`gemini-2.5`). */
+export const GEMINI_BUDGET_TOKENS: Readonly<Record<ThinkingLevel, number>> = {
+  low: 2048,
+  medium: 8192,
+  high: 24_576,
+};
+
+/**
+ * `generationConfig.thinkingConfig` (specs/thinking-levels.md 4.3), or `null`
+ * to send none. Never both `thinkingBudget` and `thinkingLevel`.
+ */
+function thinkingConfig(request: LlmRequest): Record<string, unknown> | null {
+  if (!request.thinking) return null;
+  const { level, info } = request.thinking;
+  if (info?.thinking === 'unsupported') return null;
+  if (level === null) return info?.thinking === 'supported' ? { includeThoughts: true } : null;
+  return request.model.includes('gemini-2.5')
+    ? { includeThoughts: true, thinkingBudget: GEMINI_BUDGET_TOKENS[level] }
+    : { includeThoughts: true, thinkingLevel: level };
+}
 
 export interface GeminiConfig {
   apiKey: string;
@@ -38,30 +59,39 @@ export function createGeminiProvider(
   const apiKey = config.apiKey;
   const auth: Record<string, string> = apiKey ? { 'x-goog-api-key': apiKey } : {};
 
-  function buildBody(request: LlmRequest): Record<string, unknown> {
+  function buildBody(
+    request: LlmRequest,
+    thinking: Record<string, unknown> | null,
+  ): Record<string, unknown> {
+    const generationConfig = {
+      ...(request.maxOutputTokens !== undefined
+        ? { maxOutputTokens: request.maxOutputTokens }
+        : {}),
+      ...(thinking ? { thinkingConfig: thinking } : {}),
+    };
     return {
       contents: request.turns.map((turn) => ({
         role: turn.role === 'assistant' ? 'model' : 'user',
         parts: [{ text: turn.content }],
       })),
       ...(request.system ? { systemInstruction: { parts: [{ text: request.system }] } } : {}),
-      ...(request.maxOutputTokens !== undefined
-        ? { generationConfig: { maxOutputTokens: request.maxOutputTokens } }
-        : {}),
+      ...(Object.keys(generationConfig).length > 0 ? { generationConfig } : {}),
     };
   }
 
   async function* stream(request: LlmRequest, signal: AbortSignal): AsyncGenerator<string> {
+    const thinking = thinkingConfig(request);
     const response = await send(
       fetchFn,
       `${API}/${modelPath(request.model)}:streamGenerateContent?alt=sse`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...auth },
-        body: JSON.stringify(buildBody(request)),
+        body: JSON.stringify(buildBody(request, thinking)),
       },
       apiKey,
       signal,
+      { thinkingLevel: thinking !== null && request.thinking?.level != null },
     );
     for await (const event of sseEvents(response, signal)) {
       const data = parseEventData(event.data);
