@@ -288,7 +288,7 @@ Status: done (2026-09-30; gate-checker PASS-WITH-NOTES, npm audit clean, CI gree
 
 ## T10 Chat: ask flow
 
-Status: in progress
+Status: implemented 2026-10-01; gate passes locally (exit 0). Waiting for the gate-checker, CI and the orchestrator's UI check in both browsers.
 
 ### Plan
 
@@ -301,4 +301,30 @@ Status: in progress
 - Sidebar: chat hook (send, stream, stop, retry; one request per session; streaming lives in the sending sidebar), Transcript (user messages, sanitised Markdown answers, citations via `focusOrOpen`, Stop, stopped mark, trimming and current-tab notices, error with Retry, auto-scroll), Composer (Enter sends, Shift+Enter newline, the "no access" state with Grant access). Strings in `en` and `de`.
 - Tests: context/budget, sanitiser/citations, title (success, failure, rename race), ask-flow component tests with a mocked provider (stream, stop, error, retry, history restore, exclusion, provider/model). Mock LLM request log used as is (it already scripts slow, hanging and error replies).
 - e2e `tests/e2e/chat.spec.ts` against the mock LLM with the orchestrator's 8 steps; screens `T10-*`.
-- Open questions: none so far.
+- Open questions: none. Q6 (write the two test files) and Q7 (store the error code) were answered by the owner on 2026-10-01; the plan changed accordingly: a failed answer is stored with `Message.error` instead of staying in memory.
+
+### Acceptance
+
+- [x] Questions are answered using the pins and the current tab: the request carries each ready pin and then the current tab between delimiters, with index, title and URL (unit: `tests/chat-context.test.ts`; component: `tests/sidepanel-chat.test.tsx`; e2e on the mock's request log, by booleans only). A PDF current tab is read in the sidebar (e2e).
+- [x] Excluding the current tab removes it from the request (component and e2e: text, label and second delimiter absent; the tab isn't even read). A current tab that is already pinned is sent once, as the pin.
+- [x] Trimming shows the notice: oldest history first, then page texts proportionally (unit); the notice on the answer, stored with it (component, e2e, screen `T10-05`).
+- [x] Stop keeps the partial answer, marked "Stopped" (component, e2e, screen `T10-03`).
+- [x] History restores when switching sessions, and after a sidebar reload (component, e2e).
+- [x] Citations link to the right tab or URL, and keep working after unpinning: `[n]` uses the answer's stored source list (unit: `tests/chat-markdown.test.ts`; component: focus an open tab, open a closed page, no pin present; e2e: `[1]` focuses the article's tab).
+- [x] The title is generated once, after the first answer, and never overwrites a manual rename (unit: `tests/chat-title.test.ts` incl. a rename during the request; component; e2e: one title request in the whole flow, screen `T10-06`).
+- [x] Requests go to the session's provider and model (component; e2e: `mock-large`, then `mock-small` after the header dropdown, with the provider's key).
+- [x] Injected `<script>`/`onerror` in model output does not execute (unit and component under the DOM shim; e2e in real Chromium: no `script` or `img` in the transcript, the flag stays unset).
+- [x] Errors appear inline with Retry; a failed answer is stored with its error code, so the error and Retry survive a reload, and a successful Retry clears it (owner decision Q7; repository, component and e2e tests, screen `T10-04`).
+- [x] The input shows the provider's "no access" state with Grant access instead of sending (component).
+- [x] New strings are in `en` and `de` (`tests/locales.test.ts`).
+- [ ] The orchestrator has looked at the build in both browsers (screens `test-results/screens/T10-*.png`). Firefox wasn't loaded in this task: no manifest or background change. Real providers and Firefox are on the owner checklist.
+
+### Tests
+
+- `tests/chat-context.test.ts`: ordering, delimiters, numbering by row, non-ready pins, no pages, forged delimiters, history pairs, trimming order and proportion, nothing fits, surrogate pairs, which current tab is sent.
+- `tests/chat-markdown.test.ts`: Markdown shape, link attributes, sanitiser (script, handlers, `javascript:`, frames, forms, SVG, images), citation linking (single, groups, unknown numbers, code and links untouched, stored sources, non-web sources).
+- `tests/chat-title.test.ts`: request content, title cleaning, first-answer rule, success, failure, empty reply, already renamed, rename during the request, deleted session, runaway reply.
+- `tests/chat-current-tab.test.ts`: page, PDF by URL and by Content-Type through the sidebar runner, unreadable, restricted, extractor error.
+- `tests/sidepanel-chat.test.tsx`: stream with stored answer, sources and title; manual rename kept; Shift+Enter and busy; Stop; error with Retry (cleared on success, kept after reopening, new code after a failed Retry, provider message, partial text, no Retry on an older failure); eye, pinned current tab, unreadable tab; trimming notice; history restore, session switch, citations, stored history sent, a message from another sidebar; no-access input (granted, declined).
+- `tests/repository.test.ts`: the `error` field on add and update. `tests/messages.test.ts`: the two new broadcasts.
+- `tests/e2e/chat.spec.ts`: the ask flow (8 steps plus trimming, long conversation and the reload after an error) and a PDF current tab; screens `T10-01-streaming`, `T10-02-answer` (+ `-dark`), `T10-03-stopped`, `T10-04-error-retry`, `T10-05-trimmed`, `T10-06-title`, `T10-07-long-scroll`.
