@@ -1,6 +1,6 @@
 import { errorFromResponse, errorFromThrown } from './errors';
 import { readSseEvents, type SseEvent, type SseOptions } from './sse';
-import { LlmError, type FetchFn } from './types';
+import { LlmError, type FetchFn, type ModelInfo, type ModelList } from './types';
 
 /**
  * Request helpers shared by the adapters. Every failure leaves here as an
@@ -98,17 +98,30 @@ export function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
+/** What an adapter read from its provider's model list. */
+export interface ListedModels {
+  ids: string[];
+  /** Entries only for the models the list says something about. */
+  info: Map<string, ModelInfo>;
+}
+
 /** Runs `list`, turning every failure except an abort into the free-text fallback. */
 export async function listOrFallback(
-  list: () => Promise<string[] | null>,
+  list: () => Promise<ListedModels | null>,
   signal: AbortSignal | undefined,
-): Promise<{ models: string[] } | { models: null; error: LlmError }> {
+): Promise<ModelList> {
   try {
-    const models = await list();
+    const listed = await list();
     // An empty or unreadable list also falls back to free-text entry.
-    return models && models.length > 0
-      ? { models }
-      : { models: null, error: new LlmError('unknown') };
+    if (!listed || listed.ids.length === 0) return { models: null, error: new LlmError('unknown') };
+    // `fromEntries` defines own properties, whatever a provider calls a model.
+    const info = Object.fromEntries(
+      listed.ids.flatMap((id): [string, ModelInfo][] => {
+        const entry = listed.info.get(id);
+        return entry ? [[id, entry]] : [];
+      }),
+    );
+    return { models: listed.ids, info };
   } catch (error) {
     const mapped = mapAbortAware(error, signal);
     if (mapped.code === 'aborted') throw mapped;

@@ -34,7 +34,7 @@ function provider(
   return {
     kind: 'openai-compatible',
     calls,
-    listModels: () => Promise.resolve({ models: [] }),
+    listModels: () => Promise.resolve({ models: [], info: {} }),
     stream(request, signal) {
       calls.push(request);
       return reply(request, signal);

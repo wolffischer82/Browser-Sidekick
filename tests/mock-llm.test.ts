@@ -54,7 +54,10 @@ async function failure(promise: Promise<unknown>): Promise<LlmError> {
 
 describe('mock OpenAI-compatible server', () => {
   it('lists models', async () => {
-    expect(await provider().listModels()).toEqual({ models: [...MOCK_MODELS].sort() });
+    expect(await provider().listModels()).toEqual({
+      models: [...MOCK_MODELS].sort(),
+      info: {},
+    });
     expect(mock.requests[0]).toMatchObject({ method: 'GET', path: '/v1/models' });
   });
 

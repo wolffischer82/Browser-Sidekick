@@ -199,7 +199,7 @@ describe('Anthropic listModels', () => {
           }),
     );
     const result = await createAnthropicProvider({ apiKey: KEY }, fetch).listModels();
-    expect(result).toEqual({ models: ['claude-new', 'claude-mid', 'claude-old'] });
+    expect(result).toEqual({ models: ['claude-new', 'claude-mid', 'claude-old'], info: {} });
     expect(calls.map((c) => c.url)).toEqual([
       'https://api.anthropic.com/v1/models?limit=1000',
       'https://api.anthropic.com/v1/models?limit=1000&after_id=claude-mid',

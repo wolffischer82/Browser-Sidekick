@@ -13,6 +13,8 @@ const KEYS: Record<LlmErrorCode, MessageKey> = {
   'rate-limit': 'llmErrorRateLimit',
   'model-not-found': 'llmErrorModelNotFound',
   'context-too-long': 'llmErrorContextTooLong',
+  // The generic text until T15 adds this code's own string (decisions.md T13).
+  'thinking-unsupported': 'llmErrorBadRequest',
   'bad-request': 'llmErrorBadRequest',
   server: 'llmErrorServer',
   network: 'llmErrorNetwork',

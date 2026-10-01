@@ -9,7 +9,7 @@ import {
   sseEvents,
   trimSlashes,
 } from './http';
-import type { FetchFn, LlmProvider, LlmRequest } from './types';
+import type { FetchFn, LlmProvider, LlmRequest, ModelInfo } from './types';
 
 /**
  * OpenAI-compatible adapter: OpenAI Chat Completions streaming and
@@ -34,6 +34,9 @@ function isOfficialOpenAi(baseUrl: string): boolean {
     return false;
   }
 }
+
+/** `supported_parameters` entries that mean the model takes a reasoning level. */
+const REASONING_PARAMETERS = ['reasoning', 'reasoning_effort'];
 
 function textOf(value: unknown): string {
   return typeof value === 'string' ? value : '';
@@ -117,10 +120,21 @@ export function createOpenAiProvider(
           ? json.models
           : null;
       if (!list) return null;
-      const ids = list
-        .map((item) => (isRecord(item) ? textOf(item.id) || textOf(item.name) : textOf(item)))
-        .filter((id) => id !== '');
-      return [...new Set(ids)].sort((a, b) => a.localeCompare(b));
+      const ids: string[] = [];
+      const info = new Map<string, ModelInfo>();
+      for (const item of list) {
+        const id = isRecord(item) ? textOf(item.id) || textOf(item.name) : textOf(item);
+        if (id === '' || ids.includes(id)) continue;
+        ids.push(id);
+        // OpenRouter lists what each model accepts; without the array the model is unknown.
+        if (isRecord(item) && Array.isArray(item.supported_parameters)) {
+          const accepts = REASONING_PARAMETERS.some((name) =>
+            (item.supported_parameters as unknown[]).includes(name),
+          );
+          info.set(id, { thinking: accepts ? 'supported' : 'unsupported' });
+        }
+      }
+      return { ids: ids.sort((a, b) => a.localeCompare(b)), info };
     }, signal);
   }
 

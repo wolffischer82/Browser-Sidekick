@@ -8,7 +8,7 @@ import {
   send,
   sseEvents,
 } from './http';
-import type { FetchFn, LlmProvider, LlmRequest } from './types';
+import type { FetchFn, LlmProvider, LlmRequest, ModelInfo } from './types';
 
 /**
  * Anthropic adapter: Messages API streaming and `GET /v1/models`
@@ -25,6 +25,31 @@ const MAX_PAGES = 10;
 
 export interface AnthropicConfig {
   apiKey: string;
+}
+
+function isSupported(value: unknown): boolean {
+  return isRecord(value) && value.supported === true;
+}
+
+/**
+ * Reads a model object's thinking support (specs/thinking-levels.md 4.2).
+ * `null` is unknown: the object has no `capabilities`, or they say nothing
+ * readable about thinking.
+ */
+function modelInfoOf(model: Record<string, unknown>): ModelInfo | null {
+  const capabilities = model.capabilities;
+  if (!isRecord(capabilities) || !isRecord(capabilities.thinking)) return null;
+  const types = isRecord(capabilities.thinking.types) ? capabilities.thinking.types : {};
+  const cap = model.max_tokens;
+  const maxOutputTokens =
+    typeof cap === 'number' && Number.isInteger(cap) && cap > 0 ? { maxOutputTokens: cap } : {};
+  if (isSupported(capabilities.effort) && isSupported(types.adaptive)) {
+    return { thinking: 'supported', thinkingMode: 'effort', ...maxOutputTokens };
+  }
+  if (isSupported(types.enabled)) {
+    return { thinking: 'supported', thinkingMode: 'budget', ...maxOutputTokens };
+  }
+  return { thinking: 'unsupported', ...maxOutputTokens };
 }
 
 export function createAnthropicProvider(
@@ -82,6 +107,7 @@ export function createAnthropicProvider(
   async function listModels(signal?: AbortSignal) {
     return listOrFallback(async () => {
       const ids: string[] = [];
+      const info = new Map<string, ModelInfo>();
       let afterId: string | null = null;
       for (let page = 0; page < MAX_PAGES; page++) {
         const query = new URLSearchParams({ limit: '1000' });
@@ -96,13 +122,16 @@ export function createAnthropicProvider(
         const json = await readJson(response, signal);
         if (!isRecord(json) || !Array.isArray(json.data)) return null;
         for (const item of json.data) {
-          if (isRecord(item) && typeof item.id === 'string') ids.push(item.id);
+          if (!isRecord(item) || typeof item.id !== 'string') continue;
+          ids.push(item.id);
+          const entry = modelInfoOf(item);
+          if (entry && !info.has(item.id)) info.set(item.id, entry);
         }
         afterId = typeof json.last_id === 'string' ? json.last_id : null;
         if (json.has_more !== true || !afterId) break;
       }
       // Newest first, as the API returns them.
-      return ids;
+      return { ids, info };
     }, signal);
   }
 

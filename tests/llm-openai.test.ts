@@ -184,7 +184,7 @@ describe('OpenAI-compatible listModels', () => {
       { baseUrl: 'https://api.openai.com/v1', apiKey: KEY },
       fetch,
     ).listModels();
-    expect(result).toEqual({ models: ['gpt-4.1-mini', 'gpt-4o'] });
+    expect(result).toEqual({ models: ['gpt-4.1-mini', 'gpt-4o'], info: {} });
     expect(calls[0]?.url).toBe('https://api.openai.com/v1/models');
     expect(calls[0]?.init.method).toBe('GET');
     expect(calls[0]?.headers).toEqual({ authorization: `Bearer ${KEY}` });
@@ -198,7 +198,7 @@ describe('OpenAI-compatible listModels', () => {
       { baseUrl: 'http://localhost:11434/v1', apiKey: '' },
       fetch,
     ).listModels();
-    expect(result).toEqual({ models: ['llama3.2', 'qwen3'] });
+    expect(result).toEqual({ models: ['llama3.2', 'qwen3'], info: {} });
   });
 
   it('falls back when the server has no /models (405)', async () => {

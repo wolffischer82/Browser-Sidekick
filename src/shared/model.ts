@@ -102,6 +102,24 @@ export interface Message {
 
 export type ProviderKind = 'openai-compatible' | 'anthropic' | 'gemini';
 
+/**
+ * A session's thinking level (specs/thinking-levels.md 4.1). "Default" is
+ * the absence of a level: nothing is sent and the model decides.
+ */
+export type ThinkingLevel = 'low' | 'medium' | 'high';
+
+/**
+ * What a provider's model list says about one model (specs/thinking-levels.md
+ * 4.2, 5). A model without an entry is unknown: its support can't be told.
+ */
+export interface ModelInfo {
+  thinking: 'supported' | 'unsupported';
+  /** Anthropic only: how a supported model takes its level. */
+  thinkingMode?: 'effort' | 'budget';
+  /** Anthropic only: the model's output cap in tokens. */
+  maxOutputTokens?: number;
+}
+
 /** A saved LLM provider (spec 5.7). Stored in `storage.local` only (D5). */
 export interface ProviderConfig {
   id: string;
@@ -115,6 +133,12 @@ export interface ProviderConfig {
   contextBudget: number;
   /** Models from the provider's list endpoint; `null` if listing failed or is unsupported. */
   cachedModels: string[] | null;
+  /**
+   * Per-model info from the same list, keyed by model id. Written wherever
+   * `cachedModels` is written and cleared with it; a missing field or key
+   * means unknown (specs/thinking-levels.md 5).
+   */
+  modelInfo?: Record<string, ModelInfo>;
   /**
    * False when the host permission for a custom origin was declined: the
    * provider is saved but can't be default or chosen for a session (spec 5.7).

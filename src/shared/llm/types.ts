@@ -1,4 +1,6 @@
-import type { ProviderKind } from '../model';
+import type { ModelInfo, ProviderKind, ThinkingLevel } from '../model';
+
+export type { ModelInfo, ThinkingLevel };
 
 /**
  * LLM layer (spec 6 "LLM layer", 5.6, 5.7). One adapter per provider kind
@@ -24,6 +26,13 @@ export interface LlmRequest {
    * Anthropic, where it's required, uses `ANTHROPIC_DEFAULT_MAX_TOKENS`.
    */
   maxOutputTokens?: number;
+  /**
+   * Thinking information (specs/thinking-levels.md 4.3). Absent for Test
+   * connection and title generation: the adapter then builds the body it
+   * built before thinking levels existed. `level: null` is Default;
+   * `info: undefined` means the model's support is unknown.
+   */
+  thinking?: { level: ThinkingLevel | null; info: ModelInfo | undefined };
 }
 
 /** Why a request failed. The UI localises the code (T05, T10). */
@@ -36,6 +45,11 @@ export type LlmErrorCode =
   | 'model-not-found'
   /** The provider's 400/413 saying the input is too long. */
   | 'context-too-long'
+  /**
+   * A 400/422 that names reasoning, thinking or effort, on a request that
+   * sent a thinking level (specs/thinking-levels.md 4.6).
+   */
+  | 'thinking-unsupported'
   /** Any other 4xx; `providerMessage` carries the provider's text. */
   | 'bad-request'
   /** 5xx, 529 overloaded, or an error event inside the stream. */
@@ -73,8 +87,11 @@ export class LlmError extends Error {
 /**
  * Result of `listModels`. `models: null` means listing failed or isn't
  * supported, and the settings form falls back to free-text entry (spec 5.7).
+ * `info` holds what the list says about each model, keyed by model id; a
+ * model without an entry is unknown (specs/thinking-levels.md 4.2).
  */
-export type ModelList = { models: string[] } | { models: null; error: LlmError };
+export type ModelList =
+  { models: string[]; info: Record<string, ModelInfo> } | { models: null; error: LlmError };
 
 export interface LlmProvider {
   readonly kind: ProviderKind;

@@ -173,7 +173,7 @@ describe('Gemini listModels', () => {
           }),
     );
     const result = await createGeminiProvider({ apiKey: KEY }, fetch).listModels();
-    expect(result).toEqual({ models: ['gemini-a', 'gemini-b'] });
+    expect(result).toEqual({ models: ['gemini-a', 'gemini-b'], info: {} });
     expect(calls.map((c) => c.url)).toEqual([
       'https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000',
       'https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000&pageToken=next+page',

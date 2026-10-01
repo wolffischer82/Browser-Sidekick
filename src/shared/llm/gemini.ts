@@ -8,7 +8,7 @@ import {
   send,
   sseEvents,
 } from './http';
-import type { FetchFn, LlmProvider, LlmRequest } from './types';
+import type { FetchFn, LlmProvider, LlmRequest, ModelInfo } from './types';
 
 /**
  * Google Gemini adapter: `models.streamGenerateContent?alt=sse` and
@@ -86,6 +86,7 @@ export function createGeminiProvider(
   async function listModels(signal?: AbortSignal) {
     return listOrFallback(async () => {
       const ids: string[] = [];
+      const info = new Map<string, ModelInfo>();
       let pageToken: string | null = null;
       for (let page = 0; page < MAX_PAGES; page++) {
         const query = new URLSearchParams({ pageSize: '1000' });
@@ -104,12 +105,17 @@ export function createGeminiProvider(
           const methods = item.supportedGenerationMethods;
           // Only models that can answer chat requests.
           if (Array.isArray(methods) && !methods.includes('generateContent')) continue;
-          ids.push(item.name.replace(/^models\//, ''));
+          const id = item.name.replace(/^models\//, '');
+          ids.push(id);
+          // A missing or non-boolean `thinking` leaves the model unknown.
+          if (typeof item.thinking === 'boolean' && !info.has(id)) {
+            info.set(id, { thinking: item.thinking ? 'supported' : 'unsupported' });
+          }
         }
         pageToken = typeof json.nextPageToken === 'string' ? json.nextPageToken : null;
         if (!pageToken) break;
       }
-      return ids;
+      return { ids, info };
     }, signal);
   }
 
