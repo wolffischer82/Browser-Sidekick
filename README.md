@@ -10,6 +10,7 @@ Status: MVP, version 0.1.0. It isn't in the Chrome Web Store or on addons.mozill
 - **Web pages, YouTube and PDFs.** Articles are reduced to their readable text, YouTube videos to their transcript, and PDFs to their text layer.
 - **Ask and summarise.** Questions are answered from the pinned pages plus the tab you're on. Summarize gives a short summary per page and an overall one. Answers stream in and cite their sources as `[1]`, `[2]`; clicking a citation opens that page.
 - **Your own provider and key.** Works with Anthropic, Google Gemini and any OpenAI-compatible API (OpenAI, OpenRouter, Groq, or a local server such as Ollama or LM Studio). You can save several providers and choose the model per session.
+- **Thinking level per session.** Next to the model, choose how much the model should think before it answers: Default, Low, Medium or High. The control is hidden for models known not to support it.
 - **Local data.** Sessions, pins, chat history and API keys stay on your device. Page text goes only to the provider you chose, and only when you ask or summarise. There is no telemetry.
 - **Minimal permissions.** Access to all sites is optional. Without it, the extension can still read a page you pin through the right-click menu.
 - **English and German** interface, following the browser's language.
