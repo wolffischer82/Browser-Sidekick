@@ -403,7 +403,7 @@ Status: done (2026-10-01; gate-checker PASS-WITH-NOTES)
 
 ## T14 LLM layer: reasoning in the stream
 
-Status: in progress
+Status: done by the implementer (2026-10-01); gate-checker pending
 
 ### Plan
 
@@ -417,3 +417,22 @@ Status: in progress
 - `docs/decisions.md`: T04-8 superseded with a dated entry; the mock trigger recorded.
 - No dependency, manifest, locale or README change; nothing passes thinking information yet (T15).
 - Open questions: none so far.
+
+### Acceptance
+
+- [x] Each adapter yields reasoning and text events in arrival order and yields nothing for signatures or empty reasoning (`tests/llm-anthropic.test.ts`, `tests/llm-gemini.test.ts`, `tests/llm-openai.test.ts`).
+- [x] Title generation and Test connection behave as before: reasoning events don't reach the title (`tests/chat-title.test.ts`), a reasoning-only reply is a successful test with the unchanged request body (`tests/sidepanel-settings.test.tsx`), and the byte-identical body tests of T13 still pass unchanged.
+- [x] The stored assistant message carries the reasoning on completion, Stop and failure, and a successful Retry replaces it (`tests/sidepanel-chat.test.tsx`, `tests/repository.test.ts`).
+- [x] Reasoning is absent from the turns sent on the next request and from the context-budget calculation (`tests/sidepanel-chat.test.tsx`, `tests/chat-context.test.ts`).
+- [x] Decision 8 of T04 in `docs/decisions.md` is superseded with a dated entry (T14-2).
+- [x] While an answer streams, the reasoning that arrived is in the live answer next to the partial text (`LiveAnswer.reasoning`); nothing renders it yet.
+- [x] The mock LLM sends reasoning deltas only for a scripted reply that asks for them, under either field name (`tests/mock-llm.test.ts`).
+- [x] No dependency, manifest, locale or README change; reasoning is never logged or sent anywhere.
+
+### Tests
+
+- `tests/llm-anthropic.test.ts`, `tests/llm-gemini.test.ts`, `tests/llm-openai.test.ts`: reasoning then text for any chunking, reasoning only, interleaved, signatures, empty and non-string reasoning, reasoning kept before an in-stream error; OpenAI-compatible also both field names, both in one chunk, and the non-streamed JSON reply.
+- `tests/sidepanel-chat.test.tsx` (`reasoning`): the live state through `useChat`; stored on completion, on Stop (with and without answer text) and on failure; Retry replaces or clears it; no reasoning in the next request, the title request, the broadcasts or the console.
+- `tests/chat-context.test.ts`: reasoning outside the turns, the system text and the budget. `tests/repository.test.ts`: add, update, clear, assistant messages only.
+- `tests/chat-title.test.ts`: reasoning events don't leak into the title or its runaway limit. `tests/sidepanel-settings.test.tsx`: Test connection with a reasoning-only reply.
+- `tests/mock-llm.test.ts`: scripted reasoning over the wire and through the adapter; none without it.
