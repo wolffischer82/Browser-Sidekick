@@ -277,6 +277,10 @@ describe('asking', () => {
     responders.push(() => stream.response);
     ask('First');
     await screen.findByRole('button', { name: 'Stop' });
+    // Stop shows before the request leaves, so wait for the request itself.
+    await waitFor(() => {
+      expect(bodies).toHaveLength(1);
+    });
     ask('Second');
     await pause();
     expect(questions()).toHaveLength(1);

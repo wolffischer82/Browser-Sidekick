@@ -29,6 +29,7 @@ Every spec used here defines an ordered task list, a working method (task loop, 
 - Commits use the GitHub noreply address `75468956+wolffischer82@users.noreply.github.com` (set repo-locally); pushes with any other address are rejected.
 - GitHub hosts the repository and issue tracker only. All CI and builds run on the self-hosted runner on `lenovo-ai-server` (`runs-on: [self-hosted, Linux, X64]`); no GitHub-hosted runners, no setup/cache actions, no uploaded build artifacts.
 - The loadable builds are committed: `dist/chrome-ext` and `dist/firefox-ext` are tracked in git so the owner can load them straight from a checkout. Every task ends with `dist/` rebuilt from its final source and committed (`build: update committed builds [Txx]`); CI runs `npm run check:dist` and fails when the committed builds differ from a fresh build. Never edit files in `dist/` by hand.
+- `README.md` stays current for visitors to the repository. A task that adds, removes or visibly changes a user-facing feature, changes a limit, or changes how the extension is installed or built updates the matching README section (Features, Limits, Install) in the same task, briefly: one line per feature, the most visible ones only. The implementer writes it and the gate-checker checks it; the subagents don't read this file, so their definitions in `.claude/agents/` carry the same rule.
 - Request the narrowest manifest permissions that work; every new permission is an owner decision.
 - Never log, print, or transmit page content, URLs, browsing history, or other user data.
 

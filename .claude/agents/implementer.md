@@ -30,6 +30,13 @@ Run the full verification gate the spec's definition of done prescribes and incl
 
 The loadable builds in `dist/chrome-ext` and `dist/firefox-ext` are committed. After your last source change, run the `build` script and commit the changed `dist/` files on their own as `build: update committed builds [Txx]`, before the gate: the `check:dist` script fails while `dist/` differs from what is committed. Never edit files in `dist/` by hand, and never commit anything else from `dist/`.
 
+`README.md` is the first thing a visitor to the repository reads, and its Features, Limits and Install sections must match what the extension does now. Update it in the same task, as a `docs:` commit carrying the task id, when the task:
+- adds, removes or visibly changes a feature a user would notice in normal use (one line in Features, in the style of the lines already there);
+- adds, lifts or changes a limit (supported browsers and versions, what can't be read, size caps);
+- changes how the extension is installed or built (load steps, Node version, build scripts, the `dist/` folders).
+
+Internal changes and small UI details get no mention. Keep the README brief: state what the code does, don't describe plans, and don't copy spec text into it.
+
 ## Final report (under 20 lines)
 - Spec path, task id, one-line status: DONE / BLOCKED / PARTIAL.
 - Commits made (hash + subject).
