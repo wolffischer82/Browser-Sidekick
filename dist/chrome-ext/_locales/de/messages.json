@@ -482,6 +482,14 @@
     "message": "Hoch",
     "description": "Thinking level: high."
   },
+  "reasoningThinking": {
+    "message": "Denkt nach …",
+    "description": "Toggle row of an answer's reasoning block while reasoning is arriving and no answer text has arrived yet."
+  },
+  "reasoningLabel": {
+    "message": "Gedankengang",
+    "description": "Toggle row of an answer's reasoning block; opens and closes the model's reasoning above the answer."
+  },
   "sessionProviderDeleted": {
     "message": "Der Anbieter dieser Sitzung wurde gelöscht. Sie nutzt jetzt den Standardanbieter.",
     "description": "Notice after a session moved to the default provider."
