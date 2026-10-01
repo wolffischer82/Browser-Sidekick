@@ -479,7 +479,7 @@ Not as the spec's example has it: the control has no disabled state, because the
 
 ## T16 Reasoning block, README, final report
 
-Status: done by the implementer (2026-10-01); gate-checker pending
+Status: done (gate-checker PASS-WITH-NOTES, 2026-10-01)
 
 ### Plan
 
@@ -508,7 +508,7 @@ Status: done by the implementer (2026-10-01); gate-checker pending
 - [x] New strings are in `en` and `de`; the README has the Features and the Limits line.
 - [x] The final report `docs/thinking-levels-report.md` covers what shipped, deviations, known limitations per provider, manual checks and open questions.
 - [x] No manifest, permission, dependency, stored-data or message-protocol change; reasoning is never logged.
-- [ ] The orchestrator has looked at the build in both browsers (screens `test-results/screens/T16-*.png`).
+- [x] The orchestrator has looked at the build in both browsers: the Chromium screens `test-results/screens/T16-*.png`, and `dist/firefox-ext` loaded headless in Firefox 140 ESR as a temporary add-on, without extension errors. The sidebar itself was not rendered in Firefox.
 
 ### Tests
 

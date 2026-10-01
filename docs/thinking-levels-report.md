@@ -53,7 +53,7 @@ General:
 Done so far, without a real provider:
 
 - T15: the orchestrator reviewed the Chromium screenshots and loaded `dist/firefox-ext` headless in Firefox 140 ESR as a temporary add-on, without extension errors.
-- T16: the e2e flow passes in Chromium and wrote the screens `T16-01` to `T16-08` (light and dark, one at 320 px). The orchestrator's look at the T16 build in both browsers is still open at the time of writing.
+- T16: the e2e flow passes in Chromium and wrote the screens `T16-01` to `T16-08` (light and dark, one at 320 px). The orchestrator reviewed them and loaded the final `dist/firefox-ext` headless in Firefox 140 ESR as a temporary add-on, without extension errors. The sidebar itself was not rendered in Firefox, so how the control and the reasoning block look there is the owner's check.
 - No request has gone to a real provider.
 
 For the owner, in Chrome and in Firefox, with your own keys:
