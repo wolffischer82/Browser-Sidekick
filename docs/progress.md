@@ -330,3 +330,18 @@ Status: done (2026-10-01; gate-checker PASS-WITH-NOTES for the task and for the 
 - `tests/sidepanel-chat.test.tsx`: stream with stored answer, sources and title; manual rename kept; Shift+Enter and busy; Stop; error with Retry (cleared on success, kept after reopening, new code after a failed Retry, provider message, partial text, no Retry on an older failure); eye, pinned current tab, unreadable tab; trimming notice; history restore, session switch, citations, stored history sent, a message from another sidebar; no-access input (granted, declined).
 - `tests/repository.test.ts`: the `error` field on add and update. `tests/messages.test.ts`: the two new broadcasts.
 - `tests/e2e/chat.spec.ts`: the ask flow (8 steps plus trimming, long conversation and the reload after an error) and a PDF current tab; screens `T10-01-streaming`, `T10-02-answer` (+ `-dark`), `T10-03-stopped`, `T10-04-error-retry`, `T10-05-trimmed`, `T10-06-title`, `T10-07-long-scroll`.
+
+## T11 Summarize
+
+Status: in progress
+
+### Plan
+
+- `src/shared/chat/summarize.ts` (tests first): the D4 page set (ready pins, plus the current tab if readable, not excluded and not already pinned), built on `requestCurrentTab`; the button state (`ready`, or why not: no provider, provider without access, an answer on its way, nothing to summarise).
+- `src/entrypoints/sidepanel/chat/useChat.ts`: `summarize(tab)` runs the T10 ask flow with the fixed prompt and `kind: 'summarize'` (question and answer); Retry keeps the kind; the title request works when it is the first answer. A pin still extracting when the button is pressed is waited for briefly, shown in the transcript; after the wait it is left out with a notice.
+- `ActionBar`: the wired button; while unavailable it stays focusable (`aria-disabled`) with a tooltip per reason, drawn by the page so it shows on hover, on keyboard focus and in screenshots. `Transcript`: the live "Summarize" question and the two new notices.
+- Strings in `en` and `de`: the fixed prompt (spec 5.6, in the UI language), the tooltips, the waiting line and the left-out notice.
+- Tests: page-set table test (`tests/chat-summarize.test.ts`: pins only, current tab only, both, current tab already pinned, current tab excluded, failed and extracting pins, unreadable tab, nothing); component tests for the button states and the flow (`tests/sidepanel-summarize.test.tsx`: request per combination, stream, Stop, error with Retry, title, German prompt, waiting for a pin).
+- e2e `tests/e2e/summarize.spec.ts` against the mock LLM: disabled on an empty session (tooltip), one pin plus the current tab (request log by booleans only), the current tab excluded, Summarize as the first action with the generated title; screens `T11-*`.
+- No manifest, background, message-protocol or stored-data-shape change.
+- Open questions: none so far.
