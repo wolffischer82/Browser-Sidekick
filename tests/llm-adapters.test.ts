@@ -123,8 +123,8 @@ describe.each(CASES)('$kind adapter contract', (c) => {
     let caught: unknown = null;
     controlled.push(c.delta('partial'));
     try {
-      for await (const delta of provider(c.kind, fetch).stream(REQUEST, abort.signal)) {
-        deltas.push(delta);
+      for await (const event of provider(c.kind, fetch).stream(REQUEST, abort.signal)) {
+        deltas.push(event.delta);
         abort.abort();
       }
     } catch (error) {

@@ -92,6 +92,70 @@ describe('sessions', () => {
     expect(await repo.listSessions()).toEqual([]);
   });
 
+  describe('thinkingLevel (specs/thinking-levels.md 5)', () => {
+    it('a new session has no level: the field is missing, which is Default', async () => {
+      const session = await repo.createSession({ providerId: 'p1', model: 'm1' });
+      expect('thinkingLevel' in session).toBe(false);
+      expect((await repo.getSession(session.id))?.thinkingLevel).toBeUndefined();
+    });
+
+    it.each(['low', 'medium', 'high'] as const)('stores %s and reads it back', async (level) => {
+      const a = await repo.createSession({ providerId: 'p1', model: 'm1' });
+      const b = await repo.createSession({ providerId: 'p1', model: 'm1' });
+      const updated = await repo.updateSession(a.id, { thinkingLevel: level });
+      expect(updated).toEqual({ ...a, thinkingLevel: level });
+      expect(await repo.getSession(a.id)).toEqual(updated);
+      expect((await repo.listSessions()).find((s) => s.id === a.id)?.thinkingLevel).toBe(level);
+      // Only this session, and without touching its last activity.
+      expect(await repo.getSession(b.id)).toEqual(b);
+      expect(updated?.updatedAt).toBe(a.updatedAt);
+    });
+
+    it('null sets the session back to Default', async () => {
+      const a = await repo.createSession({ providerId: 'p1', model: 'm1' });
+      await repo.updateSession(a.id, { thinkingLevel: 'high' });
+      const updated = await repo.updateSession(a.id, { thinkingLevel: null });
+      expect(updated?.thinkingLevel).toBeNull();
+      expect((await repo.getSession(a.id))?.thinkingLevel).toBeNull();
+    });
+
+    it('a change of model keeps the level, and a change of level keeps the model', async () => {
+      const a = await repo.createSession({ providerId: 'p1', model: 'm1' });
+      await repo.updateSession(a.id, { thinkingLevel: 'medium' });
+      expect(await repo.updateSession(a.id, { providerId: 'p2', model: 'm2' })).toMatchObject({
+        providerId: 'p2',
+        model: 'm2',
+        thinkingLevel: 'medium',
+      });
+      expect(await repo.updateSession(a.id, { thinkingLevel: 'low' })).toMatchObject({
+        providerId: 'p2',
+        model: 'm2',
+        thinkingLevel: 'low',
+      });
+      // A title change keeps it too.
+      await repo.setSessionTitle(a.id, 'Named', 'user');
+      expect((await repo.getSession(a.id))?.thinkingLevel).toBe('low');
+    });
+
+    it('a record written before the field existed reads as Default and can take a level', async () => {
+      const a = await repo.createSession({ providerId: 'p1', model: 'm1' });
+      const stored = await repo.getSession(a.id);
+      expect(stored).toEqual(a);
+      expect(Object.keys(stored ?? {})).not.toContain('thinkingLevel');
+      expect(await repo.updateSession(a.id, { model: 'm2' })).toEqual({ ...a, model: 'm2' });
+      expect((await repo.updateSession(a.id, { thinkingLevel: 'high' }))?.thinkingLevel).toBe(
+        'high',
+      );
+    });
+
+    it('the level goes with the session when it is deleted', async () => {
+      const a = await repo.createSession({ providerId: 'p1', model: 'm1' });
+      await repo.updateSession(a.id, { thinkingLevel: 'high' });
+      await repo.deleteSession(a.id);
+      expect(await repo.getSession(a.id)).toBeUndefined();
+    });
+  });
+
   describe('setSessionTitle', () => {
     it('applies llm and user titles', async () => {
       const s = await repo.createSession({ providerId: null, model: null });
@@ -333,6 +397,46 @@ describe('messages', () => {
     });
     expect(fixed).toMatchObject({ id: failed.id, position: 1, text: 'Answer', error: null });
     expect((await repo.listMessages(s.id)).map((m) => m.error)).toEqual([null, null]);
+  });
+
+  it("stores an answer's reasoning, and an update replaces or clears it", async () => {
+    const s = await repo.createSession({ providerId: 'p1', model: 'm1' });
+    const question = await repo.addMessage(s.id, { role: 'user', text: 'Q', reasoning: 'never' });
+    // Assistant messages only (specs/thinking-levels.md 5).
+    expect(question).not.toHaveProperty('reasoning');
+    const answer = await repo.addMessage(s.id, {
+      role: 'assistant',
+      text: 'Partial',
+      error: 'server',
+      reasoning: 'First thought.',
+    });
+    expect(answer.reasoning).toBe('First thought.');
+    expect((await repo.listMessages(s.id)).map((m) => m.reasoning)).toEqual([
+      undefined,
+      'First thought.',
+    ]);
+
+    // An update that leaves the reasoning out keeps it.
+    expect((await repo.updateMessage(answer.id, { trimmed: true }))?.reasoning).toBe(
+      'First thought.',
+    );
+    const retried = await repo.updateMessage(answer.id, {
+      text: 'Answer',
+      error: null,
+      reasoning: 'Second thought.',
+    });
+    expect(retried).toMatchObject({ id: answer.id, text: 'Answer', reasoning: 'Second thought.' });
+    expect((await repo.updateMessage(answer.id, { reasoning: null }))?.reasoning).toBeNull();
+    expect((await repo.listMessages(s.id))[1]?.reasoning).toBeNull();
+  });
+
+  it('an answer without reasoning stores null, and deleting the session deletes the reasoning', async () => {
+    const s = await repo.createSession({ providerId: 'p1', model: 'm1' });
+    const plain = await repo.addMessage(s.id, { role: 'assistant', text: 'A' });
+    expect(plain.reasoning).toBeNull();
+    await repo.addMessage(s.id, { role: 'assistant', text: 'B', reasoning: 'Thought.' });
+    await repo.deleteSession(s.id);
+    expect(await repo.listMessages(s.id)).toEqual([]);
   });
 
   it('an update that leaves the error out keeps it', async () => {

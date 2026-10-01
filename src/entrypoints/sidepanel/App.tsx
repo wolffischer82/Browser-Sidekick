@@ -22,6 +22,7 @@ import {
 } from '@/shared/provider-access';
 import { setProviderAccess } from '@/shared/provider-settings';
 import { isUsable, modelGroups, resolveSessionModel } from '@/shared/providers';
+import { sessionThinkingLevel, showsThinkingControl } from '@/shared/thinking';
 import {
   clearSettingsForDeleteAll,
   getSettings,
@@ -34,6 +35,7 @@ import { ActionBar } from './components/ActionBar';
 import { Composer, type ComposerState } from './components/Composer';
 import { Header } from './components/Header';
 import { ModelMenu } from './components/ModelMenu';
+import { ThinkingMenu } from './components/ThinkingMenu';
 import { SessionTabs } from './components/SessionTabs';
 import { SessionsDrawer, type SessionSummary } from './components/SessionsDrawer';
 import { SettingsView } from './components/SettingsView';
@@ -493,6 +495,21 @@ export function App({ repository }: Props) {
               />
             )
           }
+          thinkingMenu={
+            // Hidden without a provider or model and for a model known not to
+            // take a level; the stored level is kept (thinking-levels 4.1).
+            showsThinkingControl(sessionProvider, active.model) && (
+              <ThinkingMenu
+                level={sessionThinkingLevel(active)}
+                onChoose={(thinkingLevel) => {
+                  run(async (r) => {
+                    const updated = await r.updateSession(active.id, { thinkingLevel });
+                    if (updated) setActive(updated);
+                  });
+                }}
+              />
+            )
+          }
         />
         {notice !== 'none' && (
           <p class="notice" role="status">
@@ -549,6 +566,8 @@ export function App({ repository }: Props) {
           }}
         />
         <Transcript
+          // A new transcript per session: open reasoning blocks don't carry over.
+          key={active.id}
           messages={chat.messages}
           live={chat.live}
           errorOf={chat.errorOf}

@@ -13,6 +13,8 @@ const KEYS: Record<LlmErrorCode, MessageKey> = {
   'rate-limit': 'llmErrorRateLimit',
   'model-not-found': 'llmErrorModelNotFound',
   'context-too-long': 'llmErrorContextTooLong',
+  // Its own text, without the provider's (specs/thinking-levels.md 4.6).
+  'thinking-unsupported': 'llmErrorThinkingUnsupported',
   'bad-request': 'llmErrorBadRequest',
   server: 'llmErrorServer',
   network: 'llmErrorNetwork',

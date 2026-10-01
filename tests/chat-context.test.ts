@@ -213,6 +213,36 @@ describe('assembleContext', () => {
     expect(two.sources).toHaveLength(2);
   });
 
+  it('leaves reasoning out of the turns, the system text and the budget', () => {
+    const thought = 'REASONING '.repeat(50_000);
+    const pins = [pin({ text: 'Page text.' })];
+    const history = [
+      message('user', 'Q1'),
+      message('assistant', 'A1', { reasoning: thought }),
+      message('user', 'Q2'),
+      message('assistant', 'A2', { reasoning: 'A short thought.' }),
+    ];
+    const input = { pins, currentTab: null, question: 'Q3' };
+    const plain = assembleContext({
+      ...input,
+      history: history.map((m) => ({ ...m, reasoning: null })),
+      budgetTokens: BIG_BUDGET,
+    });
+    // A budget the request fits exactly: one character of reasoning counted would trim it.
+    const used = plain.system.length + plain.turns.reduce((n, t) => n + t.content.length, 0);
+    const ctx = assembleContext({ ...input, history, budgetTokens: used / CHARS_PER_TOKEN });
+    expect(ctx.trimmed).toBe(false);
+    expect(ctx).toEqual(plain);
+    expect(ctx.turns).toEqual([
+      { role: 'user', content: 'Q1' },
+      { role: 'assistant', content: 'A1' },
+      { role: 'user', content: 'Q2' },
+      { role: 'assistant', content: 'A2' },
+      { role: 'user', content: 'Q3' },
+    ]);
+    expect(JSON.stringify(ctx)).not.toMatch(/REASONING|short thought/);
+  });
+
   it('empties page texts but still sends the question when nothing fits', () => {
     const ctx = assembleContext({
       pins: [pin({ text: 'p'.repeat(1000) })],

@@ -102,10 +102,36 @@ function classifyStatus(status: number, info: ErrorInfo): LlmErrorCode {
   return 'unknown';
 }
 
-/** Maps a non-OK HTTP response (status and body text). */
-export function errorFromResponse(status: number, bodyText: string, apiKey: string): LlmError {
+/** What the provider's rejection of a thinking level mentions (specs/thinking-levels.md 4.6). */
+const THINKING = /reasoning|thinking|effort/i;
+
+export interface RequestFacts {
+  /** The request body carried a thinking level. */
+  thinkingLevel?: boolean;
+}
+
+/**
+ * Maps a non-OK HTTP response (status and body text). A 400/422 that would
+ * be a plain `bad-request` becomes `thinking-unsupported` when the request
+ * carried a thinking level and the provider's message names it.
+ */
+export function errorFromResponse(
+  status: number,
+  bodyText: string,
+  apiKey: string,
+  request: RequestFacts = {},
+): LlmError {
   const info = infoFromBody(parseBody(bodyText));
-  return new LlmError(classifyStatus(status, info), {
+  let code = classifyStatus(status, info);
+  if (
+    request.thinkingLevel === true &&
+    code === 'bad-request' &&
+    (status === 400 || status === 422) &&
+    THINKING.test(info.message ?? '')
+  ) {
+    code = 'thinking-unsupported';
+  }
+  return new LlmError(code, {
     status,
     providerMessage: sanitize(info.message, apiKey),
   });

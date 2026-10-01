@@ -423,6 +423,44 @@ textarea {
   background: var(--bg-hover);
 }
 
+/* Reasoning block (thinking-levels 4.5): a toggle row above the answer. */
+.reasoning {
+  width: 100%;
+  min-width: 0;
+}
+
+.reasoning-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: -4px;
+  padding: 2px 6px 2px 0;
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  color: var(--fg-muted);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.reasoning-toggle:hover {
+  background: var(--bg-hover);
+}
+
+.reasoning-toggle[aria-expanded='true'] .chevron {
+  transform: rotate(90deg);
+}
+
+/* Subdued against the answer; as long as the reasoning is, it scrolls with the transcript. */
+.reasoning-body {
+  box-sizing: border-box;
+  margin: 4px 0 6px 4px;
+  padding-left: 10px;
+  border-left: 2px solid var(--border);
+  color: var(--fg-muted);
+  font-size: 0.85rem;
+}
+
 .answer-notice,
 .answer-meta {
   margin: 0;
@@ -647,12 +685,54 @@ textarea {
   gap: 8px;
 }
 
-/* Header model menu */
+/* Header menus: the session's model and, next to it, its thinking level */
+
+.header-menus {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  min-width: 0;
+  max-width: 42%;
+}
+
+/* Both menus on one line take more room; the model name gives way first. */
+.header-menus[data-menus='2'] {
+  max-width: 62%;
+}
+
+.model-menu,
+.thinking-menu {
+  position: relative;
+}
 
 .model-menu {
-  position: relative;
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.thinking-menu {
   flex: none;
-  max-width: 42%;
+  max-width: 100%;
+}
+
+/*
+ * A narrow sidebar has no room for both menus beside the title: the thinking
+ * level sits below the model, so its value stays readable, and the rest of
+ * the header keeps to the first line.
+ */
+@media (max-width: 519px) {
+  .header:has(.header-menus[data-menus='2']) {
+    align-items: flex-start;
+  }
+
+  .header-menus[data-menus='2'] {
+    flex-direction: column;
+    align-items: flex-end;
+    max-width: max(42%, 150px);
+  }
 }
 
 .model-button {
@@ -717,6 +797,10 @@ textarea {
   font-weight: 600;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.thinking-list {
+  min-width: 130px;
 }
 
 .model-option {

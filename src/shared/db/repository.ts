@@ -18,7 +18,8 @@ export interface NewSession {
   titleSource?: TitleSource;
 }
 
-export type SessionUpdate = Partial<Pick<Session, 'providerId' | 'model'>>;
+/** `thinkingLevel: null` sets the session back to Default; left out keeps it. */
+export type SessionUpdate = Partial<Pick<Session, 'providerId' | 'model' | 'thinkingLevel'>>;
 
 export interface NewPin {
   url: string;
@@ -52,11 +53,16 @@ export interface NewMessage {
   stopped?: boolean;
   trimmed?: boolean;
   error?: Message['error'];
+  /** An answer's reasoning; ignored for a user message. */
+  reasoning?: string | null;
 }
 
 /** Fields that change while an answer streams and completes, or when it is retried. */
 export type MessageUpdate = Partial<
-  Pick<Message, 'text' | 'providerLabel' | 'model' | 'sources' | 'stopped' | 'trimmed' | 'error'>
+  Pick<
+    Message,
+    'text' | 'providerLabel' | 'model' | 'sources' | 'stopped' | 'trimmed' | 'error' | 'reasoning'
+  >
 >;
 
 export interface RepositoryOptions extends OpenDbOptions {
@@ -285,6 +291,8 @@ export async function openRepository(options: RepositoryOptions = {}): Promise<R
         stopped: input.stopped ?? false,
         trimmed: input.trimmed ?? false,
         error: input.error ?? null,
+        // Assistant messages only (specs/thinking-levels.md 5).
+        ...(input.role === 'assistant' ? { reasoning: input.reasoning ?? null } : {}),
       };
       await Promise.all([
         messages.add(message),

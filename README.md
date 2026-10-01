@@ -10,6 +10,8 @@ Status: MVP, version 0.1.0. It isn't in the Chrome Web Store or on addons.mozill
 - **Web pages, YouTube and PDFs.** Articles are reduced to their readable text, YouTube videos to their transcript, and PDFs to their text layer.
 - **Ask and summarise.** Questions are answered from the pinned pages plus the tab you're on. Summarize gives a short summary per page and an overall one. Answers stream in and cite their sources as `[1]`, `[2]`; clicking a citation opens that page.
 - **Your own provider and key.** Works with Anthropic, Google Gemini and any OpenAI-compatible API (OpenAI, OpenRouter, Groq, or a local server such as Ollama or LM Studio). You can save several providers and choose the model per session.
+- **Thinking level per session.** Next to the model, choose how much the model should think before it answers: Default, Low, Medium or High. The control is hidden for models known not to support it.
+- **Reasoning on demand.** When the model returns its reasoning, a collapsed "Reasoning" row above the answer opens it. It is saved with the answer.
 - **Local data.** Sessions, pins, chat history and API keys stay on your device. Page text goes only to the provider you chose, and only when you ask or summarise. There is no telemetry.
 - **Minimal permissions.** Access to all sites is optional. Without it, the extension can still read a page you pin through the right-click menu.
 - **English and German** interface, following the browser's language.
@@ -24,6 +26,7 @@ Status: MVP, version 0.1.0. It isn't in the Chrome Web Store or on addons.mozill
 - A YouTube video without captions contributes only its title and description.
 - Each pin holds at most 200,000 characters. When pages and history exceed the provider's context budget (100,000 tokens by default), older history is dropped and page text is shortened.
 - The model can't search the web or use tools. It sees only the pages you give it.
+- OpenAI's own API returns no reasoning text, so OpenAI models show no reasoning block.
 - No sync between devices, no export or import, no search across sessions.
 
 ## Install

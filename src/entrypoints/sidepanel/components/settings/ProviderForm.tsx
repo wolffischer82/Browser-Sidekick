@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'preact/hooks';
 import { t, type MessageKey } from '@/shared/i18n';
 import { createProvider, DEFAULT_BASE_URLS, type LlmProvider } from '@/shared/llm';
 import { llmErrorText } from '@/shared/llm-messages';
-import type { ProviderConfig, ProviderKind } from '@/shared/model';
+import type { ModelInfo, ProviderConfig, ProviderKind } from '@/shared/model';
 import { accessPattern, hasHostAccess, requestHostAccess } from '@/shared/provider-access';
 import { storeProvider } from '@/shared/provider-settings';
 import {
@@ -65,6 +65,10 @@ export function ProviderForm({ existing, onDone }: Props) {
   );
   const [errors, setErrors] = useState<DraftErrors>({});
   const [models, setModels] = useState<string[] | null>(existing?.cachedModels ?? null);
+  /** What the list said about its models; kept and cleared together with `models`. */
+  const [modelInfo, setModelInfo] = useState<Record<string, ModelInfo> | null>(
+    existing?.cachedModels ? (existing.modelInfo ?? null) : null,
+  );
   const [modelsStatus, setModelsStatus] = useState<ModelsStatus>('idle');
   const [test, setTest] = useState<TestResult>({ state: 'idle' });
   const [saving, setSaving] = useState(false);
@@ -121,6 +125,7 @@ export function ProviderForm({ existing, onDone }: Props) {
     }
     if (next.kind !== draft.kind || next.baseUrl !== draft.baseUrl) {
       setModels(null);
+      setModelInfo(null);
       setModelsStatus('idle');
     }
     if (
@@ -158,6 +163,7 @@ export function ProviderForm({ existing, onDone }: Props) {
       .then(
         (list) => {
           setModels(list.models);
+          setModelInfo(list.models ? list.info : null);
           setModelsStatus(list.models ? 'loaded' : 'failed');
         },
         () => undefined, // Aborted because the form closed.
@@ -181,8 +187,8 @@ export function ProviderForm({ existing, onDone }: Props) {
         turns: [{ role: 'user' as const, content: 'Hi' }],
         maxOutputTokens: 1,
       };
-      for await (const delta of provider.stream(request, controller.signal)) {
-        if (delta) break;
+      for await (const event of provider.stream(request, controller.signal)) {
+        if (event.type === 'text') break;
       }
     })()
       .then(
@@ -223,6 +229,7 @@ export function ProviderForm({ existing, onDone }: Props) {
           defaultModel: draft.defaultModel.trim(),
           contextBudget: parseBudget(draft.contextBudget) ?? 0,
           cachedModels: models,
+          ...(models && modelInfo ? { modelInfo } : {}),
           hasAccess,
         };
         await storeProvider(config);

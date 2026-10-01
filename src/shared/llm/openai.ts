@@ -9,7 +9,14 @@ import {
   sseEvents,
   trimSlashes,
 } from './http';
-import type { FetchFn, LlmProvider, LlmRequest } from './types';
+import type {
+  FetchFn,
+  LlmProvider,
+  LlmRequest,
+  LlmStreamEvent,
+  ModelInfo,
+  ThinkingLevel,
+} from './types';
 
 /**
  * OpenAI-compatible adapter: OpenAI Chat Completions streaming and
@@ -35,8 +42,34 @@ function isOfficialOpenAi(baseUrl: string): boolean {
   }
 }
 
+/** `supported_parameters` entries that mean the model takes a reasoning level. */
+const REASONING_PARAMETERS = ['reasoning', 'reasoning_effort'];
+
 function textOf(value: unknown): string {
   return typeof value === 'string' ? value : '';
+}
+
+/**
+ * The events of one delta or message: its reasoning, then its content
+ * (specs/thinking-levels.md 4.4). Reasoning is `reasoning_content`
+ * (DeepSeek, Groq, llama.cpp) or `reasoning` (OpenRouter, Ollama) when it is
+ * a non-empty string; other shapes, tool calls and usage are ignored.
+ */
+function eventsOf(part: unknown): LlmStreamEvent[] {
+  if (!isRecord(part)) return [];
+  const events: LlmStreamEvent[] = [];
+  const reasoning = textOf(part.reasoning_content) || textOf(part.reasoning);
+  if (reasoning) events.push({ type: 'reasoning', delta: reasoning });
+  const text = textOf(part.content);
+  if (text) events.push({ type: 'text', delta: text });
+  return events;
+}
+
+/** The level to send, or `null` for Default and for a model known not to take one. */
+function reasoningEffort(request: LlmRequest): ThinkingLevel | null {
+  const thinking = request.thinking;
+  if (!thinking || thinking.info?.thinking === 'unsupported') return null;
+  return thinking.level;
 }
 
 export function createOpenAiProvider(
@@ -59,10 +92,13 @@ export function createOpenAiProvider(
       const key = isOfficialOpenAi(base) ? 'max_completion_tokens' : 'max_tokens';
       body[key] = request.maxOutputTokens;
     }
+    // One field for every host (specs/thinking-levels.md 4.3); Default sends nothing.
+    const level = reasoningEffort(request);
+    if (level) body.reasoning_effort = level;
     return body;
   }
 
-  async function* stream(request: LlmRequest, signal: AbortSignal): AsyncGenerator<string> {
+  async function* stream(request: LlmRequest, signal: AbortSignal): AsyncGenerator<LlmStreamEvent> {
     const response = await send(
       fetchFn,
       `${base}/chat/completions`,
@@ -73,6 +109,7 @@ export function createOpenAiProvider(
       },
       apiKey,
       signal,
+      { thinkingLevel: reasoningEffort(request) !== null },
     );
 
     const contentType = response.headers.get('content-type') ?? '';
@@ -82,9 +119,7 @@ export function createOpenAiProvider(
       if (isRecord(json) && json.error !== undefined) throw errorFromPayload(json.error, apiKey);
       const choice =
         isRecord(json) && Array.isArray(json.choices) ? (json.choices[0] as unknown) : undefined;
-      const text =
-        isRecord(choice) && isRecord(choice.message) ? textOf(choice.message.content) : '';
-      if (text) yield text;
+      yield* eventsOf(isRecord(choice) ? choice.message : undefined);
       return;
     }
 
@@ -94,9 +129,7 @@ export function createOpenAiProvider(
       if (!chunk) continue;
       if (chunk.error !== undefined) throw errorFromPayload(chunk.error, apiKey);
       const choice = Array.isArray(chunk.choices) ? (chunk.choices[0] as unknown) : undefined;
-      // Only visible content; `reasoning`, tool calls and usage are ignored.
-      const text = isRecord(choice) && isRecord(choice.delta) ? textOf(choice.delta.content) : '';
-      if (text) yield text;
+      yield* eventsOf(isRecord(choice) ? choice.delta : undefined);
     }
   }
 
@@ -117,10 +150,21 @@ export function createOpenAiProvider(
           ? json.models
           : null;
       if (!list) return null;
-      const ids = list
-        .map((item) => (isRecord(item) ? textOf(item.id) || textOf(item.name) : textOf(item)))
-        .filter((id) => id !== '');
-      return [...new Set(ids)].sort((a, b) => a.localeCompare(b));
+      const ids: string[] = [];
+      const info = new Map<string, ModelInfo>();
+      for (const item of list) {
+        const id = isRecord(item) ? textOf(item.id) || textOf(item.name) : textOf(item);
+        if (id === '' || ids.includes(id)) continue;
+        ids.push(id);
+        // OpenRouter lists what each model accepts; without the array the model is unknown.
+        if (isRecord(item) && Array.isArray(item.supported_parameters)) {
+          const accepts = REASONING_PARAMETERS.some((name) =>
+            (item.supported_parameters as unknown[]).includes(name),
+          );
+          info.set(id, { thinking: accepts ? 'supported' : 'unsupported' });
+        }
+      }
+      return { ids: ids.sort((a, b) => a.localeCompare(b)), info };
     }, signal);
   }
 

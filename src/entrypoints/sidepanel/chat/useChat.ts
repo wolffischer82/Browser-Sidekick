@@ -10,6 +10,7 @@ import { t } from '@/shared/i18n';
 import { createProvider, LlmError } from '@/shared/llm';
 import { broadcast, isSidekickMessage } from '@/shared/messages';
 import type { Message, MessageKind, MessageSource, ProviderConfig, Session } from '@/shared/model';
+import { requestThinking } from '@/shared/thinking';
 
 /**
  * The ask flow (spec 5.6). Streaming lives in this sidebar: the answer
@@ -17,8 +18,12 @@ import type { Message, MessageKind, MessageSource, ProviderConfig, Session } fro
  * and other sidebars showing the session then read the stored message
  * (`messages-changed`). A failed answer is stored with its error code
  * (decisions.md T10), so the error and Retry survive a reload; Retry resends
- * the same question and replaces the failed answer. Nothing about the
- * question, the pages or the answer is logged.
+ * the same question and replaces the failed answer. The model's reasoning,
+ * where the provider returns it, is collected next to the answer text and
+ * stored with it (specs/thinking-levels.md 4.4); it is never part of a
+ * request. Ask and Summarize requests carry the session's thinking level
+ * (4.1). Nothing about the question, the pages, the answer or its
+ * reasoning is logged.
  *
  * Summarize (D4, decisions.md T11) is the same flow with the fixed prompt as
  * the question and `kind: 'summarize'`; it also waits briefly for pins that
@@ -37,6 +42,8 @@ export interface LiveAnswer {
   replacesId: string | null;
   status: 'waiting' | 'streaming';
   text: string;
+  /** The reasoning that has arrived so far, in order; empty when there is none. */
+  reasoning: string;
   sources: MessageSource[];
   trimmed: boolean;
   /** The current tab should have been sent but couldn't be read. */
@@ -165,6 +172,7 @@ export function useChat({ repo, session, providers, onTitleChanged }: Options): 
       replacesId: retry?.failed.id ?? null,
       status: 'waiting',
       text: '',
+      reasoning: '',
       sources: [],
       trimmed: false,
       tabSkipped: false,
@@ -175,6 +183,8 @@ export function useChat({ repo, session, providers, onTitleChanged }: Options): 
     rerender();
 
     const llm = createProvider(provider);
+    // As set when the question is sent; a later change applies to the next one.
+    const thinking = requestThinking(session, provider, model);
 
     /**
      * A summary waits a moment for pins that are still being read, so a page
@@ -221,9 +231,12 @@ export function useChat({ repo, session, providers, onTitleChanged }: Options): 
       if (controller.signal.aborted) throw new LlmError('aborted');
       answer.status = 'streaming';
       rerender();
-      const request = { model, system: context.system, turns: context.turns };
-      for await (const delta of llm.stream(request, controller.signal)) {
-        answer.text += delta;
+      // The session's thinking level and what is known about the model, also
+      // at Default (thinking-levels 4.3). The title request carries neither.
+      const request = { model, system: context.system, turns: context.turns, thinking };
+      for await (const event of llm.stream(request, controller.signal)) {
+        if (event.type === 'text') answer.text += event.delta;
+        else answer.reasoning += event.delta;
         rerenderSoon();
       }
     };
@@ -239,6 +252,8 @@ export function useChat({ repo, session, providers, onTitleChanged }: Options): 
         stopped,
         trimmed: answer.trimmed,
         error: error?.code ?? null,
+        // What arrived, also before a Stop or a failure; a Retry replaces it.
+        reasoning: answer.reasoning || null,
       };
       const stored =
         (retry && (await repo.updateMessage(retry.failed.id, fields))) ||

@@ -364,3 +364,156 @@ Status: done (2026-10-01; gate-checker PASS-WITH-NOTES, CI green incl. e2e, orch
 - `tests/sidepanel-summarize.test.tsx`: button states and tooltips (ready, nothing, failed and extracting pins on a browser page, the eye, a pin turning ready, no provider, no access, streaming a summary, streaming a question, German); the request per D4 combination; the flow (message, stream, stored kinds and sources, title, reload), history, Stop, error with Retry after a reload, trimming notice, German prompt; the wait (included, left out with the notice, Stop).
 - `tests/sidepanel-app.test.tsx`: the first-run button state, updated for the new tooltip.
 - `tests/e2e/summarize.spec.ts`: the flow of decisions.md T11-8; screens `T11-01-disabled-tooltip` (+ `-dark`), `T11-02-streaming`, `T11-03-summary` (+ `-dark`), `T11-04-first-action-title` (+ `-dark`), `T11-05-current-tab-excluded`, `T11-06-empty-session-disabled`.
+
+# Thinking levels
+
+Spec: `specs/thinking-levels.md` (GitHub issue #4). Branch `feature/thinking-levels`. Status values as above.
+
+## T13 LLM layer: thinking level in requests and capability discovery
+
+Status: done (2026-10-01; gate-checker PASS-WITH-NOTES)
+
+### Plan
+
+- `src/shared/model.ts`: `ThinkingLevel`, `ModelInfo`, optional `ProviderConfig.modelInfo` (spec 5); re-exported from `src/shared/llm/types.ts`, which gains `LlmRequest.thinking?: { level, info }`, `ModelList` with per-model `info`, and the `thinking-unsupported` code.
+- First a test that pins today's request bodies as exact strings for all three adapters, committed before any source change, so "byte-identical without thinking information" is proven against the old code.
+- `listModels` per adapter (tests first): Anthropic `capabilities` and `max_tokens`, Gemini `thinking`, OpenAI-compatible `supported_parameters`; `listOrFallback` carries the info.
+- Request mapping per adapter (tests first, table-driven, one row per row of spec 4.3), incl. Anthropic `max_tokens` and budget rules.
+- `errors.ts`/`http.ts`: a 400/422 on a request that sent a level and whose message matches `/reasoning|thinking|effort/i` maps to `thinking-unsupported`; `llm-messages.ts` shows the generic bad-request string until T15.
+- `ProviderForm`: keep `modelInfo` next to the loaded model list, write it on save, clear it wherever the list is cleared; component test.
+- Callers and fakes of `listModels` updated (`tests/chat-title.test.ts`, `tests/mock-llm.test.ts`).
+- No UI change, no locale string, no stream-interface change (T14), no manifest or dependency change.
+- Open questions: none so far.
+
+### Acceptance
+
+- [x] Requests without thinking information produce byte-identical bodies to before, for all three adapters (`tests/llm-request-bodies.test.ts`, committed before the source changed and still passing unchanged).
+- [x] Every row of the three mapping tables in 4.3 produces exactly the stated body fields, including the Anthropic `max_tokens` and budget rules (`tests/llm-thinking.test.ts`, whole-body comparisons).
+- [x] `listModels` reports support per 4.2 for each adapter (`tests/llm-model-info.test.ts`), and the settings code stores it in `modelInfo` next to `cachedModels` (`tests/sidepanel-settings.test.tsx`, `tests/settings.test.ts`).
+- [x] A 400 that mentions reasoning, thinking or effort on a request with a level maps to `thinking-unsupported`; the same 400 on a request without a level maps as before (`tests/llm-thinking.test.ts`, unit and per adapter).
+- [x] No UI change, no locale string, no stream-interface change, no manifest or dependency change.
+
+### Tests
+
+- `tests/llm-request-bodies.test.ts`: the exact body strings without thinking information (7 rows over the three adapters).
+- `tests/llm-thinking.test.ts`: the mapping tables per adapter (Anthropic 16 rows, Gemini 17, OpenAI-compatible 10 on four hosts); Anthropic `max_tokens` (cap below, at and above 32000, unknown cap, unknown model, caller limit, no thinking parameter) and budget (12 rows: lowered, left alone, dropped, caller limit); `thinking-unsupported` in `errorFromResponse` and per adapter, with and without a level.
+- `tests/llm-model-info.test.ts`: per adapter supported, unsupported, unknown and malformed capability data.
+- `tests/sidepanel-settings.test.tsx`: `modelInfo` stored on save, kept, replaced by a reload, cleared when loading fails or the base URL changes, not invented for older providers. `tests/settings.test.ts`: the storage round trip.
+- `tests/provider-access.test.ts`: the error text for the new code. Existing `listModels` expectations updated for the new shape.
+
+## T14 LLM layer: reasoning in the stream
+
+Status: done (2026-10-01; gate-checker PASS-WITH-NOTES)
+
+### Plan
+
+- `src/shared/llm/types.ts`: `LlmStreamEvent = { type: 'text'; delta } | { type: 'reasoning'; delta }` (orchestrator decision); `LlmProvider.stream` returns `AsyncIterable<LlmStreamEvent>`.
+- Adapters (tests first, replacing the "thinking is dropped" tests): Anthropic `thinking_delta` (nothing for `signature_delta` or empty thinking), Gemini `thought: true` parts, OpenAI-compatible `delta.reasoning_content` or `delta.reasoning` when a non-empty string; events in arrival order.
+- Callers: title generation and Test connection read text events only; `tests/helpers/llm-fetch.ts` keeps `collect` (text) and gains `collectEvents`; the fakes in `tests/chat-title.test.ts` and `tests/mock-llm.test.ts` follow.
+- `src/shared/model.ts`: `Message.reasoning?: string | null` (spec 5); the repository takes it on add and update, without a DB version bump.
+- `useChat`: `LiveAnswer.reasoning` grows with the reasoning events, next to the partial text (T16 renders it); stored on completion, Stop and failure; a Retry replaces it. Nothing renders it yet.
+- `tests/mock-llm/server.ts`: a scripted stream reply can carry reasoning chunks, under either field name; replies without them are unchanged.
+- Tests: per-adapter stream tests (reasoning only, interleaved, both OpenAI field names, non-string reasoning), ask-flow tests (stored on completion, Stop, failure, Retry; not in the next request's turns, not in the budget), a title test, a repository test, a mock-server test.
+- `docs/decisions.md`: T04-8 superseded with a dated entry; the mock trigger recorded.
+- No dependency, manifest, locale or README change; nothing passes thinking information yet (T15).
+- Open questions: none so far.
+
+### Acceptance
+
+- [x] Each adapter yields reasoning and text events in arrival order and yields nothing for signatures or empty reasoning (`tests/llm-anthropic.test.ts`, `tests/llm-gemini.test.ts`, `tests/llm-openai.test.ts`).
+- [x] Title generation and Test connection behave as before: reasoning events don't reach the title (`tests/chat-title.test.ts`), a reasoning-only reply is a successful test with the unchanged request body (`tests/sidepanel-settings.test.tsx`), and the byte-identical body tests of T13 still pass unchanged.
+- [x] The stored assistant message carries the reasoning on completion, Stop and failure, and a successful Retry replaces it (`tests/sidepanel-chat.test.tsx`, `tests/repository.test.ts`).
+- [x] Reasoning is absent from the turns sent on the next request and from the context-budget calculation (`tests/sidepanel-chat.test.tsx`, `tests/chat-context.test.ts`).
+- [x] Decision 8 of T04 in `docs/decisions.md` is superseded with a dated entry (T14-2).
+- [x] While an answer streams, the reasoning that arrived is in the live answer next to the partial text (`LiveAnswer.reasoning`); nothing renders it yet.
+- [x] The mock LLM sends reasoning deltas only for a scripted reply that asks for them, under either field name (`tests/mock-llm.test.ts`).
+- [x] No dependency, manifest, locale or README change; reasoning is never logged or sent anywhere.
+
+### Tests
+
+- `tests/llm-anthropic.test.ts`, `tests/llm-gemini.test.ts`, `tests/llm-openai.test.ts`: reasoning then text for any chunking, reasoning only, interleaved, signatures, empty and non-string reasoning, reasoning kept before an in-stream error; OpenAI-compatible also both field names, both in one chunk, and the non-streamed JSON reply.
+- `tests/sidepanel-chat.test.tsx` (`reasoning`): the live state through `useChat`; stored on completion, on Stop (with and without answer text) and on failure; Retry replaces or clears it; no reasoning in the next request, the title request, the broadcasts or the console.
+- `tests/chat-context.test.ts`: reasoning outside the turns, the system text and the budget. `tests/repository.test.ts`: add, update, clear, assistant messages only.
+- `tests/chat-title.test.ts`: reasoning events don't leak into the title or its runaway limit. `tests/sidepanel-settings.test.tsx`: Test connection with a reasoning-only reply.
+- `tests/mock-llm.test.ts`: scripted reasoning over the wire and through the adapter; none without it.
+
+## T15 Thinking-level control in the session header
+
+Status: done (2026-10-01; gate-checker PASS-WITH-NOTES)
+
+### Plan
+
+- `src/shared/model.ts`: `Session.thinkingLevel?: ThinkingLevel | null` (spec 5); the repository takes it in `updateSession`; a new session doesn't get the field (Default). Repository test first, incl. records without the field.
+- `src/shared/thinking.ts` (tests first): the model's info via `Object.hasOwn` (T13-3), whether the control shows (provider and model set, support not `unsupported`), and the `thinking: { level, info }` of a request (`level` is `null` while the control is hidden).
+- `useChat`: Ask and Summarize (and their Retry) put that `thinking` on the request, also at Default; title generation and Test connection stay without it.
+- `ThinkingMenu.tsx`: the `ModelMenu` listbox pattern and styling, in the header after the model menu; button "Thinking: <value>", options Default, Low, Medium, High. `style.css`: both menus in one group; the thinking control wraps below the model menu when they don't fit.
+- `llm-messages.ts`: its own key for `thinking-unsupported`, no provider text. Strings of spec 4.7 for the control and the error in `en` and `de`.
+- `tests/mock-llm/server.ts`: `reasoningEfforts` (one entry per chat request), a designated model id that answers 400 naming `reasoning_effort` when one is sent, and model-list entries that can carry `supported_parameters`.
+- Tests: `tests/thinking.test.ts`, `tests/repository.test.ts`, `tests/sidepanel-thinking.test.tsx` (control: options, selection, persistence, hidden states, keyboard, both locales, while an answer streams; ask flow: level and info on the request for all three provider kinds, hidden sends none, title and Test connection never), `tests/mock-llm.test.ts`, `tests/provider-access.test.ts` (error text).
+- e2e `tests/e2e/thinking.spec.ts`: set High, ask, the mock got `reasoning_effort: "high"`; new session at Default; switch back; reload; reject flow, then Default and Retry; hidden for an `unsupported` model; screens `T15-*` incl. a narrow width with a long model name.
+- README Features line. No manifest, permission or dependency change.
+- Open questions: the model menu has no disabled state today, so "follows the model menu's rules" (spec 4.1) leaves the control enabled while an answer streams; the spec's example assumes otherwise. Recorded in decisions.md, raised in the report.
+
+### Acceptance
+
+- [x] The control shows the session's level, changes it, and the change persists across reopening the side panel and switching sessions (`tests/sidepanel-thinking.test.tsx`, `tests/repository.test.ts`; e2e incl. a reload; screens `T15-02`, `T15-03`, `T15-04`).
+- [x] A new session starts at Default: the record has no level (`tests/repository.test.ts`, component, e2e).
+- [x] The control is hidden with no provider or model and for an `unsupported` model, shown for `supported` and `unknown`; a hidden control sends no level and keeps the stored one (`tests/thinking.test.ts`, component, e2e with the mock's `supported_parameters`; screens `T15-01`, `T15-07`).
+- [x] Ask and Summarize send the level; Test connection and title generation never do (component tests for all three provider kinds; e2e on the mock's `reasoningEfforts`).
+- [x] A provider rejection shows the `thinking-unsupported` message with Retry; after setting Default, Retry succeeds (component, e2e; screens `T15-05`, `T15-06`). No automatic retry; the provider's text is not shown.
+- [x] The control is keyboard operable and has its accessible name in both locales (component tests in `en` and `de`; e2e sets High with the keyboard only).
+- [x] The header fits a 320 px sidebar with a 65-character model name; the level's value is never cut off (e2e at 320, 400 and 640 px; screens `T15-08`, `T15-09`, `T15-10`).
+- [x] New strings are in `en` and `de` (`tests/locales.test.ts`); the README has the Features line.
+- [x] No manifest, permission, dependency or message-protocol change; no stored data beyond spec 5.
+- [x] The orchestrator has looked at the build in both browsers: the Chromium screens `test-results/screens/T15-*.png`, and `dist/firefox-ext` loaded headless in Firefox 140 ESR as a temporary add-on, without extension errors.
+
+Not as the spec's example has it: the control has no disabled state, because the model menu it follows has none (decisions.md T15-6). The owed "disabled state" test checks that both menus stay enabled while an answer streams and that a change applies to the next request only.
+
+### Tests
+
+- `tests/repository.test.ts` (`thinkingLevel`): a new session without the field, each level stored and read back, `null` for Default, kept across model and title changes, a record without the field, deletion.
+- `tests/thinking.test.ts`: the session's level incl. damaged data; the model's info (own keys only, damaged entries, a provider cached before the feature); when the control shows; what a request carries.
+- `tests/sidepanel-thinking.test.tsx`: the control (label and name, options and current mark, selection, nothing written for the current level, reopening, new session and switching back, keyboard, outside click, German, save error); its hidden and shown states; while an answer streams; the requests (Ask per level and at Default, Summarize, title request, Test connection, hidden control; Anthropic effort, budget and unknown, Gemini supported and unknown); the rejection (message, Retry at the same level, Default then Retry, after reopening, German, the same 400 at Default).
+- `tests/provider-access.test.ts`: the text for `thinking-unsupported`. `tests/mock-llm.test.ts`: listed `supported_parameters`, the recorded efforts, the rejecting model.
+- `tests/e2e/thinking.spec.ts`: the flow of the plan and the header widths; screens `T15-01-no-provider-hidden`, `T15-02-control-closed` (+ `-dark`), `T15-03-control-open` (+ `-dark`), `T15-04-high-answered` (+ `-dark`), `T15-05-rejected` (+ `-dark`), `T15-06-default-retry-ok`, `T15-07-unsupported-hidden`, `T15-08-narrow-320`, `T15-08-narrow-400`, `T15-09-narrow-320-open` (+ `-dark`), `T15-10-wide-640`.
+
+## T16 Reasoning block, README, final report
+
+Status: done (gate-checker PASS-WITH-NOTES, 2026-10-01)
+
+### Plan
+
+- `Transcript.tsx`: a reasoning block above the answer text for a stored answer (`Message.reasoning`) and for the live one (`LiveAnswer.reasoning`): a `<button>` row with `aria-expanded`, `aria-controls` and the chevron of the "Session tabs" toggle, collapsed by default; the body goes through the answer renderer without citation linking (`renderReasoning` in `markdown.ts`). Label "Thinking…" while the answer is live and has no text yet, else "Reasoning".
+- The open state is kept in the transcript, in memory only, keyed by the question the answer belongs to, so a block opened while streaming stays open when the answer is stored; it is gone with a session switch or a reload.
+- Auto-scroll: the transcript keeps following a growing block; opening or closing a block doesn't jump to the end.
+- `style.css`: the row, and the body in the secondary colour, slightly smaller, with a left border; no height limit.
+- Strings `reasoningThinking`, `reasoningLabel` in `en` and `de` (spec 4.7).
+- Tests: `tests/sidepanel-reasoning.test.tsx` (no reasoning, collapsed, expanded, both labels, stopped and failed answers, live update while open, keyboard, reopened session, German, injected markup); `tests/chat-markdown.test.ts` (sanitiser for reasoning, no citation buttons); the "not in the DOM" assertion in `tests/sidepanel-chat.test.tsx` changed to the new behaviour.
+- `tests/mock-llm/server.ts`: a scripted reply can hold the stream after its reasoning until the test releases it, so the "Thinking…" state is captured without sleeps; `tests/mock-llm.test.ts`.
+- e2e `tests/e2e/reasoning.spec.ts`: reasoning before the answer, "Thinking…" then "Reasoning", expand, reload and expand again, injected markup; screens `T16-*` (light and dark, one at 320 px).
+- README: one Features line, one Limits line. `docs/thinking-levels-report.md`. No manifest, permission or dependency change.
+- Open questions: none so far.
+
+### Acceptance
+
+- [x] An assistant message with non-empty reasoning shows a toggle row above the answer text, collapsed by default, also while streaming; the open state is not stored (component tests; e2e incl. a reload and a session switch; screens `T16-01`, `T16-05`).
+- [x] The row reads "Thinking…" while reasoning is arriving and no answer text has arrived yet, otherwise "Reasoning"; a stopped or failed answer with reasoning alone reads "Reasoning" (component tests in `en` and `de`; e2e; screens `T16-01`, `T16-04`, `T16-08`).
+- [x] Expanded, it shows the reasoning through the answer's sanitised renderer, without citation linking, subdued against the answer; open while streaming, it updates live (component tests; e2e; screens `T16-02`, `T16-03`, `T16-04`).
+- [x] The row is a real button with `aria-expanded` and `aria-controls`, operable by keyboard (component test; e2e with Enter and Space in Chromium).
+- [x] A message without reasoning renders exactly as before: the same elements, no block (component test for a missing, `null` and empty field; e2e).
+- [x] The same holds for a reopened session: collapsed, and it expands again from the stored answer (component test; e2e after a reload; screen `T16-06`).
+- [x] Injected `<script>` or `onerror` in reasoning text does not execute (`tests/chat-markdown.test.ts`, component test, e2e in Chromium for the live and the reopened answer).
+- [x] The transcript keeps following a streaming answer while the block is open and growing; opening a long block doesn't jump to its end (e2e; screen `T16-03`).
+- [x] The answer text, the title request and the next request's history don't contain the reasoning (component tests of T14, updated; e2e on the mock's recorded requests).
+- [x] New strings are in `en` and `de`; the README has the Features and the Limits line.
+- [x] The final report `docs/thinking-levels-report.md` covers what shipped, deviations, known limitations per provider, manual checks and open questions.
+- [x] No manifest, permission, dependency, stored-data or message-protocol change; reasoning is never logged.
+- [x] The orchestrator has looked at the build in both browsers: the Chromium screens `test-results/screens/T16-*.png`, and `dist/firefox-ext` loaded headless in Firefox 140 ESR as a temporary add-on, without extension errors. The sidebar itself was not rendered in Firefox.
+
+### Tests
+
+- `tests/sidepanel-reasoning.test.tsx`: stored answers (no block without reasoning, collapsed, expanded as Markdown without citations, native button, one block and state per answer, stopped and failed with reasoning alone, reopened, session switch, German, injected markup) and streaming answers (both labels, live update while open and staying open when stored, Stop, failure and Retry, German).
+- `tests/chat-markdown.test.ts` (`reasoning`): Markdown, the sanitiser, external links, no citation buttons.
+- `tests/sidepanel-chat.test.tsx`: the former "reasoning is not in the page" assertion now checks the collapsed block, opens it and closes it.
+- `tests/mock-llm.test.ts`: a stream held at given chunks until released, and a held stream whose client goes away.
+- `tests/e2e/reasoning.spec.ts`: the flow of the plan; screens `T16-01-thinking-collapsed`, `T16-02-thinking-open`, `T16-04-answered-open`, `T16-05-answered-collapsed`, `T16-06-reopened-expanded`, `T16-07-narrow-320-expanded`, `T16-08-stopped-reasoning-only` (each also `-dark`) and `T16-03-thinking-open-growing`.

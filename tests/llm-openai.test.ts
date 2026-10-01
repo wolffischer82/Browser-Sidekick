@@ -3,19 +3,27 @@ import { describe, expect, it } from 'vitest';
 import { createOpenAiProvider } from '../src/shared/llm/openai';
 import {
   collect,
+  collectEvents,
   guardGlobalFetch,
   jsonResponse,
   KEY,
   mockFetch,
+  reasoning,
   REQUEST,
   splitEvery,
   sseResponse,
+  text,
 } from './helpers/llm-fetch';
 
 guardGlobalFetch();
 
 const chunk = (content: unknown, extra: Record<string, unknown> = {}): string =>
   `data: ${JSON.stringify({ id: 'c1', object: 'chat.completion.chunk', choices: [{ index: 0, delta: { content }, finish_reason: null }], ...extra })}\n\n`;
+
+/** One chunk with the given `delta` object. */
+const delta = (value: Record<string, unknown>): string =>
+  `data: ${JSON.stringify({ id: 'c1', choices: [{ index: 0, delta: value, finish_reason: null }] })}\n\n`;
+const DONE = 'data: [DONE]\n\n';
 
 describe('OpenAI-compatible request shape', () => {
   it('posts a streaming chat completion to <base>/chat/completions', async () => {
@@ -97,7 +105,7 @@ describe('OpenAI-compatible stream parsing', () => {
     }
   });
 
-  it('tolerates OpenRouter comments, reasoning fields, CRLF, unknown fields and no [DONE]', async () => {
+  it('tolerates OpenRouter comments, CRLF, unknown fields and no [DONE]', async () => {
     const result = await collect(
       provider(() =>
         sseResponse([
@@ -111,6 +119,122 @@ describe('OpenAI-compatible stream parsing', () => {
     );
     expect(result).toEqual({ deltas: ['A', 'B'], error: null });
   });
+
+  it.each(['reasoning_content', 'reasoning'])(
+    'yields `delta.%s` as reasoning, then the text, for any chunking',
+    async (field) => {
+      const stream = [
+        delta({ role: 'assistant', content: '', [field]: '' }),
+        delta({ [field]: 'Let me ' }),
+        delta({ [field]: 'think.', content: null }),
+        delta({ content: 'Hello' }),
+        delta({ content: ' world' }),
+        DONE,
+      ].join('');
+      for (const size of [1, 3, 17, stream.length]) {
+        expect(await collectEvents(provider(() => sseResponse(splitEvery(stream, size))))).toEqual({
+          events: [reasoning('Let me '), reasoning('think.'), text('Hello'), text(' world')],
+          error: null,
+        });
+      }
+    },
+  );
+
+  it('yields reasoning only when no text follows', async () => {
+    const result = await collectEvents(
+      provider(() =>
+        sseResponse([delta({ reasoning: 'First, ' }), delta({ reasoning: 'the pages.' }), DONE]),
+      ),
+    );
+    expect(result).toEqual({
+      events: [reasoning('First, '), reasoning('the pages.')],
+      error: null,
+    });
+  });
+
+  it('keeps interleaved reasoning and text in arrival order, reasoning first within a chunk', async () => {
+    const result = await collectEvents(
+      provider(() =>
+        sseResponse([
+          delta({ reasoning_content: 'Plan. ' }),
+          delta({ content: 'Part one. ' }),
+          delta({ content: 'Part two.', reasoning_content: 'Check. ' }),
+          delta({ reasoning: 'Done.' }),
+          DONE,
+        ]),
+      ),
+    );
+    expect(result).toEqual({
+      events: [
+        reasoning('Plan. '),
+        text('Part one. '),
+        reasoning('Check. '),
+        text('Part two.'),
+        reasoning('Done.'),
+      ],
+      error: null,
+    });
+  });
+
+  it('ignores reasoning that is not a non-empty string, and other reasoning shapes', async () => {
+    const result = await collectEvents(
+      provider(() =>
+        sseResponse([
+          delta({ reasoning: '' }),
+          delta({ reasoning: null, reasoning_content: null }),
+          delta({ reasoning: { text: 'nested' } }),
+          delta({ reasoning_content: ['a', 'b'] }),
+          delta({ reasoning: 42 }),
+          delta({ reasoning_details: [{ type: 'reasoning.text', text: 'detail' }] }),
+          delta({ thinking: 'other name' }),
+          delta({ content: 'Answer.' }),
+          DONE,
+        ]),
+      ),
+    );
+    expect(result).toEqual({ events: [text('Answer.')], error: null });
+  });
+
+  it('yields the reasoning once when a chunk carries both field names', async () => {
+    const result = await collectEvents(
+      provider(() =>
+        sseResponse([
+          delta({ reasoning_content: 'Same thought', reasoning: 'Same thought' }),
+          DONE,
+        ]),
+      ),
+    );
+    expect(result.events).toEqual([reasoning('Same thought')]);
+  });
+
+  it('keeps the reasoning that arrived before an error chunk', async () => {
+    const result = await collectEvents(
+      provider(() =>
+        sseResponse([
+          delta({ reasoning: 'Half a thought' }),
+          `data: ${JSON.stringify({ error: { code: 502, message: 'Upstream error' } })}\n\n`,
+        ]),
+      ),
+    );
+    expect(result.events).toEqual([reasoning('Half a thought')]);
+    expect(result.error?.code).toBe('server');
+  });
+
+  it.each(['reasoning_content', 'reasoning'])(
+    'yields `message.%s` of a non-streamed JSON completion before its text',
+    async (field) => {
+      const response = () =>
+        jsonResponse(200, {
+          choices: [
+            { index: 0, message: { role: 'assistant', content: 'Whole answer', [field]: 'Why.' } },
+          ],
+        });
+      expect(await collectEvents(provider(response))).toEqual({
+        events: [reasoning('Why.'), text('Whole answer')],
+        error: null,
+      });
+    },
+  );
 
   it('accepts bare JSON lines without data: prefixes', async () => {
     const line = (content: string) => `${JSON.stringify({ choices: [{ delta: { content } }] })}\n`;
@@ -184,7 +308,7 @@ describe('OpenAI-compatible listModels', () => {
       { baseUrl: 'https://api.openai.com/v1', apiKey: KEY },
       fetch,
     ).listModels();
-    expect(result).toEqual({ models: ['gpt-4.1-mini', 'gpt-4o'] });
+    expect(result).toEqual({ models: ['gpt-4.1-mini', 'gpt-4o'], info: {} });
     expect(calls[0]?.url).toBe('https://api.openai.com/v1/models');
     expect(calls[0]?.init.method).toBe('GET');
     expect(calls[0]?.headers).toEqual({ authorization: `Bearer ${KEY}` });
@@ -198,7 +322,7 @@ describe('OpenAI-compatible listModels', () => {
       { baseUrl: 'http://localhost:11434/v1', apiKey: '' },
       fetch,
     ).listModels();
-    expect(result).toEqual({ models: ['llama3.2', 'qwen3'] });
+    expect(result).toEqual({ models: ['llama3.2', 'qwen3'], info: {} });
   });
 
   it('falls back when the server has no /models (405)', async () => {

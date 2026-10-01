@@ -77,8 +77,10 @@ export async function generateSessionTitle(input: TitleInput): Promise<boolean> 
     let reply = '';
     try {
       const request = titleRequest(input.model, input.question, input.answer);
-      for await (const delta of input.provider.stream(request, controller.signal)) {
-        reply += delta;
+      for await (const event of input.provider.stream(request, controller.signal)) {
+        // The title is the answer text; reasoning is not part of it.
+        if (event.type !== 'text') continue;
+        reply += event.delta;
         if (reply.length > MAX_REPLY_CHARS) {
           controller.abort();
           break;

@@ -13,3 +13,9 @@ None open.
 5. **Writing the ask-flow tests** (T10). The permission system had declined `tests/e2e/chat.spec.ts` and `tests/sidepanel-chat.test.tsx`. Answered 2026-10-01: yes, write both. Both exist now.
 6. **Store a failed answer's error code with the message** (T10), so the error and Retry survive a reload and a browser restart. Answered 2026-10-01: yes; an optional error-code field on `Message` (a code, never provider text). Implemented without a DB version bump; decisions.md T10-9.
 7. **Feedback for a context-menu pin when no sidebar is open** (T07). Answered 2026-10-01 (spec D17, section 5.4): the context-menu click also opens the sidebar if it's closed, so the pin, "Already pinned" or the failure is visible there. No toolbar badge. decisions.md T07-18 to T07-20.
+
+# Thinking levels
+
+Spec: `specs/thinking-levels.md`. Each entry names the task it blocks.
+
+None open.

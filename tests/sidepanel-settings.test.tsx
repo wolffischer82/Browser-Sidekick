@@ -366,6 +366,27 @@ describe('Test connection and model list', () => {
     expect(new Headers(init?.headers).get('Authorization')).toBe(`Bearer ${KEY}`);
   });
 
+  it('reports success for a model that answers with reasoning only, and shows none of it', async () => {
+    const body =
+      `data: ${JSON.stringify({ choices: [{ delta: { reasoning_content: 'Secret thought' } }] })}\n\n` +
+      'data: [DONE]\n\n';
+    const fetchMock = stubFetch(
+      () => new Response(body, { headers: { 'Content-Type': 'text/event-stream' } }),
+    );
+    await openForm();
+    fireEvent.click(screen.getByRole('button', { name: 'Test connection' }));
+    expect(await screen.findByText('The connection works.')).toBeTruthy();
+    expect(screen.queryByText(/Secret thought/)).toBeNull();
+    // The request is the one sent before reasoning existed: no thinking field.
+    const [, init] = fetchMock.mock.calls[0] ?? [];
+    expect(JSON.parse(init?.body as string)).toEqual({
+      model: 'gpt-a',
+      messages: [{ role: 'user', content: 'Hi' }],
+      stream: true,
+      max_completion_tokens: 1,
+    });
+  });
+
   it('reports an invalid key', async () => {
     stubFetch(() => new Response('{"error":{"message":"bad key"}}', { status: 401 }));
     await openForm();
@@ -423,6 +444,97 @@ describe('Test connection and model list', () => {
       defaultModel: 'gpt-b',
       cachedModels: ['gpt-a', 'gpt-b'],
     });
+  });
+
+  it('stores what the list says about each model next to the cached list', async () => {
+    stubFetch(() =>
+      Response.json({
+        data: [
+          { id: 'gpt-b', supported_parameters: ['temperature'] },
+          { id: 'gpt-a', supported_parameters: ['reasoning'] },
+          { id: 'gpt-c' },
+        ],
+      }),
+    );
+    await openForm();
+    fireEvent.click(screen.getByRole('button', { name: 'Load models' }));
+    expect(await screen.findByText('Model list loaded.')).toBeTruthy();
+    save();
+    await screen.findByRole('button', { name: /^Edit/ });
+    const [saved] = await stored();
+    expect(saved?.cachedModels).toEqual(['gpt-a', 'gpt-b', 'gpt-c']);
+    expect(saved?.modelInfo).toEqual({
+      'gpt-a': { thinking: 'supported' },
+      'gpt-b': { thinking: 'unsupported' },
+    });
+  });
+
+  describe('editing a provider that has model info', () => {
+    const INFO = { 'gpt-a': { thinking: 'supported' as const } };
+
+    async function openEdit() {
+      await setup([provider({ modelInfo: INFO })]);
+      openSettings();
+      fireEvent.click(screen.getByRole('button', { name: /^Edit/ }));
+      await settle();
+    }
+
+    async function saved() {
+      save();
+      await screen.findByRole('button', { name: /^Edit/ });
+      return (await stored())[0];
+    }
+
+    it('keeps both when the list is not touched', async () => {
+      await openEdit();
+      type('Name', 'Renamed');
+      expect(await saved()).toMatchObject({
+        label: 'Renamed',
+        cachedModels: ['gpt-a', 'gpt-b'],
+        modelInfo: INFO,
+      });
+    });
+
+    it('replaces both when the list is loaded again', async () => {
+      stubFetch(() => Response.json({ data: [{ id: 'gpt-a', supported_parameters: [] }] }));
+      await openEdit();
+      fireEvent.click(screen.getByRole('button', { name: 'Load models' }));
+      expect(await screen.findByText('Model list loaded.')).toBeTruthy();
+      const config = await saved();
+      expect(config?.cachedModels).toEqual(['gpt-a']);
+      expect(config?.modelInfo).toEqual({ 'gpt-a': { thinking: 'unsupported' } });
+    });
+
+    it('clears both when loading the list fails', async () => {
+      stubFetch(() => new Response('not found', { status: 404 }));
+      await openEdit();
+      fireEvent.click(screen.getByRole('button', { name: 'Load models' }));
+      await screen.findByText("The model list couldn't be loaded. Type the model name instead.");
+      const config = await saved();
+      expect(config?.cachedModels).toBeNull();
+      expect(config).not.toHaveProperty('modelInfo');
+    });
+
+    it('clears both when the base URL changes', async () => {
+      await openEdit();
+      type('Base URL', 'https://api.openai.com/v2');
+      await settle();
+      const config = await saved();
+      expect(config?.cachedModels).toBeNull();
+      expect(config).not.toHaveProperty('modelInfo');
+    });
+  });
+
+  it('saves a provider cached before model info existed without adding any', async () => {
+    await setup([provider()]);
+    openSettings();
+    fireEvent.click(screen.getByRole('button', { name: /^Edit/ }));
+    await settle();
+    save();
+    await screen.findByRole('button', { name: /^Edit/ });
+    const [config] = await stored();
+    expect(config?.cachedModels).toEqual(['gpt-a', 'gpt-b']);
+    expect(config).not.toHaveProperty('modelInfo');
   });
 
   it('falls back to free-text entry when listing fails', async () => {
