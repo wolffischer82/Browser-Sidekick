@@ -479,7 +479,7 @@ Not as the spec's example has it: the control has no disabled state, because the
 
 ## T16 Reasoning block, README, final report
 
-Status: in progress
+Status: done by the implementer (2026-10-01); gate-checker pending
 
 ### Plan
 
@@ -493,3 +493,27 @@ Status: in progress
 - e2e `tests/e2e/reasoning.spec.ts`: reasoning before the answer, "Thinking…" then "Reasoning", expand, reload and expand again, injected markup; screens `T16-*` (light and dark, one at 320 px).
 - README: one Features line, one Limits line. `docs/thinking-levels-report.md`. No manifest, permission or dependency change.
 - Open questions: none so far.
+
+### Acceptance
+
+- [x] An assistant message with non-empty reasoning shows a toggle row above the answer text, collapsed by default, also while streaming; the open state is not stored (component tests; e2e incl. a reload and a session switch; screens `T16-01`, `T16-05`).
+- [x] The row reads "Thinking…" while reasoning is arriving and no answer text has arrived yet, otherwise "Reasoning"; a stopped or failed answer with reasoning alone reads "Reasoning" (component tests in `en` and `de`; e2e; screens `T16-01`, `T16-04`, `T16-08`).
+- [x] Expanded, it shows the reasoning through the answer's sanitised renderer, without citation linking, subdued against the answer; open while streaming, it updates live (component tests; e2e; screens `T16-02`, `T16-03`, `T16-04`).
+- [x] The row is a real button with `aria-expanded` and `aria-controls`, operable by keyboard (component test; e2e with Enter and Space in Chromium).
+- [x] A message without reasoning renders exactly as before: the same elements, no block (component test for a missing, `null` and empty field; e2e).
+- [x] The same holds for a reopened session: collapsed, and it expands again from the stored answer (component test; e2e after a reload; screen `T16-06`).
+- [x] Injected `<script>` or `onerror` in reasoning text does not execute (`tests/chat-markdown.test.ts`, component test, e2e in Chromium for the live and the reopened answer).
+- [x] The transcript keeps following a streaming answer while the block is open and growing; opening a long block doesn't jump to its end (e2e; screen `T16-03`).
+- [x] The answer text, the title request and the next request's history don't contain the reasoning (component tests of T14, updated; e2e on the mock's recorded requests).
+- [x] New strings are in `en` and `de`; the README has the Features and the Limits line.
+- [x] The final report `docs/thinking-levels-report.md` covers what shipped, deviations, known limitations per provider, manual checks and open questions.
+- [x] No manifest, permission, dependency, stored-data or message-protocol change; reasoning is never logged.
+- [ ] The orchestrator has looked at the build in both browsers (screens `test-results/screens/T16-*.png`).
+
+### Tests
+
+- `tests/sidepanel-reasoning.test.tsx`: stored answers (no block without reasoning, collapsed, expanded as Markdown without citations, native button, one block and state per answer, stopped and failed with reasoning alone, reopened, session switch, German, injected markup) and streaming answers (both labels, live update while open and staying open when stored, Stop, failure and Retry, German).
+- `tests/chat-markdown.test.ts` (`reasoning`): Markdown, the sanitiser, external links, no citation buttons.
+- `tests/sidepanel-chat.test.tsx`: the former "reasoning is not in the page" assertion now checks the collapsed block, opens it and closes it.
+- `tests/mock-llm.test.ts`: a stream held at given chunks until released, and a held stream whose client goes away.
+- `tests/e2e/reasoning.spec.ts`: the flow of the plan; screens `T16-01-thinking-collapsed`, `T16-02-thinking-open`, `T16-04-answered-open`, `T16-05-answered-collapsed`, `T16-06-reopened-expanded`, `T16-07-narrow-320-expanded`, `T16-08-stopped-reasoning-only` (each also `-dark`) and `T16-03-thinking-open-growing`.
