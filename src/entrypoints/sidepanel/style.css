@@ -470,6 +470,36 @@ textarea {
   padding: 8px 12px 0;
 }
 
+/* A tooltip drawn by the page: shown on hover and on keyboard focus. */
+
+.tooltip-anchor {
+  position: relative;
+  display: inline-flex;
+}
+
+.tooltip {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  z-index: 5;
+  width: max-content;
+  max-width: min(280px, calc(100vw - 24px));
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-raised);
+  box-shadow: var(--shadow);
+  color: var(--fg);
+  font-size: 0.85rem;
+  pointer-events: none;
+  visibility: hidden;
+}
+
+.tooltip-anchor:hover .tooltip,
+.tooltip-anchor:focus-within .tooltip {
+  visibility: visible;
+}
+
 .composer {
   flex: none;
   padding: 8px 12px 12px;

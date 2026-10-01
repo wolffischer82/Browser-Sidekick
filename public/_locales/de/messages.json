@@ -105,6 +105,27 @@
     "message": "Hefte eine Seite an oder öffne einen lesbaren Tab, um zusammenzufassen.",
     "description": "Tooltip of the disabled Summarize button."
   },
+  "summarizeNoProvider": {
+    "message": "Füge in den Einstellungen einen Anbieter hinzu, um zusammenzufassen.",
+    "description": "Tooltip of the disabled Summarize button when no usable provider is set up."
+  },
+  "summarizeNoAccess": {
+    "message": "Kein Zugriff auf $LABEL$. Erlaube den Zugriff, um zusammenzufassen.",
+    "description": "Tooltip of the disabled Summarize button when the session's provider has no host access. $1 is the provider name.",
+    "placeholders": {
+      "label": {
+        "content": "$1"
+      }
+    }
+  },
+  "summarizeBusy": {
+    "message": "Warte, bis die Antwort fertig ist, oder stoppe sie.",
+    "description": "Tooltip of the disabled Summarize button while an answer is on its way."
+  },
+  "summarizePrompt": {
+    "message": "Fasse die bereitgestellten Seiten zusammen. Gib zuerst für jede Seite eine kurze Zusammenfassung unter ihrem Titel und zitiere die Seite mit ihrer Nummer. Gib danach eine Gesamtzusammenfassung, die die gemeinsamen Themen der Seiten und die Punkte nennt, in denen sie sich widersprechen. Antworte auf Deutsch.",
+    "description": "The fixed request sent to the model by Summarize (spec 5.6), in the UI language. Not shown in the UI: the transcript shows \"Summarize\" instead."
+  },
   "inputPlaceholder": {
     "message": "Frag etwas zu diesen Seiten…",
     "description": "Placeholder of the question input."
@@ -631,6 +652,10 @@
     "message": "Warte auf die Antwort…",
     "description": "Shown while a question is sent and no text has arrived yet."
   },
+  "answerWaitingPins": {
+    "message": "Warte auf angeheftete Seiten, die noch gelesen werden…",
+    "description": "Shown after Summarize was pressed while a pinned page is still being extracted; the summary waits briefly for it."
+  },
   "stop": {
     "message": "Stopp",
     "description": "Button that stops the answer while it streams."
@@ -646,6 +671,10 @@
   "currentTabSkipped": {
     "message": "Der aktuelle Tab konnte nicht gelesen werden und wurde deshalb nicht einbezogen.",
     "description": "One-line notice when the current tab could not be read at send time."
+  },
+  "pinsSkipped": {
+    "message": "Eine angeheftete Seite wurde noch gelesen und deshalb nicht einbezogen.",
+    "description": "One-line notice when a pinned page was still being extracted after the wait and the summary went ahead without it."
   },
   "retry": {
     "message": "Erneut versuchen",

@@ -94,7 +94,10 @@ describe('summarize and input', () => {
     await renderSidebar(repo);
     const button = screen.getByRole('button', { name: 'Summarize' });
     expect(button.getAttribute('aria-disabled')).toBe('true');
-    expect(button.getAttribute('title')).toBe(readMessages('en').summarizeUnavailable?.message);
+    // No provider yet: the tooltip names that first (the states are T11's tests).
+    const hint = document.getElementById(button.getAttribute('aria-describedby') ?? '');
+    expect(hint?.getAttribute('role')).toBe('tooltip');
+    expect(hint?.textContent).toBe(readMessages('en').summarizeNoProvider?.message);
   });
 
   it('disables the input with a settings link while no provider exists', async () => {

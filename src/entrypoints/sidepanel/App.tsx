@@ -12,6 +12,7 @@ import {
   openActiveSession,
 } from '@/shared/sessions';
 import { watchCurrentTab, type CurrentTab } from '@/shared/current-tab';
+import { summarizeState, summaryPageSet } from '@/shared/chat/summarize';
 import { hasAllSitesAccess, requestAllSitesAccess, requestSiteAccess } from '@/shared/page-access';
 import {
   accessPattern,
@@ -391,9 +392,15 @@ export function App({ repository }: Props) {
     composerState = { kind: 'noProvider' };
   }
 
-  const tabContext = (): TabContext => ({
-    currentTab,
-    excluded: currentTabId !== null && excludedTabId === currentTabId,
+  const currentTabExcluded = currentTabId !== null && excludedTabId === currentTabId;
+  const tabContext = (): TabContext => ({ currentTab, excluded: currentTabExcluded });
+
+  // Summarize (D4): all ready pins plus the current tab, if there is anything.
+  const summarize = summarizeState({
+    provider: sessionProvider,
+    model: active.model,
+    busy: chat.busy,
+    pages: summaryPageSet(pins, currentTab, currentTabExcluded),
   });
 
   const grantSessionProvider = () => {
@@ -512,7 +519,7 @@ export function App({ repository }: Props) {
         <SessionTabs
           pins={pins}
           currentTab={currentTab}
-          currentTabExcluded={currentTabId !== null && excludedTabId === currentTabId}
+          currentTabExcluded={currentTabExcluded}
           isOpen={isOpen}
           alreadyPinned={alreadyPinned}
           onPinCurrent={pinCurrent}
@@ -558,7 +565,12 @@ export function App({ repository }: Props) {
             });
           }}
         />
-        <ActionBar canSummarize={false} />
+        <ActionBar
+          state={summarize}
+          onSummarize={() => {
+            chat.summarize(tabContext());
+          }}
+        />
         <Composer
           state={composerState}
           busy={chat.busy}

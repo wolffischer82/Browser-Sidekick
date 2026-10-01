@@ -2,12 +2,14 @@ import { useEffect, useRef, useState } from 'preact/hooks';
 import { browser } from 'wxt/browser';
 import { assembleContext, requestCurrentTab } from '@/shared/chat/context';
 import { readCurrentTabText } from '@/shared/chat/current-tab-text';
+import { waitForPins } from '@/shared/chat/summarize';
 import { generateSessionTitle, isFirstAnswer } from '@/shared/chat/title';
 import type { CurrentTab } from '@/shared/current-tab';
 import type { Repository } from '@/shared/db/repository';
+import { t } from '@/shared/i18n';
 import { createProvider, LlmError } from '@/shared/llm';
 import { broadcast, isSidekickMessage } from '@/shared/messages';
-import type { Message, MessageSource, ProviderConfig, Session } from '@/shared/model';
+import type { Message, MessageKind, MessageSource, ProviderConfig, Session } from '@/shared/model';
 
 /**
  * The ask flow (spec 5.6). Streaming lives in this sidebar: the answer
@@ -17,11 +19,17 @@ import type { Message, MessageSource, ProviderConfig, Session } from '@/shared/m
  * (decisions.md T10), so the error and Retry survive a reload; Retry resends
  * the same question and replaces the failed answer. Nothing about the
  * question, the pages or the answer is logged.
+ *
+ * Summarize (D4, decisions.md T11) is the same flow with the fixed prompt as
+ * the question and `kind: 'summarize'`; it also waits briefly for pins that
+ * are still being read.
  */
 
 /** An answer on its way: waiting for the first text, or streaming. */
 export interface LiveAnswer {
   sessionId: string;
+  /** A typed question, or the Summarize request (shown as "Summarize"). */
+  kind: MessageKind;
   question: string;
   /** The stored question this answers; `null` until it is saved. */
   questionId: string | null;
@@ -33,6 +41,10 @@ export interface LiveAnswer {
   trimmed: boolean;
   /** The current tab should have been sent but couldn't be read. */
   tabSkipped: boolean;
+  /** A summary is waiting for pins that are still being read. */
+  waitingForPins: boolean;
+  /** Pins were still being read after the wait and were left out. */
+  pinsSkipped: boolean;
 }
 
 /** What the sidebar shows about the current tab when a question is sent. */
@@ -61,6 +73,8 @@ export interface Chat {
    */
   errorOf: (messageId: string) => LlmError | undefined;
   send: (question: string, tab: TabContext) => void;
+  /** Sends the fixed Summarize request for D4's page set. */
+  summarize: (tab: TabContext) => void;
   stop: () => void;
   /** Resends the question of the failed answer `failed`. */
   retry: (failed: Message, tab: TabContext) => void;
@@ -134,7 +148,7 @@ export function useChat({ repo, session, providers, onTitleChanged }: Options): 
     };
   }, [repo]);
 
-  const ask = (question: string, tab: TabContext, retry: Retry | null) => {
+  const ask = (kind: MessageKind, question: string, tab: TabContext, retry: Retry | null) => {
     if (!repo || !session) return;
     const provider = providers.find((p) => p.id === session.providerId);
     const model = session.model;
@@ -145,6 +159,7 @@ export function useChat({ repo, session, providers, onTitleChanged }: Options): 
     controllers.current.set(id, controller);
     const answer: LiveAnswer = {
       sessionId: id,
+      kind,
       question,
       questionId: retry?.question.id ?? null,
       replacesId: retry?.failed.id ?? null,
@@ -153,22 +168,43 @@ export function useChat({ repo, session, providers, onTitleChanged }: Options): 
       sources: [],
       trimmed: false,
       tabSkipped: false,
+      waitingForPins: false,
+      pinsSkipped: false,
     };
     live.current.set(id, answer);
     rerender();
 
     const llm = createProvider(provider);
 
+    /**
+     * A summary waits a moment for pins that are still being read, so a page
+     * pinned just before isn't missed; after that they are left out (D4).
+     */
+    const pinsForSummary = async () => {
+      const waited = await waitForPins(
+        () => repo.listPins(id),
+        controller.signal,
+        () => {
+          answer.waitingForPins = true;
+          rerender();
+        },
+      );
+      answer.waitingForPins = false;
+      answer.pinsSkipped = waited.stillExtracting > 0;
+      if (controller.signal.aborted) throw new LlmError('aborted');
+      return waited.pins;
+    };
+
     /** Sends the question and collects the answer; rejects with what stopped it. */
     const stream = async () => {
       const userMessage =
-        retry?.question ??
-        (await repo.addMessage(id, { role: 'user', kind: 'ask', text: question }));
+        retry?.question ?? (await repo.addMessage(id, { role: 'user', kind, text: question }));
       answer.questionId = userMessage.id;
       await reload(repo, id);
       if (!retry) await broadcast({ type: 'messages-changed', sessionId: id });
 
-      const [all, pins] = await Promise.all([repo.listMessages(id), repo.listPins(id)]);
+      const pins = kind === 'summarize' ? await pinsForSummary() : await repo.listPins(id);
+      const all = await repo.listMessages(id);
       const history = all.filter((m) => m.position < userMessage.position);
       const ref = requestCurrentTab(tab.currentTab, tab.excluded, pins);
       const page = ref ? await readCurrentTabText(ref) : null;
@@ -206,7 +242,7 @@ export function useChat({ repo, session, providers, onTitleChanged }: Options): 
       };
       const stored =
         (retry && (await repo.updateMessage(retry.failed.id, fields))) ||
-        (await repo.addMessage(id, { role: 'assistant', kind: 'ask', ...fields }));
+        (await repo.addMessage(id, { role: 'assistant', kind, ...fields }));
       if (error) errors.current.set(stored.id, error);
       else errors.current.delete(stored.id);
       await reload(repo, id);
@@ -262,7 +298,10 @@ export function useChat({ repo, session, providers, onTitleChanged }: Options): 
     errorOf: (messageId) => errors.current.get(messageId),
     send: (question, tab) => {
       const text = question.trim();
-      if (text) ask(text, tab, null);
+      if (text) ask('ask', text, tab, null);
+    },
+    summarize: (tab) => {
+      ask('summarize', t('summarizePrompt'), tab, null);
     },
     stop: () => {
       if (sessionId) controllers.current.get(sessionId)?.abort();
@@ -274,7 +313,7 @@ export function useChat({ repo, session, providers, onTitleChanged }: Options): 
         .reverse()
         .find((m) => m.role === 'user');
       if (index === -1 || !failed.error || !question) return;
-      ask(question.text, tab, { question, failed });
+      ask(question.kind, question.text, tab, { question, failed });
     },
   };
 }

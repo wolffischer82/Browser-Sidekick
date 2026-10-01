@@ -54,9 +54,16 @@ function Question({ message }: { message: Pick<Message, 'kind' | 'text'> }) {
   );
 }
 
-function Notices({ trimmed, tabSkipped }: { trimmed: boolean; tabSkipped?: boolean }) {
+interface NoticesProps {
+  trimmed: boolean;
+  tabSkipped?: boolean;
+  pinsSkipped?: boolean;
+}
+
+function Notices({ trimmed, tabSkipped, pinsSkipped }: NoticesProps) {
   return (
     <>
+      {pinsSkipped && <p class="answer-notice">{t('pinsSkipped')}</p>}
       {tabSkipped && <p class="answer-notice">{t('currentTabSkipped')}</p>}
       {trimmed && <p class="answer-notice">{t('answerTrimmed')}</p>}
     </>
@@ -112,8 +119,14 @@ function Live({ answer, onStop }: { answer: LiveAnswer; onStop: () => void }) {
       data-status={answer.status}
     >
       {answer.text !== '' && <AnswerBody text={answer.text} sources={answer.sources} />}
-      {answer.status === 'waiting' && <p class="muted">{t('answerWaiting')}</p>}
-      <Notices trimmed={answer.trimmed} tabSkipped={answer.tabSkipped} />
+      {answer.status === 'waiting' && (
+        <p class="muted">{t(answer.waitingForPins ? 'answerWaitingPins' : 'answerWaiting')}</p>
+      )}
+      <Notices
+        trimmed={answer.trimmed}
+        tabSkipped={answer.tabSkipped}
+        pinsSkipped={answer.pinsSkipped}
+      />
       <button type="button" class="button stop-button" onClick={onStop}>
         {t('stop')}
       </button>
@@ -178,7 +191,7 @@ export function Transcript({ messages, live, errorOf, onStop, onRetry, onOpenSou
               ),
             )}
             {live && !liveQuestionStored && (
-              <Question message={{ kind: 'ask', text: live.question }} />
+              <Question message={{ kind: live.kind, text: live.question }} />
             )}
             {live && <Live answer={live} onStop={onStop} />}
           </div>

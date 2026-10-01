@@ -105,6 +105,27 @@
     "message": "Pin a page or open a readable tab to summarize.",
     "description": "Tooltip of the disabled Summarize button."
   },
+  "summarizeNoProvider": {
+    "message": "Add a provider in settings to summarize.",
+    "description": "Tooltip of the disabled Summarize button when no usable provider is set up."
+  },
+  "summarizeNoAccess": {
+    "message": "No access to $LABEL$. Grant access to summarize.",
+    "description": "Tooltip of the disabled Summarize button when the session's provider has no host access. $1 is the provider name.",
+    "placeholders": {
+      "label": {
+        "content": "$1"
+      }
+    }
+  },
+  "summarizeBusy": {
+    "message": "Wait for the answer to finish, or stop it.",
+    "description": "Tooltip of the disabled Summarize button while an answer is on its way."
+  },
+  "summarizePrompt": {
+    "message": "Summarize the pages provided. First give a short summary of each page under its title, citing the page with its number. Then give an overall summary that covers the themes the pages share and the points on which they disagree. Answer in English.",
+    "description": "The fixed request sent to the model by Summarize (spec 5.6), in the UI language. Not shown in the UI: the transcript shows \"Summarize\" instead."
+  },
   "inputPlaceholder": {
     "message": "Ask about these pages…",
     "description": "Placeholder of the question input."
@@ -631,6 +652,10 @@
     "message": "Waiting for the answer…",
     "description": "Shown while a question is sent and no text has arrived yet."
   },
+  "answerWaitingPins": {
+    "message": "Waiting for pinned pages that are still being read…",
+    "description": "Shown after Summarize was pressed while a pinned page is still being extracted; the summary waits briefly for it."
+  },
   "stop": {
     "message": "Stop",
     "description": "Button that stops the answer while it streams."
@@ -646,6 +671,10 @@
   "currentTabSkipped": {
     "message": "The current tab couldn't be read, so it wasn't included.",
     "description": "One-line notice when the current tab could not be read at send time."
+  },
+  "pinsSkipped": {
+    "message": "A pinned page was still being read, so it wasn't included.",
+    "description": "One-line notice when a pinned page was still being extracted after the wait and the summary went ahead without it."
   },
   "retry": {
     "message": "Retry",
