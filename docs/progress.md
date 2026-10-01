@@ -333,7 +333,7 @@ Status: done (2026-10-01; gate-checker PASS-WITH-NOTES for the task and for the 
 
 ## T11 Summarize
 
-Status: in progress
+Status: implemented (2026-10-01); waiting for the gate-checker and the orchestrator's UI check
 
 ### Plan
 
@@ -345,3 +345,22 @@ Status: in progress
 - e2e `tests/e2e/summarize.spec.ts` against the mock LLM: disabled on an empty session (tooltip), one pin plus the current tab (request log by booleans only), the current tab excluded, Summarize as the first action with the generated title; screens `T11-*`.
 - No manifest, background, message-protocol or stored-data-shape change.
 - Open questions: none so far.
+
+### Acceptance
+
+- [x] The page set matches D4 in every combination: pins only, current tab only, both, current tab already pinned, and current tab excluded. Table test (`tests/chat-summarize.test.ts`, also failed and extracting pins, unreadable tabs, nothing; each row is checked against the sources `assembleContext` sends), component tests on the request for each combination (`tests/sidepanel-summarize.test.tsx`), e2e on the mock's request log for both and for excluded.
+- [x] Output streams into the transcript: a "Summarize" user message, then the streamed answer with Markdown, citations and Stop (component, e2e, screens `T11-02`, `T11-03`).
+- [x] The fixed prompt is in the UI language (`en`, `de`): per-page summaries, then an overall summary with common themes and disagreements (component tests for both languages, e2e).
+- [x] The button is disabled with a tooltip when there is nothing to summarise, when no usable provider exists (none, or without access) and while an answer streams; a click then sends nothing (component, e2e, screens `T11-01`, `T11-02`, `T11-06`).
+- [x] Reuses the ask flow: trimming notice, Stop keeps the partial summary, a stored error with Retry that survives a reload, the summary as history of later questions, the title when it is the first answer (component; e2e for the title, screen `T11-04`).
+- [x] A pin still extracting is waited for (10 s), visibly; after that it is left out with a notice (unit, component; decisions.md T11-4).
+- [x] New strings are in `en` and `de` (`tests/locales.test.ts`).
+- [x] No manifest, background, message-protocol or stored-data-shape change; no new dependency.
+- [ ] The orchestrator has looked at the build in both browsers (screens `test-results/screens/T11-*.png`).
+
+### Tests
+
+- `tests/chat-summarize.test.ts`: the page-set table (12 rows), the button state, the wait for extracting pins (none, ready in time, time limit, Stop).
+- `tests/sidepanel-summarize.test.tsx`: button states and tooltips (ready, nothing, failed and extracting pins on a browser page, the eye, a pin turning ready, no provider, no access, streaming a summary, streaming a question, German); the request per D4 combination; the flow (message, stream, stored kinds and sources, title, reload), history, Stop, error with Retry after a reload, trimming notice, German prompt; the wait (included, left out with the notice, Stop).
+- `tests/sidepanel-app.test.tsx`: the first-run button state, updated for the new tooltip.
+- `tests/e2e/summarize.spec.ts`: the flow of decisions.md T11-8; screens `T11-01-disabled-tooltip` (+ `-dark`), `T11-02-streaming`, `T11-03-summary` (+ `-dark`), `T11-04-first-action-title` (+ `-dark`), `T11-05-current-tab-excluded`, `T11-06-empty-session-disabled`.
