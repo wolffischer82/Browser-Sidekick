@@ -14,6 +14,10 @@ import type { AddressInfo } from 'node:net';
  *   `Authorization: Bearer <apiKey>`.
  * - `script()` queues replies for the next completion requests: a streamed
  *   answer with optional per-chunk delay, or an error with any status and body.
+ * - A scripted stream with `reasoning` sends those chunks as reasoning deltas
+ *   before the answer, in `delta.reasoning_content` or, with
+ *   `reasoningField: 'reasoning'`, in `delta.reasoning`. Nothing else makes
+ *   the server send reasoning, so every other reply is the plain answer.
  * - Every request is recorded in `requests` (method, path, headers, parsed
  *   body). Nothing is printed.
  * - CORS is open (`*`), so it also answers extension pages without host access.
@@ -24,6 +28,10 @@ export type ScriptedReply =
       kind: 'stream';
       chunks: string[];
       delayMs?: number;
+      /** Reasoning deltas sent before `chunks`; none when left out. */
+      reasoning?: string[];
+      /** The delta field that carries `reasoning`; default `reasoning_content`. */
+      reasoningField?: 'reasoning_content' | 'reasoning';
       /** Leave the stream open. */ hang?: boolean;
     }
   | { kind: 'error'; status: number; body: unknown };
@@ -133,6 +141,12 @@ export async function startMockLlm(options: MockLlmOptions = {}): Promise<MockLl
         choices: [{ index: 0, delta, finish_reason: finish }],
       })}\n\n`;
     res.write(event({ role: 'assistant', content: '' }, null));
+    const field = scripted.reasoningField ?? 'reasoning_content';
+    for (const chunk of scripted.reasoning ?? []) {
+      if (res.destroyed) return;
+      if (scripted.delayMs) await sleep(scripted.delayMs);
+      res.write(event({ [field]: chunk }, null));
+    }
     for (const chunk of scripted.chunks) {
       if (res.destroyed) return;
       if (scripted.delayMs) await sleep(scripted.delayMs);

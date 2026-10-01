@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
-import { createProvider, LlmError, type LlmRequest } from '../src/shared/llm';
+import { createProvider, LlmError, type LlmRequest, type LlmStreamEvent } from '../src/shared/llm';
 import { MOCK_MODELS, MOCK_REPLY, startMockLlm, type MockLlm } from './mock-llm/server';
 
 // The mock server against the real OpenAI-compatible adapter, over loopback
@@ -42,6 +42,14 @@ async function collect(apiKey = KEY, request = REQUEST, signal = new AbortContro
     if (event.type === 'text') text += event.delta;
   }
   return text;
+}
+
+async function collectEvents() {
+  const events: LlmStreamEvent[] = [];
+  for await (const event of provider().stream(REQUEST, new AbortController().signal)) {
+    events.push(event);
+  }
+  return events;
 }
 
 async function failure(promise: Promise<unknown>): Promise<LlmError> {
@@ -115,6 +123,71 @@ describe('mock OpenAI-compatible server', () => {
     expect(await collect()).toBe('One two');
     expect(await collect()).toBe(MOCK_REPLY);
   });
+
+  it('sends no reasoning unless a scripted reply asks for it', async () => {
+    const events = await collectEvents();
+    expect(events.every((e) => e.type === 'text')).toBe(true);
+    expect(events.map((e) => e.delta).join('')).toBe(MOCK_REPLY);
+    mock.script({ kind: 'stream', chunks: ['One ', 'two'] });
+    expect(await collectEvents()).toEqual([
+      { type: 'text', delta: 'One ' },
+      { type: 'text', delta: 'two' },
+    ]);
+  });
+
+  it.each([
+    [undefined, 'reasoning_content'],
+    ['reasoning_content', 'reasoning_content'],
+    ['reasoning', 'reasoning'],
+  ] as const)(
+    'streams scripted reasoning before the answer (reasoningField %s)',
+    async (reasoningField, field) => {
+      mock.script({
+        kind: 'stream',
+        reasoning: ['Let me ', 'think.'],
+        chunks: ['The ', 'answer.'],
+        ...(reasoningField ? { reasoningField } : {}),
+      });
+      // What goes over the wire: the reasoning chunks under the chosen field name.
+      const response = await fetch(`${mock.baseUrl}/chat/completions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${KEY}` },
+        body: JSON.stringify({ model: 'mock-large', messages: [], stream: true }),
+      });
+      const deltas = (await response.text())
+        .split('\n\n')
+        .filter((line) => line.startsWith('data: {'))
+        .map(
+          (line) =>
+            (JSON.parse(line.slice(6)) as { choices: { delta: Record<string, unknown> }[] })
+              .choices[0]?.delta,
+        );
+      expect(deltas).toEqual([
+        { role: 'assistant', content: '' },
+        { [field]: 'Let me ' },
+        { [field]: 'think.' },
+        { content: 'The ' },
+        { content: 'answer.' },
+        {},
+      ]);
+
+      // And through the adapter: reasoning events, then text events.
+      mock.script({
+        kind: 'stream',
+        reasoning: ['Let me ', 'think.'],
+        chunks: ['The ', 'answer.'],
+        ...(reasoningField ? { reasoningField } : {}),
+      });
+      expect(await collectEvents()).toEqual([
+        { type: 'reasoning', delta: 'Let me ' },
+        { type: 'reasoning', delta: 'think.' },
+        { type: 'text', delta: 'The ' },
+        { type: 'text', delta: 'answer.' },
+      ]);
+      // The next reply is the plain default again.
+      expect((await collectEvents()).every((e) => e.type === 'text')).toBe(true);
+    },
+  );
 
   it('keeps a hanging stream open until the client aborts', async () => {
     mock.script({ kind: 'stream', chunks: ['Partial'], hang: true });
