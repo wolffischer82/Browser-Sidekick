@@ -189,3 +189,11 @@ export function renderAnswer(
   }
   return fragment;
 }
+
+/**
+ * Renders a model's reasoning (specs/thinking-levels.md 4.5) through the same
+ * sanitiser as an answer. Reasoning has no citations: `[n]` stays text.
+ */
+export function renderReasoning(text: string): DocumentFragment {
+  return renderAnswer(text, [], () => '');
+}
