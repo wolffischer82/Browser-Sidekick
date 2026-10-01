@@ -98,6 +98,13 @@ export interface Message {
    * arrived before the failure. A successful Retry clears it.
    */
   error?: LlmErrorCode | null;
+  /**
+   * The model's reasoning for an answer, as it arrived (specs/thinking-levels.md
+   * 4.4, 5). Assistant messages only; missing or `null` is no reasoning. Kept
+   * on completion, Stop and failure, and replaced by a Retry. Never sent back
+   * to the model and never counted in the context budget.
+   */
+  reasoning?: string | null;
 }
 
 export type ProviderKind = 'openai-compatible' | 'anthropic' | 'gemini';

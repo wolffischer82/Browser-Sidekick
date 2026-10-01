@@ -1,6 +1,15 @@
-import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/preact';
+import {
+  act,
+  cleanup,
+  fireEvent,
+  renderHook,
+  screen,
+  waitFor,
+  within,
+} from '@testing-library/preact';
 import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from 'vitest';
 import { fakeBrowser } from 'wxt/testing/fake-browser';
+import { useChat, type TabContext } from '@/entrypoints/sidepanel/chat/useChat';
 import type { Repository } from '@/shared/db/repository';
 import { isSidekickMessage, type SidekickMessage } from '@/shared/messages';
 import { DEFAULT_CONTEXT_BUDGET, type MessageSource, type ProviderConfig } from '@/shared/model';
@@ -12,7 +21,8 @@ import { freshRepository, renderSidebar, titleButton } from './helpers/sidebar';
 // The ask flow in the sidebar (spec 5.2 item 4, 5.6, D11, D13) with a
 // mocked provider behind a stubbed `fetch`: streaming, Stop, errors with
 // Retry (stored with their code), the current tab and the eye, trimming,
-// citations, the LLM title, history restore, and the "no access" input.
+// citations, the LLM title, history restore, the "no access" input, and the
+// reasoning stored with an answer (specs/thinking-levels.md 4.4).
 
 const KEY = 'sk-chat-test-KEY-9876';
 const PIN_TEXT = 'Sleeper trains now run from Vienna to Amsterdam.';
@@ -75,6 +85,23 @@ function provider(patch: Partial<ProviderConfig> = {}): ProviderConfig {
 function event(content: string): string {
   return `data: ${JSON.stringify({ choices: [{ delta: { content } }] })}\n\n`;
 }
+
+/** A reasoning delta, under either field name OpenAI-compatible servers use. */
+function thought(
+  text: string,
+  field: 'reasoning_content' | 'reasoning' = 'reasoning_content',
+): string {
+  return `data: ${JSON.stringify({ choices: [{ delta: { [field]: text } }] })}\n\n`;
+}
+
+/** A finished stream of ready-made events. */
+function sseOf(...events: string[]): Response {
+  return new Response(events.join('') + 'data: [DONE]\n\n', {
+    headers: { 'content-type': 'text/event-stream' },
+  });
+}
+
+const errorChunk = `data: ${JSON.stringify({ error: { message: 'Overloaded' } })}\n\n`;
 
 function sse(...deltas: string[]): Response {
   return new Response(deltas.map(event).join('') + 'data: [DONE]\n\n', {
@@ -672,5 +699,273 @@ describe('provider without access', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Grant access' }));
     await pause();
     expect(input().disabled).toBe(true);
+  });
+});
+
+describe('reasoning', () => {
+  const NO_TAB: TabContext = { currentTab: { state: 'none' }, excluded: false };
+
+  /** The ask flow on its own, so the state the transcript receives can be read. */
+  async function hook() {
+    repo = await freshRepository();
+    fakes();
+    const session = await repo.createSession({ providerId: 'p1', model: 'gpt-a' });
+    await repo.setSessionTitle(session.id, 'Named', 'user');
+    const providers = [provider()];
+    const chat = renderHook(() =>
+      useChat({ repo, session, providers, onTitleChanged: () => undefined }),
+    );
+    return { id: session.id, chat };
+  }
+
+  it('collects reasoning next to the partial text while the answer streams, in arrival order', async () => {
+    const { id, chat } = await hook();
+    const stream = controlledResponse();
+    responders.push(() => stream.response);
+    await act(() => {
+      chat.result.current.send('Why?', NO_TAB);
+    });
+    await waitFor(() => {
+      expect(chat.result.current.live?.status).toBe('streaming');
+    });
+    expect(chat.result.current.live).toMatchObject({ text: '', reasoning: '' });
+
+    stream.push(thought('Let me '));
+    await waitFor(() => {
+      expect(chat.result.current.live).toMatchObject({ text: '', reasoning: 'Let me ' });
+    });
+    stream.push(thought('think. ', 'reasoning'));
+    stream.push(event('Hello'));
+    await waitFor(() => {
+      expect(chat.result.current.live).toMatchObject({
+        text: 'Hello',
+        reasoning: 'Let me think. ',
+      });
+    });
+    stream.push(thought('One more check.'));
+    stream.push(event(' world.'));
+    await waitFor(() => {
+      expect(chat.result.current.live).toMatchObject({
+        text: 'Hello world.',
+        reasoning: 'Let me think. One more check.',
+      });
+    });
+    stream.push('data: [DONE]\n\n');
+    stream.close();
+    await waitFor(() => {
+      expect(chat.result.current.live).toBeNull();
+      expect(chat.result.current.messages).toHaveLength(2);
+    });
+    expect(chat.result.current.messages[1]).toMatchObject({
+      role: 'assistant',
+      text: 'Hello world.',
+      reasoning: 'Let me think. One more check.',
+      stopped: false,
+      error: null,
+    });
+    expect((await repo.listMessages(id))[1]?.reasoning).toBe('Let me think. One more check.');
+  });
+
+  it('Stop keeps the reasoning that arrived, also before any answer text', async () => {
+    const { id, chat } = await hook();
+    const stream = controlledResponse();
+    responders.push(() => stream.response);
+    await act(() => {
+      chat.result.current.send('Why?', NO_TAB);
+    });
+    await waitFor(() => {
+      expect(chat.result.current.live?.status).toBe('streaming');
+    });
+    stream.push(thought('Still thinking'));
+    await waitFor(() => {
+      expect(chat.result.current.live?.reasoning).toBe('Still thinking');
+    });
+    await act(() => {
+      chat.result.current.stop();
+    });
+    await waitFor(() => {
+      expect(chat.result.current.live).toBeNull();
+      expect(chat.result.current.messages).toHaveLength(2);
+    });
+    expect((await repo.listMessages(id))[1]).toMatchObject({
+      role: 'assistant',
+      text: '',
+      reasoning: 'Still thinking',
+      stopped: true,
+      error: null,
+    });
+  });
+
+  it('stores the reasoning with a completed answer and sends none of it on', async () => {
+    const consoles = (['log', 'info', 'warn', 'error', 'debug'] as const).map((name) =>
+      vi.spyOn(console, name).mockImplementation(() => undefined),
+    );
+    const id = await open();
+    responders.push(
+      () =>
+        sseOf(
+          thought('Plan the answer. '),
+          event('Trains are back [1].'),
+          thought('Check it.', 'reasoning'),
+        ),
+      () => sseOf(thought('Title thoughts'), event('Night trains')),
+    );
+    ask('What is new?');
+    await waitFor(() => {
+      expect(titleButton().textContent).toBe('Night trains');
+    });
+    const stored = await repo.listMessages(id);
+    expect(stored[0]).not.toHaveProperty('reasoning');
+    expect(stored[1]).toMatchObject({
+      role: 'assistant',
+      text: 'Trains are back [1].',
+      reasoning: 'Plan the answer. Check it.',
+      stopped: false,
+      error: null,
+    });
+    // Nothing renders reasoning yet (T16), and it is not part of the answer text.
+    expect(document.body.textContent).not.toMatch(/Plan the answer|Check it|Title thoughts/);
+    // The title request carries the answer text only.
+    expect(bodies[1]?.messages.at(-1)?.content).toContain('Trains are back [1].');
+
+    responders.push(() => sseOf(thought('Second plan.'), event('More.')));
+    ask('And then?');
+    await waitFor(() => {
+      expect(answers()).toHaveLength(2);
+      expect(screen.queryByRole('button', { name: 'Stop' })).toBeNull();
+    });
+    expect(bodies).toHaveLength(3);
+    expect(bodies[2]?.messages.slice(1)).toEqual([
+      { role: 'user', content: 'What is new?' },
+      { role: 'assistant', content: 'Trains are back [1].' },
+      { role: 'user', content: 'And then?' },
+    ]);
+    // No request, broadcast or console line ever carries reasoning.
+    const reasoning = /Plan the answer|Check it|Title thoughts|Second plan/;
+    expect(JSON.stringify(bodies)).not.toMatch(reasoning);
+    expect(JSON.stringify(broadcasts)).not.toMatch(reasoning);
+    for (const spy of consoles) expect(JSON.stringify(spy.mock.calls)).not.toMatch(reasoning);
+    expect((await repo.listMessages(id)).map((m) => m.reasoning ?? null)).toEqual([
+      null,
+      'Plan the answer. Check it.',
+      null,
+      'Second plan.',
+    ]);
+    expect((await repo.getSession(id))?.title).toBe('Night trains');
+  });
+
+  it('an answer without reasoning stores none', async () => {
+    const id = await open();
+    await repo.setSessionTitle(id, 'Named', 'user');
+    responders.push(() => sse('Plain answer.'));
+    ask('Q');
+    await waitFor(() => {
+      expect(answers()[0]?.textContent).toContain('Plain answer.');
+      expect(screen.queryByRole('button', { name: 'Stop' })).toBeNull();
+    });
+    expect((await repo.listMessages(id))[1]?.reasoning).toBeNull();
+  });
+
+  it('Stop keeps the reasoning with the partial answer', async () => {
+    const id = await open();
+    const stream = controlledResponse();
+    responders.push(() => stream.response);
+    ask('Long question');
+    await screen.findByRole('button', { name: 'Stop' });
+    stream.push(thought('Thinking it through. '));
+    stream.push(event('Partial text'));
+    await waitFor(() => {
+      expect(answers()[0]?.textContent).toContain('Partial text');
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Stop' }));
+    await waitFor(() => {
+      expect(answers()[0]?.textContent).toContain('Stopped');
+    });
+    expect((await repo.listMessages(id))[1]).toMatchObject({
+      role: 'assistant',
+      text: 'Partial text',
+      reasoning: 'Thinking it through. ',
+      stopped: true,
+      error: null,
+    });
+  });
+
+  it('a failed answer keeps the reasoning that arrived before the failure', async () => {
+    const id = await open();
+    responders.push(() =>
+      sseOf(thought('Half a thought'), event('Half an ans'), thought(', then more'), errorChunk),
+    );
+    ask('Q1');
+    await screen.findByRole('alert');
+    expect((await repo.listMessages(id))[1]).toMatchObject({
+      role: 'assistant',
+      text: 'Half an ans',
+      reasoning: 'Half a thought, then more',
+      stopped: false,
+      error: 'server',
+    });
+
+    // The failed pair, reasoning included, is not part of the next request.
+    responders.push(() => sse('Fine.'));
+    ask('Q2');
+    await waitFor(() => {
+      expect(answers()[1]?.textContent).toContain('Fine.');
+    });
+    expect(bodies[1]?.messages.slice(1)).toEqual([{ role: 'user', content: 'Q2' }]);
+    expect(JSON.stringify(bodies)).not.toMatch(/Half a thought|then more/);
+  });
+
+  it('a successful Retry replaces the reasoning', async () => {
+    const id = await open();
+    await repo.setSessionTitle(id, 'Named', 'user');
+    responders.push(
+      () => sseOf(thought('Old thought.'), errorChunk),
+      () => sseOf(thought('New thought.'), event('Now it works.')),
+    );
+    ask('Q');
+    const alert = await screen.findByRole('alert');
+    const failed = await repo.listMessages(id);
+    expect(failed[1]).toMatchObject({ text: '', reasoning: 'Old thought.', error: 'server' });
+
+    fireEvent.click(within(alert).getByRole('button', { name: 'Retry' }));
+    await waitFor(() => {
+      expect(answers()[0]?.textContent).toContain('Now it works.');
+    });
+    await waitFor(() => {
+      expect(screen.queryByRole('alert')).toBeNull();
+    });
+    const stored = await repo.listMessages(id);
+    expect(stored).toHaveLength(2);
+    expect(stored[1]).toMatchObject({
+      id: failed[1]?.id,
+      text: 'Now it works.',
+      reasoning: 'New thought.',
+      error: null,
+    });
+    expect(JSON.stringify(bodies)).not.toMatch(/Old thought|New thought/);
+  });
+
+  it('a successful Retry without reasoning clears the earlier reasoning', async () => {
+    const id = await open();
+    await repo.setSessionTitle(id, 'Named', 'user');
+    responders.push(
+      () => sseOf(thought('Old thought.'), errorChunk),
+      () => sse('Now it works.'),
+    );
+    ask('Q');
+    const alert = await screen.findByRole('alert');
+    expect((await repo.listMessages(id))[1]?.reasoning).toBe('Old thought.');
+    fireEvent.click(within(alert).getByRole('button', { name: 'Retry' }));
+    await waitFor(() => {
+      expect(answers()[0]?.textContent).toContain('Now it works.');
+    });
+    await waitFor(() => {
+      expect(screen.queryByRole('alert')).toBeNull();
+    });
+    expect((await repo.listMessages(id))[1]).toMatchObject({
+      text: 'Now it works.',
+      reasoning: null,
+      error: null,
+    });
   });
 });

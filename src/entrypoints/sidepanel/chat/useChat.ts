@@ -17,8 +17,11 @@ import type { Message, MessageKind, MessageSource, ProviderConfig, Session } fro
  * and other sidebars showing the session then read the stored message
  * (`messages-changed`). A failed answer is stored with its error code
  * (decisions.md T10), so the error and Retry survive a reload; Retry resends
- * the same question and replaces the failed answer. Nothing about the
- * question, the pages or the answer is logged.
+ * the same question and replaces the failed answer. The model's reasoning,
+ * where the provider returns it, is collected next to the answer text and
+ * stored with it (specs/thinking-levels.md 4.4); it is never part of a
+ * request. Nothing about the question, the pages, the answer or its
+ * reasoning is logged.
  *
  * Summarize (D4, decisions.md T11) is the same flow with the fixed prompt as
  * the question and `kind: 'summarize'`; it also waits briefly for pins that
@@ -37,6 +40,8 @@ export interface LiveAnswer {
   replacesId: string | null;
   status: 'waiting' | 'streaming';
   text: string;
+  /** The reasoning that has arrived so far, in order; empty when there is none. */
+  reasoning: string;
   sources: MessageSource[];
   trimmed: boolean;
   /** The current tab should have been sent but couldn't be read. */
@@ -165,6 +170,7 @@ export function useChat({ repo, session, providers, onTitleChanged }: Options): 
       replacesId: retry?.failed.id ?? null,
       status: 'waiting',
       text: '',
+      reasoning: '',
       sources: [],
       trimmed: false,
       tabSkipped: false,
@@ -224,6 +230,7 @@ export function useChat({ repo, session, providers, onTitleChanged }: Options): 
       const request = { model, system: context.system, turns: context.turns };
       for await (const event of llm.stream(request, controller.signal)) {
         if (event.type === 'text') answer.text += event.delta;
+        else answer.reasoning += event.delta;
         rerenderSoon();
       }
     };
@@ -239,6 +246,8 @@ export function useChat({ repo, session, providers, onTitleChanged }: Options): 
         stopped,
         trimmed: answer.trimmed,
         error: error?.code ?? null,
+        // What arrived, also before a Stop or a failure; a Retry replaces it.
+        reasoning: answer.reasoning || null,
       };
       const stored =
         (retry && (await repo.updateMessage(retry.failed.id, fields))) ||

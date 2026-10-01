@@ -335,6 +335,46 @@ describe('messages', () => {
     expect((await repo.listMessages(s.id)).map((m) => m.error)).toEqual([null, null]);
   });
 
+  it("stores an answer's reasoning, and an update replaces or clears it", async () => {
+    const s = await repo.createSession({ providerId: 'p1', model: 'm1' });
+    const question = await repo.addMessage(s.id, { role: 'user', text: 'Q', reasoning: 'never' });
+    // Assistant messages only (specs/thinking-levels.md 5).
+    expect(question).not.toHaveProperty('reasoning');
+    const answer = await repo.addMessage(s.id, {
+      role: 'assistant',
+      text: 'Partial',
+      error: 'server',
+      reasoning: 'First thought.',
+    });
+    expect(answer.reasoning).toBe('First thought.');
+    expect((await repo.listMessages(s.id)).map((m) => m.reasoning)).toEqual([
+      undefined,
+      'First thought.',
+    ]);
+
+    // An update that leaves the reasoning out keeps it.
+    expect((await repo.updateMessage(answer.id, { trimmed: true }))?.reasoning).toBe(
+      'First thought.',
+    );
+    const retried = await repo.updateMessage(answer.id, {
+      text: 'Answer',
+      error: null,
+      reasoning: 'Second thought.',
+    });
+    expect(retried).toMatchObject({ id: answer.id, text: 'Answer', reasoning: 'Second thought.' });
+    expect((await repo.updateMessage(answer.id, { reasoning: null }))?.reasoning).toBeNull();
+    expect((await repo.listMessages(s.id))[1]?.reasoning).toBeNull();
+  });
+
+  it('an answer without reasoning stores null, and deleting the session deletes the reasoning', async () => {
+    const s = await repo.createSession({ providerId: 'p1', model: 'm1' });
+    const plain = await repo.addMessage(s.id, { role: 'assistant', text: 'A' });
+    expect(plain.reasoning).toBeNull();
+    await repo.addMessage(s.id, { role: 'assistant', text: 'B', reasoning: 'Thought.' });
+    await repo.deleteSession(s.id);
+    expect(await repo.listMessages(s.id)).toEqual([]);
+  });
+
   it('an update that leaves the error out keeps it', async () => {
     const s = await repo.createSession({ providerId: 'p1', model: 'm1' });
     const failed = await repo.addMessage(s.id, { role: 'assistant', text: '', error: 'server' });
