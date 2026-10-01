@@ -1,0 +1,1 @@
+import{t as e,u as t}from"./pdf-local-C_oY-w5L.js";t.runtime.onMessage.addListener((t,n,r)=>e(t,r));

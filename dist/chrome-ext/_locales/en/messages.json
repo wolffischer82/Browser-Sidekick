@@ -1,0 +1,704 @@
+{
+  "extName": {
+    "message": "Browser Sidekick",
+    "description": "Extension name shown in the browser and the store."
+  },
+  "extDescription": {
+    "message": "Pin pages to a session and ask your own LLM about them.",
+    "description": "Short extension description shown in the browser's extension list."
+  },
+  "sidebarHeading": {
+    "message": "Browser Sidekick",
+    "description": "Heading at the top of the sidebar."
+  },
+  "sessions": {
+    "message": "Sessions",
+    "description": "Sessions drawer button and drawer heading."
+  },
+  "newSession": {
+    "message": "New session",
+    "description": "Button that starts a new session."
+  },
+  "fallbackTitle": {
+    "message": "New session",
+    "description": "Title of a session before it has one."
+  },
+  "settings": {
+    "message": "Settings",
+    "description": "Settings gear label and settings heading."
+  },
+  "back": {
+    "message": "Back",
+    "description": "Button that leaves the settings view."
+  },
+  "renameSession": {
+    "message": "Rename session",
+    "description": "Tooltip of the session title, which starts the inline rename."
+  },
+  "sessionTitleLabel": {
+    "message": "Session title",
+    "description": "Label of the inline rename field."
+  },
+  "close": {
+    "message": "Close",
+    "description": "Button that closes the sessions drawer."
+  },
+  "deleteSessionNamed": {
+    "message": "Delete “$TITLE$”",
+    "description": "Delete icon label in a sessions drawer row.",
+    "placeholders": {
+      "title": {
+        "content": "$1",
+        "example": "Pricing research"
+      }
+    }
+  },
+  "deleteSessionConfirm": {
+    "message": "Delete this session with its pins and messages?",
+    "description": "Confirmation shown before a session is deleted."
+  },
+  "delete": {
+    "message": "Delete",
+    "description": "Confirms deleting a session."
+  },
+  "cancel": {
+    "message": "Cancel",
+    "description": "Cancels deleting a session."
+  },
+  "pinCountOne": {
+    "message": "1 pin",
+    "description": "Pin count of a session with one pin."
+  },
+  "pinCountOther": {
+    "message": "$COUNT$ pins",
+    "description": "Pin count of a session with zero or several pins.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "sessionTabsHeading": {
+    "message": "Session tabs ($COUNT$)",
+    "description": "Collapsible section listing pinned pages and the current tab.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "sessionTabsEmpty": {
+    "message": "No pinned pages yet.",
+    "description": "Shown in Session tabs when nothing is pinned."
+  },
+  "transcriptEmpty": {
+    "message": "Pin pages to this session, then ask about them or summarize them.",
+    "description": "Empty chat transcript."
+  },
+  "summarize": {
+    "message": "Summarize",
+    "description": "Button that summarises the pages."
+  },
+  "summarizeUnavailable": {
+    "message": "Pin a page or open a readable tab to summarize.",
+    "description": "Tooltip of the disabled Summarize button."
+  },
+  "summarizeNoProvider": {
+    "message": "Add a provider in settings to summarize.",
+    "description": "Tooltip of the disabled Summarize button when no usable provider is set up."
+  },
+  "summarizeNoAccess": {
+    "message": "No access to $LABEL$. Grant access to summarize.",
+    "description": "Tooltip of the disabled Summarize button when the session's provider has no host access. $1 is the provider name.",
+    "placeholders": {
+      "label": {
+        "content": "$1"
+      }
+    }
+  },
+  "summarizeBusy": {
+    "message": "Wait for the answer to finish, or stop it.",
+    "description": "Tooltip of the disabled Summarize button while an answer is on its way."
+  },
+  "summarizePrompt": {
+    "message": "Summarize the pages provided. First give a short summary of each page under its title, citing the page with its number. Then give an overall summary that covers the themes the pages share and the points on which they disagree. Answer in English.",
+    "description": "The fixed request sent to the model by Summarize (spec 5.6), in the UI language. Not shown in the UI: the transcript shows \"Summarize\" instead."
+  },
+  "inputPlaceholder": {
+    "message": "Ask about these pages…",
+    "description": "Placeholder of the question input."
+  },
+  "noProviderHint": {
+    "message": "Add a provider in settings to ask questions.",
+    "description": "Shown under the disabled input when no provider is set up."
+  },
+  "openSettings": {
+    "message": "Open settings",
+    "description": "Link from the disabled input to the settings."
+  },
+  "settingsNoProviders": {
+    "message": "No providers saved yet.",
+    "description": "Settings view without providers."
+  },
+  "loadError": {
+    "message": "Your sessions couldn't be loaded. Close and reopen the sidebar to try again.",
+    "description": "Shown when the local session storage can't be opened."
+  },
+  "saveError": {
+    "message": "The change couldn't be saved. Try again.",
+    "description": "Shown when a session change fails."
+  },
+  "providersHeading": {
+    "message": "Providers",
+    "description": "Settings section listing the saved LLM providers."
+  },
+  "addProvider": {
+    "message": "Add provider",
+    "description": "Button and form heading for adding a provider."
+  },
+  "editProvider": {
+    "message": "Edit provider",
+    "description": "Form heading when editing a provider."
+  },
+  "providerDefaultBadge": {
+    "message": "Default",
+    "description": "Badge on the default provider."
+  },
+  "providerNoAccessBadge": {
+    "message": "No access",
+    "description": "Badge on a provider whose server the extension may not contact."
+  },
+  "providerNoAccessHint": {
+    "message": "The extension isn't allowed to contact this provider's server. Grant access to use it.",
+    "description": "Explains the No access badge."
+  },
+  "grantAccess": {
+    "message": "Grant access",
+    "description": "Button that asks the browser for access to a provider's server."
+  },
+  "makeDefault": {
+    "message": "Make default",
+    "description": "Button that makes a provider the default."
+  },
+  "makeDefaultNamed": {
+    "message": "Make “$LABEL$” the default",
+    "description": "Accessible name of the Make default button.",
+    "placeholders": {
+      "label": {
+        "content": "$1",
+        "example": "Work OpenAI"
+      }
+    }
+  },
+  "edit": {
+    "message": "Edit",
+    "description": "Button that edits a provider."
+  },
+  "editProviderNamed": {
+    "message": "Edit “$LABEL$”",
+    "description": "Accessible name of the Edit button.",
+    "placeholders": {
+      "label": {
+        "content": "$1",
+        "example": "Work OpenAI"
+      }
+    }
+  },
+  "deleteProviderNamed": {
+    "message": "Delete “$LABEL$”",
+    "description": "Accessible name of the provider Delete button.",
+    "placeholders": {
+      "label": {
+        "content": "$1",
+        "example": "Work OpenAI"
+      }
+    }
+  },
+  "deleteProviderConfirm": {
+    "message": "Delete this provider and its API key? Sessions that use it switch to the default provider.",
+    "description": "Confirmation before a provider is deleted."
+  },
+  "kindOpenAi": {
+    "message": "OpenAI-compatible",
+    "description": "Provider type: OpenAI or any server with the same API."
+  },
+  "kindAnthropic": {
+    "message": "Anthropic",
+    "description": "Provider type: Anthropic."
+  },
+  "kindGemini": {
+    "message": "Google Gemini",
+    "description": "Provider type: Google Gemini."
+  },
+  "fieldKind": {
+    "message": "Type",
+    "description": "Provider form: provider type."
+  },
+  "fieldLabel": {
+    "message": "Name",
+    "description": "Provider form: name shown in lists."
+  },
+  "fieldBaseUrl": {
+    "message": "Base URL",
+    "description": "Provider form: the API's base URL."
+  },
+  "baseUrlFixedHint": {
+    "message": "Fixed for this provider.",
+    "description": "Hint under a base URL that cannot be changed."
+  },
+  "fieldApiKey": {
+    "message": "API key",
+    "description": "Provider form: API key."
+  },
+  "apiKeyOptionalHint": {
+    "message": "Optional for local servers.",
+    "description": "Hint under the key field for OpenAI-compatible providers."
+  },
+  "apiKeySaved": {
+    "message": "Saved key: $MASK$. Type a new key to replace it.",
+    "description": "Shows the masked saved key.",
+    "placeholders": {
+      "mask": {
+        "content": "$1",
+        "example": "••••1a2b"
+      }
+    }
+  },
+  "apiKeyStorageHint": {
+    "message": "Stored on this device only and sent only to this provider.",
+    "description": "Hint under the key field."
+  },
+  "fieldDefaultModel": {
+    "message": "Default model",
+    "description": "Provider form: default model."
+  },
+  "chooseModel": {
+    "message": "Choose a model",
+    "description": "Empty option of the model dropdown."
+  },
+  "loadModels": {
+    "message": "Load models",
+    "description": "Button that fetches the provider's model list."
+  },
+  "modelsLoading": {
+    "message": "Loading models…",
+    "description": "Shown while the model list loads."
+  },
+  "modelsLoaded": {
+    "message": "Model list loaded.",
+    "description": "Shown when the model list loaded."
+  },
+  "modelsFailed": {
+    "message": "The model list couldn't be loaded. Type the model name instead.",
+    "description": "Shown when the model list failed; the field becomes free text."
+  },
+  "fieldContextBudget": {
+    "message": "Context budget (tokens)",
+    "description": "Provider form: context budget."
+  },
+  "contextBudgetHint": {
+    "message": "Pages and history are shortened to fit. About 4 characters make a token.",
+    "description": "Hint under the context budget."
+  },
+  "localServerHelp": {
+    "message": "For Ollama or LM Studio, the local server must allow this extension's origin, for example with OLLAMA_ORIGINS.",
+    "description": "Help text for OpenAI-compatible local servers."
+  },
+  "testConnection": {
+    "message": "Test connection",
+    "description": "Button that sends a one-token test request."
+  },
+  "testing": {
+    "message": "Testing…",
+    "description": "Shown while the connection test runs."
+  },
+  "testOk": {
+    "message": "The connection works.",
+    "description": "Connection test succeeded."
+  },
+  "save": {
+    "message": "Save",
+    "description": "Saves the provider form."
+  },
+  "errorLabelRequired": {
+    "message": "Enter a name.",
+    "description": "Validation: name missing."
+  },
+  "errorBaseUrl": {
+    "message": "Enter a URL that starts with http:// or https://.",
+    "description": "Validation: base URL invalid."
+  },
+  "errorKeyRequired": {
+    "message": "Enter the API key.",
+    "description": "Validation: key missing."
+  },
+  "errorModelRequired": {
+    "message": "Choose or enter a model.",
+    "description": "Validation: model missing."
+  },
+  "errorBudget": {
+    "message": "Enter a whole number from 1000 to 10000000.",
+    "description": "Validation: context budget out of range."
+  },
+  "llmErrorInvalidKey": {
+    "message": "The API key was rejected. Check the key and try again.",
+    "description": "LLM error: 401/403."
+  },
+  "llmErrorRateLimit": {
+    "message": "The provider's rate limit or quota was reached. Wait a moment or check your plan.",
+    "description": "LLM error: 429 or quota."
+  },
+  "llmErrorModelNotFound": {
+    "message": "The model wasn't found. Check the model name.",
+    "description": "LLM error: model not found."
+  },
+  "llmErrorContextTooLong": {
+    "message": "The request is too long for this model. Unpin pages or lower the context budget.",
+    "description": "LLM error: context too long."
+  },
+  "llmErrorBadRequest": {
+    "message": "The provider rejected the request. Check the settings and try again.",
+    "description": "LLM error: other 4xx."
+  },
+  "llmErrorServer": {
+    "message": "The provider had a problem. Try again later.",
+    "description": "LLM error: 5xx."
+  },
+  "llmErrorNetwork": {
+    "message": "The provider couldn't be reached. Check the base URL and your connection.",
+    "description": "LLM error: network or CORS."
+  },
+  "llmErrorAborted": {
+    "message": "The request was stopped.",
+    "description": "LLM error: aborted."
+  },
+  "llmErrorTimeout": {
+    "message": "The provider didn't answer in time. Try again.",
+    "description": "Connection test timed out."
+  },
+  "llmErrorUnknown": {
+    "message": "Something went wrong. Try again.",
+    "description": "LLM error: anything else."
+  },
+  "providerMessage": {
+    "message": "Provider message: $MESSAGE$",
+    "description": "The provider's own error text (key removed).",
+    "placeholders": {
+      "message": {
+        "content": "$1",
+        "example": "Invalid parameter"
+      }
+    }
+  },
+  "deleteAllHeading": {
+    "message": "Delete all data",
+    "description": "Settings section and button that delete all data."
+  },
+  "deleteAllText": {
+    "message": "Removes all sessions, pinned pages and chat history from this device.",
+    "description": "Explains Delete all data."
+  },
+  "deleteAllProviders": {
+    "message": "Also delete providers and API keys",
+    "description": "Checkbox for Delete all data."
+  },
+  "deleteAllConfirm": {
+    "message": "Delete all sessions, pinned pages and chat history? This can't be undone.",
+    "description": "Confirmation of Delete all data."
+  },
+  "deleteAllConfirmProviders": {
+    "message": "Delete all sessions, pinned pages, chat history, providers and API keys? This can't be undone.",
+    "description": "Confirmation of Delete all data with providers."
+  },
+  "deleteAllDone": {
+    "message": "All data was deleted.",
+    "description": "Shown after Delete all data."
+  },
+  "deleteAllError": {
+    "message": "The data couldn't be deleted. Try again.",
+    "description": "Delete all data failed."
+  },
+  "model": {
+    "message": "Model",
+    "description": "Label of the session model list."
+  },
+  "modelMenuLabel": {
+    "message": "Model: $MODEL$",
+    "description": "Accessible name of the header model button.",
+    "placeholders": {
+      "model": {
+        "content": "$1",
+        "example": "Work OpenAI · gpt-4o"
+      }
+    }
+  },
+  "noModel": {
+    "message": "No model",
+    "description": "Header model button when the session has none."
+  },
+  "sessionProviderDeleted": {
+    "message": "This session's provider was deleted. It now uses the default provider.",
+    "description": "Notice after a session moved to the default provider."
+  },
+  "sessionProviderDeletedNoDefault": {
+    "message": "This session's provider was deleted. Add a provider in settings to ask questions.",
+    "description": "Notice after a session lost its provider and no default exists."
+  },
+  "accessBannerLabel": {
+    "message": "Page access",
+    "description": "Accessible name of the page-access banner."
+  },
+  "accessBannerText": {
+    "message": "Sidekick needs access to websites to read the current tab and the pages you pin. Page content is sent only to your LLM provider, and only when you ask.",
+    "description": "Text of the first-use banner that asks for access to all sites."
+  },
+  "accessBannerAllow": {
+    "message": "Allow on all sites",
+    "description": "Banner button that asks the browser for access to all sites."
+  },
+  "accessBannerDismiss": {
+    "message": "Dismiss",
+    "description": "Banner button that hides the access banner for good."
+  },
+  "currentTabMarker": {
+    "message": "Current tab",
+    "description": "Marker on the current-tab row in Session tabs."
+  },
+  "currentTabNotAccessible": {
+    "message": "Current tab not accessible",
+    "description": "Current-tab row when the extension has no access to the tab's site."
+  },
+  "pageCantBeRead": {
+    "message": "This page can't be read",
+    "description": "Current-tab row for browser pages, web stores, other extensions' pages, view-source and local files."
+  },
+  "extractFailedRestricted": {
+    "message": "This page can't be read. Browser pages, web stores and local files are off limits.",
+    "description": "Pin failure: restricted page."
+  },
+  "extractFailedNoAccess": {
+    "message": "No access to this site. Allow access and try again.",
+    "description": "Pin failure: the extension has no access to the site."
+  },
+  "extractFailedEmpty": {
+    "message": "No readable text was found on this page.",
+    "description": "Pin failure: the page has no text."
+  },
+  "extractFailedUnreadable": {
+    "message": "The page couldn't be read. Reload it and try again.",
+    "description": "Pin failure: extraction failed for another reason."
+  },
+  "extractFailedPdfTooLarge": {
+    "message": "Can't read this PDF: it's larger than 30 MB. Only smaller PDFs can be pinned.",
+    "description": "Pin failure: the PDF is larger than 30 MB."
+  },
+  "extractFailedPdfEncrypted": {
+    "message": "Can't read this PDF: it's protected by a password. Pin a copy without a password instead.",
+    "description": "Pin failure: the PDF needs a password to open."
+  },
+  "extractFailedPdfNoText": {
+    "message": "Can't read this PDF: it has no text, only images, as in a scan. Pin a version with selectable text instead.",
+    "description": "Pin failure: the PDF has no text layer (scanned or image-only)."
+  },
+  "extractFailedPdfUnreadable": {
+    "message": "Can't read this PDF. Check that it opens in the browser, then refresh it.",
+    "description": "Pin failure: the PDF couldn't be downloaded or parsed."
+  },
+  "youtubeNoTranscript": {
+    "message": "No transcript available.",
+    "description": "Note at the end of a pinned YouTube video's text when it has no transcript; the text goes to the model with the title and description."
+  },
+  "pageAccessHeading": {
+    "message": "Page access",
+    "description": "Settings section about access to websites."
+  },
+  "pageAccessText": {
+    "message": "Sidekick reads the current tab and the pages you pin. Without access to all sites, it can only read a page you pin from its context menu.",
+    "description": "Explanation in the Page access settings section."
+  },
+  "pageAccessAllowed": {
+    "message": "Allowed on all sites",
+    "description": "Page access state: the all-sites grant is held."
+  },
+  "pageAccessNotAllowed": {
+    "message": "Not allowed",
+    "description": "Page access state: the all-sites grant is missing."
+  },
+  "currentTabNoAccessHint": {
+    "message": "To read it, right-click the page and choose “Pin to Sidekick”.",
+    "description": "Hint under “Current tab not accessible”; followed by the Allow on all sites link."
+  },
+  "contextMenuPin": {
+    "message": "Pin to Sidekick",
+    "description": "Context menu item that pins the page to the active session."
+  },
+  "sessionTabsList": {
+    "message": "Session tabs",
+    "description": "Accessible name of the list of pinned pages and the current tab."
+  },
+  "pinToSession": {
+    "message": "Pin to session",
+    "description": "Pin needle on the current-tab row (tooltip and label)."
+  },
+  "excludeFromQuestions": {
+    "message": "Exclude from questions",
+    "description": "Eye toggle on the current-tab row while the tab is included."
+  },
+  "includeInQuestions": {
+    "message": "Include in questions",
+    "description": "Eye toggle on the current-tab row while the tab is excluded."
+  },
+  "currentTabExcluded": {
+    "message": "Not included in questions",
+    "description": "Shown on the current-tab row after the eye toggle excluded it."
+  },
+  "openPage": {
+    "message": "Open",
+    "description": "Tooltip of the open action on a pinned row."
+  },
+  "openPageNamed": {
+    "message": "Open “$TITLE$”",
+    "description": "Accessible name of the open action on a pinned row.",
+    "placeholders": {
+      "title": {
+        "content": "$1",
+        "example": "Night trains return"
+      }
+    }
+  },
+  "refreshPin": {
+    "message": "Refresh",
+    "description": "Tooltip of the refresh action on a pinned row, and the refresh offer after “Already pinned”."
+  },
+  "refreshPinNamed": {
+    "message": "Refresh “$TITLE$”",
+    "description": "Accessible name of the refresh action on a pinned row.",
+    "placeholders": {
+      "title": {
+        "content": "$1",
+        "example": "Night trains return"
+      }
+    }
+  },
+  "unpin": {
+    "message": "Unpin",
+    "description": "Tooltip of the filled needle that unpins a page."
+  },
+  "unpinNamed": {
+    "message": "Unpin “$TITLE$”",
+    "description": "Accessible name of the filled needle that unpins a page.",
+    "placeholders": {
+      "title": {
+        "content": "$1",
+        "example": "Night trains return"
+      }
+    }
+  },
+  "kindPage": {
+    "message": "Page",
+    "description": "Kind badge of a pinned web page."
+  },
+  "kindYoutube": {
+    "message": "YouTube",
+    "description": "Kind badge of a pinned YouTube video."
+  },
+  "kindPdf": {
+    "message": "PDF",
+    "description": "Kind badge of a pinned PDF."
+  },
+  "pinStatusExtracting": {
+    "message": "Extracting…",
+    "description": "Status of a pin while its text is extracted."
+  },
+  "pinStatusReady": {
+    "message": "Ready",
+    "description": "Status of a pin whose text was extracted."
+  },
+  "pinStatusFailed": {
+    "message": "Failed",
+    "description": "Status of a pin whose extraction failed; the reason follows."
+  },
+  "pinTruncated": {
+    "message": "Truncated",
+    "description": "Marker on a pin whose text was cut at 200,000 characters."
+  },
+  "alreadyPinned": {
+    "message": "Already pinned",
+    "description": "Notice when the page is already pinned in this session."
+  },
+  "dismissNotice": {
+    "message": "Dismiss",
+    "description": "Closes the “Already pinned” notice."
+  },
+  "pinFailed": {
+    "message": "The page couldn't be pinned. Reload it and try again.",
+    "description": "Shown when pinning the current tab fails."
+  },
+  "refreshFailed": {
+    "message": "The page couldn't be refreshed. Open it in a tab and try again.",
+    "description": "Shown when refreshing a pin fails."
+  },
+  "chatQuestionLabel": {
+    "message": "Your question",
+    "description": "Accessible name of a question in the chat transcript."
+  },
+  "chatAnswerLabel": {
+    "message": "Answer",
+    "description": "Accessible name of an answer in the chat transcript."
+  },
+  "answerWaiting": {
+    "message": "Waiting for the answer…",
+    "description": "Shown while a question is sent and no text has arrived yet."
+  },
+  "answerWaitingPins": {
+    "message": "Waiting for pinned pages that are still being read…",
+    "description": "Shown after Summarize was pressed while a pinned page is still being extracted; the summary waits briefly for it."
+  },
+  "stop": {
+    "message": "Stop",
+    "description": "Button that stops the answer while it streams."
+  },
+  "answerStopped": {
+    "message": "Stopped",
+    "description": "Mark on an answer the user stopped; the partial text is kept."
+  },
+  "answerTrimmed": {
+    "message": "Some history or page text was left out to fit the context budget.",
+    "description": "One-line notice on an answer whose request was trimmed to the provider's context budget."
+  },
+  "currentTabSkipped": {
+    "message": "The current tab couldn't be read, so it wasn't included.",
+    "description": "One-line notice when the current tab could not be read at send time."
+  },
+  "pinsSkipped": {
+    "message": "A pinned page was still being read, so it wasn't included.",
+    "description": "One-line notice when a pinned page was still being extracted after the wait and the summary went ahead without it."
+  },
+  "retry": {
+    "message": "Retry",
+    "description": "Button that sends the same question again after an error."
+  },
+  "citationLabel": {
+    "message": "Source $N$: $TITLE$",
+    "description": "Accessible name of a citation link [n] in an answer. $1 is the number, $2 the page title.",
+    "placeholders": {
+      "n": {
+        "content": "$1"
+      },
+      "title": {
+        "content": "$2"
+      }
+    }
+  },
+  "providerNoAccessComposer": {
+    "message": "No access to $LABEL$. Grant access to ask questions.",
+    "description": "Shown under the disabled input when the session's provider has no host access. $1 is the provider name.",
+    "placeholders": {
+      "label": {
+        "content": "$1"
+      }
+    }
+  }
+}

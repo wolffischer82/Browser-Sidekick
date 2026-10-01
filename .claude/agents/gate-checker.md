@@ -11,7 +11,7 @@ You verify one task against the spec named in your prompt. You do NOT fix anythi
 Given a spec path, task id, and git range, do all of the following:
 
 1. **Locate** in the spec: the task row and its acceptance criteria, the definition of done, the verification gate, and the tests the task owes.
-2. **Gate**: run every command the definition of done prescribes. If the spec prescribes none, run the `lint`, `typecheck`, `test` and `build` scripts that `package.json` defines. Record pass/fail and the relevant output tail.
+2. **Gate**: run every command the definition of done prescribes. If the spec prescribes none, run the `lint`, `typecheck`, `test` and `build` scripts that `package.json` defines. Record pass/fail and the relevant output tail. The loadable builds in `dist/chrome-ext` and `dist/firefox-ext` are committed: after the `build` script, `git status --porcelain -- dist` must print nothing. Any output means the committed builds are stale, which is a FAIL.
 3. **Owed tests**: for each test the spec names for this task, confirm a matching test file exists and is actually exercised (not skipped or `.only`-filtered away).
 4. **Hygiene**: grep the extension source for `console.log`, `debugger`, `// TODO` without a `[Txx]` id, lint-disable comments without a trailing reason, and any log, telemetry or network call whose arguments reference page content, URLs, browsing history, or other user data. Check the manifest for permissions or host permissions beyond what the task needs. Add any further guard the spec defines.
 5. **Strings**: every new user-facing string exists in all locale files (`_locales/*/messages.json` or whatever the spec prescribes).
