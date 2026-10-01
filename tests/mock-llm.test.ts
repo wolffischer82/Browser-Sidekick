@@ -199,6 +199,53 @@ describe('mock OpenAI-compatible server', () => {
     },
   );
 
+  it('holds a scripted stream at the given chunks until it is released', async () => {
+    mock.script({
+      kind: 'stream',
+      reasoning: ['Let me ', 'think.'],
+      chunks: ['The ', 'answer.'],
+      holdAt: [1, 2],
+    });
+    const events: LlmStreamEvent[] = [];
+    const done = (async () => {
+      for await (const event of provider().stream(REQUEST, new AbortController().signal)) {
+        events.push(event);
+      }
+    })();
+    const settled = () => new Promise((resolve) => setTimeout(resolve, 60));
+    await expect.poll(() => events.length).toBe(1);
+    // A release lets the stream run to its next hold, not further.
+    await settled();
+    expect(events).toEqual([{ type: 'reasoning', delta: 'Let me ' }]);
+    mock.release();
+    await expect.poll(() => events.length).toBe(2);
+    await settled();
+    expect(events.at(-1)).toEqual({ type: 'reasoning', delta: 'think.' });
+    mock.release();
+    await done;
+    expect(events.slice(2)).toEqual([
+      { type: 'text', delta: 'The ' },
+      { type: 'text', delta: 'answer.' },
+    ]);
+    // Nothing is held any more; a release without a held stream does nothing.
+    mock.release();
+    expect(await collect()).toBe(MOCK_REPLY);
+  });
+
+  it('a held stream ends when the client goes away', async () => {
+    mock.script({ kind: 'stream', reasoning: ['Thinking'], chunks: ['Never sent'], holdAt: [1] });
+    const controller = new AbortController();
+    const events: LlmStreamEvent[] = [];
+    const done = (async () => {
+      for await (const event of provider().stream(REQUEST, controller.signal)) events.push(event);
+    })();
+    await expect.poll(() => events.length).toBe(1);
+    controller.abort();
+    expect((await failure(done)).code).toBe('aborted');
+    expect(events).toEqual([{ type: 'reasoning', delta: 'Thinking' }]);
+    expect(await collect()).toBe(MOCK_REPLY);
+  });
+
   describe('thinking levels (specs/thinking-levels.md T15)', () => {
     const withLevel = (model: string, level: 'low' | 'medium' | 'high' | null): LlmRequest => ({
       ...REQUEST,

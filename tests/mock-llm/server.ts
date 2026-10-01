@@ -18,6 +18,10 @@ import type { AddressInfo } from 'node:net';
  *   before the answer, in `delta.reasoning_content` or, with
  *   `reasoningField: 'reasoning'`, in `delta.reasoning`. Nothing else makes
  *   the server send reasoning, so every other reply is the plain answer.
+ * - A scripted stream with `holdAt` stops before the chunks with those
+ *   numbers (reasoning chunks first, then answer chunks, from 0) until the
+ *   test calls `release()`, so a test can look at a half-streamed answer
+ *   without timing.
  * - A model-list entry may be an object with `supported_parameters`, as
  *   OpenRouter lists them; a plain id is listed without the field.
  * - A completion request for `MOCK_REJECTING_MODEL` that carries a
@@ -39,6 +43,11 @@ export type ScriptedReply =
       reasoning?: string[];
       /** The delta field that carries `reasoning`; default `reasoning_content`. */
       reasoningField?: 'reasoning_content' | 'reasoning';
+      /**
+       * Wait for `release()` before sending the chunks with these numbers,
+       * counting the `reasoning` chunks first and then `chunks`, from 0.
+       */
+      holdAt?: number[];
       /** Leave the stream open. */ hang?: boolean;
     }
   | { kind: 'error'; status: number; body: unknown };
@@ -77,6 +86,8 @@ export interface MockLlm {
   reasoningEfforts: unknown[];
   /** Queues replies for the next completion requests, in order. */
   script(...replies: ScriptedReply[]): void;
+  /** Lets every stream that waits at a `holdAt` continue to its next hold. */
+  release(): void;
   /** Changes the required key (`undefined` accepts any). */
   setApiKey(key: string | undefined): void;
   /** Changes the model list; `null` makes `/v1/models` answer 404. */
@@ -153,6 +164,8 @@ export async function startMockLlm(options: MockLlmOptions = {}): Promise<MockLl
   const requests: RecordedRequest[] = [];
   const reasoningEfforts: unknown[] = [];
   const open = new Set<ServerResponse>();
+  /** Streams waiting at a `holdAt`, each with what lets it continue. */
+  const held = new Set<() => void>();
 
   async function stream(
     res: ServerResponse,
@@ -178,17 +191,26 @@ export async function startMockLlm(options: MockLlmOptions = {}): Promise<MockLl
       })}\n\n`;
     res.write(event({ role: 'assistant', content: '' }, null));
     const field = scripted.reasoningField ?? 'reasoning_content';
-    for (const chunk of scripted.reasoning ?? []) {
+    const deltas = [
+      ...(scripted.reasoning ?? []).map((chunk) => ({ [field]: chunk })),
+      ...scripted.chunks.map((chunk) => ({ content: chunk })),
+    ];
+    for (const [index, delta] of deltas.entries()) {
+      if (scripted.holdAt?.includes(index)) {
+        await new Promise<void>((resolve) => {
+          const go = () => {
+            held.delete(go);
+            resolve();
+          };
+          held.add(go);
+          res.on('close', go);
+        });
+      }
       if (res.destroyed) return;
       if (scripted.delayMs) await sleep(scripted.delayMs);
-      res.write(event({ [field]: chunk }, null));
+      res.write(event(delta, null));
     }
-    for (const chunk of scripted.chunks) {
-      if (res.destroyed) return;
-      if (scripted.delayMs) await sleep(scripted.delayMs);
-      res.write(event({ content: chunk }, null));
-    }
-    if (scripted.hang) return;
+    if (scripted.hang || res.destroyed) return;
     res.write(event({}, 'stop'));
     res.end('data: [DONE]\n\n');
   }
@@ -299,6 +321,9 @@ export async function startMockLlm(options: MockLlmOptions = {}): Promise<MockLl
     reasoningEfforts,
     script: (...replies) => {
       queue.push(...replies);
+    },
+    release: () => {
+      for (const go of [...held]) go();
     },
     setApiKey: (key) => {
       apiKey = key;
