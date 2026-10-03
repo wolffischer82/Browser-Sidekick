@@ -89,8 +89,7 @@ async function focusRings(page: Page, presses: number): Promise<{ what: string; 
       const name =
         el.getAttribute('aria-label') ??
         el.getAttribute('title') ??
-        el.textContent?.trim().slice(0, 30) ??
-        '';
+        el.textContent.trim().slice(0, 30);
       return {
         what: `${el.tagName.toLowerCase()}${el.id ? `#${el.id}` : ''} "${name}"`,
         ok:
