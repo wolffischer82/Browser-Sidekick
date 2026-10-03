@@ -550,3 +550,17 @@ Status: done (2026-10-03; gate-checker PASS-WITH-NOTES, orchestrator UI check in
 - `tests/style-contrast.test.ts`: the text/background pairs in both themes, plus the WCAG reference values.
 - `tests/manifest.test.ts`: the four woff2 files and `assets/OFL.txt` in both builds.
 - `tests/e2e/visual.spec.ts`: fonts from the extension origin and loaded; focus rings; screens `T17-01-first-run`, `T17-02-answer`, `T17-03-focus-citation` (each also `-dark`), 400 px wide.
+
+## T18 Header, composer and transcript
+
+Status: in progress
+
+### Plan
+
+- Header (`Header.tsx`, `SessionTitle.tsx`): menus leave the header; 36 px icon buttons (decisions.md Redesign T17-10); title block with a subtitle `<p>` beside the rename button (not in its name): pin count and "active <relative time>" from `session.updatedAt` via `relative-time.ts`, or "No pins yet"; re-rendered every 30 s. App keeps the shown session's `updatedAt` fresh after pin and message changes.
+- Composer (`Composer.tsx`): one card with the textarea and a toolbar (Model menu, Thinking menu, spacer, Summarize, Send); keyboard hint under it, or the existing unavailable hints with the card at 70 % opacity. Send runs the same `canSend` check as Enter. `ActionBar.tsx` removed; Summarize becomes `SummarizeButton.tsx` (same unavailable tooltip, opening above, right-aligned); icon only below 360 px.
+- Menus (`ModelMenu.tsx`, `ThinkingMenu.tsx`): pill with accent dot / transparent lightbulb with the level name; lists open upward, left-aligned, max height the space above, shifted to stay inside the panel (shared hook).
+- Transcript: 14/18 px padding, empty-state illustration (inline, `aria-hidden`), citations show the number only (`markdown.ts`).
+- Strings: header activity, no pins, Send, keyboard hint (en, de); `thinkingButton` removed. Session-tabs strings stay for T19.
+- Tests: Header component tests (subtitle, refresh with fake timers), composer (Send states, hints, Enter/Send parity), Thinking text and name, citation text and name, narrow Summarize; update header, thinking, summarize, chat, markdown tests; e2e `tests/e2e/composer.spec.ts` (Send, both menus, Summarize, Stop, screens T18-* at 400 and 320 light and dark); `thinking.spec.ts` narrow-header test becomes a composer-toolbar fit test.
+- Open questions: none so far.
