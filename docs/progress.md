@@ -580,3 +580,9 @@ Status: done (2026-10-03, implementer gate passed; gate-checker and the orchestr
 - `tests/sidepanel-composer.test.tsx`: Send placement, disabled states and parity with Enter, Shift+Enter, focus after Send; keyboard hint versus the no-provider and no-access hints and the faded card; German; Summarize name, icon, tooltip and the narrow rule; model button dot and "No model"; citation text, name and click; the empty-state illustration.
 - Updated: `tests/sidepanel-thinking.test.tsx` (level name only, toolbar order), `tests/chat-markdown.test.ts`, `tests/sidepanel-chat.test.tsx`, `tests/sidepanel-reasoning.test.tsx` (citation text), `tests/e2e/thinking.spec.ts` (toolbar fit replaces the narrow header), `tests/e2e/summarize.spec.ts` (keyboard path to Summarize, citation text), `tests/e2e/chat.spec.ts` (citation selectors).
 - e2e `tests/e2e/composer.spec.ts`: screens `T18-01-no-provider`, `T18-02-idle`, `T18-03-model-menu-open`, `T18-04-thinking-menu-open`, `T18-05-streaming`, `T18-06-answer-citations`, each at `-400` and `-320`, light and `-dark`.
+
+### Follow-up after the gate (orchestrator's screenshot review)
+
+- [x] Composer focus shows on the card (2 px accent outline, 2 px offset) while the input has focus; the input draws none; toolbar buttons keep their own ring (decisions.md Redesign T18-12; `composer.spec.ts`, `visual.spec.ts`).
+- [x] A citation chip is flush with the punctuation after it: no chip margin (decisions.md Redesign T18-13; unit test for "text [1].", CSS check, e2e gap under 0.5 px).
+- Gate passed again after the follow-up.
