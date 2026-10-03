@@ -183,7 +183,7 @@ function PinRow({
             number={number}
             parts={[
               domain(pin.url) && <span class="tab-row-domain">{domain(pin.url)}</span>,
-              <span>{t(KIND[pin.kind])}</span>,
+              <span class="tab-row-kind">{t(KIND[pin.kind])}</span>,
               isCurrent && <span class="tab-row-current">{t('currentTabMarker')}</span>,
               pin.truncated && pin.status === 'ready' && (
                 <span class="pin-truncated">{t('pinTruncated')}</span>
