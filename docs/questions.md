@@ -24,5 +24,9 @@ None open.
 
 Spec: `specs/redesign.md`. Each entry names the task it blocks.
 
-1. **T20: the new e2e spec for §5.6/§5.7** (drawer with set activity times, delete, New session from the drawer, add/edit provider, screens T20-01–08) was declined by the permission prompt; owner to decide whether to allow it. Blocks only the T20 e2e acceptance item; the drafted spec, `tests/e2e/drawer-settings.spec.ts`, is in the T20 report to the orchestrator and can be written as-is.
-2. **T20: the final report `docs/redesign-report.md`** was declined by the permission prompt when the implementer wrote it; owner to decide whether to allow it. Blocks only the T20 report acceptance item; the draft is in the T20 report to the orchestrator.
+None open.
+
+## Closed
+
+1. **T20: the new e2e spec for §5.6/§5.7** was declined by the permission prompt. Answered 2026-10-03: the owner allowed it; `tests/e2e/drawer-settings.spec.ts` is written.
+2. **T20: the final report `docs/redesign-report.md`** was declined by the permission prompt. Answered 2026-10-03: the owner allowed it; the report is written.
