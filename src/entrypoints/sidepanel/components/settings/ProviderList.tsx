@@ -3,7 +3,7 @@ import { t } from '@/shared/i18n';
 import type { ProviderConfig } from '@/shared/model';
 import { accessPattern, requestHostAccess } from '@/shared/provider-access';
 import { makeDefaultProvider, removeProvider, setProviderAccess } from '@/shared/provider-settings';
-import { TrashIcon } from '../icons';
+import { PlusIcon, TrashIcon } from '../icons';
 import { KIND_LABELS } from './ProviderForm';
 
 interface Props {
@@ -15,6 +15,12 @@ interface Props {
   onEdit: (id: string) => void;
   /** A provider write failed. */
   onError: () => void;
+}
+
+/** The provider tile's letter: the name's first character, upper case. */
+export function providerInitial(label: string): string {
+  const code = label.trim().codePointAt(0);
+  return code === undefined ? '' : String.fromCodePoint(code).toLocaleUpperCase();
 }
 
 /**
@@ -57,17 +63,18 @@ export function ProviderList(props: Props) {
   return (
     <section class="settings-section" aria-labelledby="providers-heading">
       <div class="settings-section-header">
-        <h3 id="providers-heading" class="settings-subheading">
+        <h3 id="providers-heading" class="section-label">
           {t('providersHeading')}
         </h3>
-        <button id="add-provider" type="button" class="button" onClick={props.onAdd}>
+        <button id="add-provider" type="button" class="button-text" onClick={props.onAdd}>
+          <PlusIcon />
           {t('addProvider')}
         </button>
       </div>
       {providers.length === 0 ? (
-        <p class="muted">{t('settingsNoProviders')}</p>
+        <p class="settings-card settings-card-body muted">{t('settingsNoProviders')}</p>
       ) : (
-        <ul class="provider-list">
+        <ul class="settings-card provider-list">
           {providers.map((p) => {
             const isDefault = p.id === defaultProviderId;
             return (
@@ -112,6 +119,9 @@ export function ProviderList(props: Props) {
                   </div>
                 ) : (
                   <>
+                    <span class="provider-tile" aria-hidden="true">
+                      {providerInitial(p.label)}
+                    </span>
                     <div class="provider-main">
                       <p class="provider-title">
                         <span class="provider-label">{p.label}</span>
@@ -121,10 +131,11 @@ export function ProviderList(props: Props) {
                         )}
                       </p>
                       <p class="provider-meta">
-                        {t(KIND_LABELS[p.kind])} · {p.defaultModel}
+                        {t(KIND_LABELS[p.kind])} ·{' '}
+                        <span class="provider-model">{p.defaultModel}</span>
                       </p>
                       {!p.hasAccess && (
-                        <p class="provider-meta">
+                        <p class="provider-notice">
                           {t('providerNoAccessHint')}{' '}
                           <button
                             type="button"
@@ -166,7 +177,7 @@ export function ProviderList(props: Props) {
                     <button
                       id={`delete-provider-${p.id}`}
                       type="button"
-                      class="icon-button"
+                      class="icon-button provider-delete"
                       aria-label={t('deleteProviderNamed', p.label)}
                       title={t('deleteProviderNamed', p.label)}
                       onClick={() => {

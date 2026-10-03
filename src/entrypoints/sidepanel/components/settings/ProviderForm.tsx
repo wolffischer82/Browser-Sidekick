@@ -274,222 +274,223 @@ export function ProviderForm({ existing, onDone }: Props) {
         onDone(null);
       }}
     >
-      <h3 id="provider-form-heading" class="settings-subheading">
+      <h3 id="provider-form-heading" class="section-label settings-label">
         {t(existing ? 'editProvider' : 'addProvider')}
       </h3>
+      <div class="settings-card settings-card-body">
+        <div class="field">
+          <label for="provider-kind">{t('fieldKind')}</label>
+          <select
+            id="provider-kind"
+            value={draft.kind}
+            disabled={existing !== null}
+            onChange={(event) => {
+              update({ kind: event.currentTarget.value as ProviderKind });
+            }}
+          >
+            {KINDS.map((kind) => (
+              <option key={kind} value={kind}>
+                {t(KIND_LABELS[kind])}
+              </option>
+            ))}
+          </select>
+        </div>
 
-      <div class="field">
-        <label for="provider-kind">{t('fieldKind')}</label>
-        <select
-          id="provider-kind"
-          value={draft.kind}
-          disabled={existing !== null}
-          onChange={(event) => {
-            update({ kind: event.currentTarget.value as ProviderKind });
-          }}
-        >
-          {KINDS.map((kind) => (
-            <option key={kind} value={kind}>
-              {t(KIND_LABELS[kind])}
-            </option>
-          ))}
-        </select>
-      </div>
+        <div class="field">
+          <label for="provider-label">{t('fieldLabel')}</label>
+          <input
+            id="provider-label"
+            data-field="label"
+            type="text"
+            value={draft.label}
+            aria-invalid={errors.label ? true : undefined}
+            aria-describedby={describedBy('label')}
+            onInput={(event) => {
+              update({ label: event.currentTarget.value });
+            }}
+          />
+          {fieldError('label')}
+        </div>
 
-      <div class="field">
-        <label for="provider-label">{t('fieldLabel')}</label>
-        <input
-          id="provider-label"
-          data-field="label"
-          type="text"
-          value={draft.label}
-          aria-invalid={errors.label ? true : undefined}
-          aria-describedby={describedBy('label')}
-          onInput={(event) => {
-            update({ label: event.currentTarget.value });
-          }}
-        />
-        {fieldError('label')}
-      </div>
-
-      <div class="field">
-        <label for="provider-baseUrl">{t('fieldBaseUrl')}</label>
-        <input
-          id="provider-baseUrl"
-          data-field="baseUrl"
-          type="url"
-          spellcheck={false}
-          autocomplete="off"
-          value={draft.baseUrl}
-          readOnly={!isOpenAi}
-          aria-invalid={errors.baseUrl ? true : undefined}
-          aria-describedby={describedBy('baseUrl', !isOpenAi && 'provider-baseUrl-hint')}
-          onInput={(event) => {
-            update({ baseUrl: event.currentTarget.value });
-          }}
-        />
-        {fieldError('baseUrl')}
-        {!isOpenAi && (
-          <p id="provider-baseUrl-hint" class="field-hint">
-            {t('baseUrlFixedHint')}
-          </p>
-        )}
-      </div>
-
-      <div class="field">
-        <label for="provider-apiKey">{t('fieldApiKey')}</label>
-        <input
-          id="provider-apiKey"
-          data-field="apiKey"
-          type="password"
-          spellcheck={false}
-          autocomplete="off"
-          value={draft.apiKey}
-          aria-invalid={errors.apiKey ? true : undefined}
-          aria-describedby={describedBy(
-            'apiKey',
-            storedKey !== '' && !draft.apiKey && 'provider-apiKey-saved',
-            'provider-apiKey-hint',
+        <div class="field">
+          <label for="provider-baseUrl">{t('fieldBaseUrl')}</label>
+          <input
+            id="provider-baseUrl"
+            data-field="baseUrl"
+            type="url"
+            spellcheck={false}
+            autocomplete="off"
+            value={draft.baseUrl}
+            readOnly={!isOpenAi}
+            aria-invalid={errors.baseUrl ? true : undefined}
+            aria-describedby={describedBy('baseUrl', !isOpenAi && 'provider-baseUrl-hint')}
+            onInput={(event) => {
+              update({ baseUrl: event.currentTarget.value });
+            }}
+          />
+          {fieldError('baseUrl')}
+          {!isOpenAi && (
+            <p id="provider-baseUrl-hint" class="field-hint">
+              {t('baseUrlFixedHint')}
+            </p>
           )}
-          onInput={(event) => {
-            update({ apiKey: event.currentTarget.value });
-          }}
-        />
-        {fieldError('apiKey')}
-        {storedKey !== '' && !draft.apiKey && (
-          <p id="provider-apiKey-saved" class="field-hint">
-            {t('apiKeySaved', maskKey(storedKey))}
-          </p>
-        )}
-        <p id="provider-apiKey-hint" class="field-hint">
-          {isOpenAi ? `${t('apiKeyOptionalHint')} ` : ''}
-          {t('apiKeyStorageHint')}
-        </p>
-      </div>
+        </div>
 
-      <div class="field">
-        <label for="provider-defaultModel">{t('fieldDefaultModel')}</label>
-        <div class="field-row">
-          {modelOptions ? (
-            <select
-              id="provider-defaultModel"
-              data-field="defaultModel"
-              value={draft.defaultModel}
-              aria-invalid={errors.defaultModel ? true : undefined}
-              aria-describedby={describedBy('defaultModel', 'provider-models-status')}
-              onChange={(event) => {
-                update({ defaultModel: event.currentTarget.value });
+        <div class="field">
+          <label for="provider-apiKey">{t('fieldApiKey')}</label>
+          <input
+            id="provider-apiKey"
+            data-field="apiKey"
+            type="password"
+            spellcheck={false}
+            autocomplete="off"
+            value={draft.apiKey}
+            aria-invalid={errors.apiKey ? true : undefined}
+            aria-describedby={describedBy(
+              'apiKey',
+              storedKey !== '' && !draft.apiKey && 'provider-apiKey-saved',
+              'provider-apiKey-hint',
+            )}
+            onInput={(event) => {
+              update({ apiKey: event.currentTarget.value });
+            }}
+          />
+          {fieldError('apiKey')}
+          {storedKey !== '' && !draft.apiKey && (
+            <p id="provider-apiKey-saved" class="field-hint">
+              {t('apiKeySaved', maskKey(storedKey))}
+            </p>
+          )}
+          <p id="provider-apiKey-hint" class="field-hint">
+            {isOpenAi ? `${t('apiKeyOptionalHint')} ` : ''}
+            {t('apiKeyStorageHint')}
+          </p>
+        </div>
+
+        <div class="field">
+          <label for="provider-defaultModel">{t('fieldDefaultModel')}</label>
+          <div class="field-row">
+            {modelOptions ? (
+              <select
+                id="provider-defaultModel"
+                data-field="defaultModel"
+                value={draft.defaultModel}
+                aria-invalid={errors.defaultModel ? true : undefined}
+                aria-describedby={describedBy('defaultModel', 'provider-models-status')}
+                onChange={(event) => {
+                  update({ defaultModel: event.currentTarget.value });
+                }}
+              >
+                <option value="">{t('chooseModel')}</option>
+                {modelOptions.map((model) => (
+                  <option key={model} value={model}>
+                    {model}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <input
+                id="provider-defaultModel"
+                data-field="defaultModel"
+                type="text"
+                spellcheck={false}
+                autocomplete="off"
+                value={draft.defaultModel}
+                aria-invalid={errors.defaultModel ? true : undefined}
+                aria-describedby={describedBy('defaultModel', 'provider-models-status')}
+                onInput={(event) => {
+                  update({ defaultModel: event.currentTarget.value });
+                }}
+              />
+            )}
+            <button
+              type="button"
+              class="button"
+              aria-disabled={modelsStatus === 'loading' ? 'true' : undefined}
+              onClick={() => {
+                if (modelsStatus !== 'loading') loadModels();
               }}
             >
-              <option value="">{t('chooseModel')}</option>
-              {modelOptions.map((model) => (
-                <option key={model} value={model}>
-                  {model}
-                </option>
-              ))}
-            </select>
-          ) : (
-            <input
-              id="provider-defaultModel"
-              data-field="defaultModel"
-              type="text"
-              spellcheck={false}
-              autocomplete="off"
-              value={draft.defaultModel}
-              aria-invalid={errors.defaultModel ? true : undefined}
-              aria-describedby={describedBy('defaultModel', 'provider-models-status')}
-              onInput={(event) => {
-                update({ defaultModel: event.currentTarget.value });
-              }}
-            />
-          )}
+              {t('loadModels')}
+            </button>
+          </div>
+          {fieldError('defaultModel')}
+          <p id="provider-models-status" class="field-hint" role="status">
+            {modelsStatus === 'loading' && t('modelsLoading')}
+            {modelsStatus === 'loaded' && t('modelsLoaded')}
+            {modelsStatus === 'failed' && t('modelsFailed')}
+          </p>
+        </div>
+
+        <div class="field">
+          <label for="provider-contextBudget">{t('fieldContextBudget')}</label>
+          <input
+            id="provider-contextBudget"
+            data-field="contextBudget"
+            type="text"
+            inputMode="numeric"
+            value={draft.contextBudget}
+            aria-invalid={errors.contextBudget ? true : undefined}
+            aria-describedby={describedBy('contextBudget', 'provider-contextBudget-hint')}
+            onInput={(event) => {
+              update({ contextBudget: event.currentTarget.value });
+            }}
+          />
+          {fieldError('contextBudget')}
+          <p id="provider-contextBudget-hint" class="field-hint">
+            {t('contextBudgetHint')}
+          </p>
+        </div>
+
+        {isOpenAi && <p class="field-hint help">{t('localServerHelp')}</p>}
+
+        <div class="test-connection">
           <button
             type="button"
             class="button"
-            aria-disabled={modelsStatus === 'loading' ? 'true' : undefined}
+            aria-disabled={test.state === 'running' ? 'true' : undefined}
             onClick={() => {
-              if (modelsStatus !== 'loading') loadModels();
+              if (test.state !== 'running') testConnection();
             }}
           >
-            {t('loadModels')}
+            {t('testConnection')}
+          </button>
+          <div class="test-result" role="status">
+            {test.state === 'running' && <p class="muted">{t('testing')}</p>}
+            {test.state === 'ok' && <p class="result-ok">{t('testOk')}</p>}
+            {test.state === 'error' && (
+              <>
+                <p class="result-error">{test.message}</p>
+                {test.detail && <p class="result-detail">{test.detail}</p>}
+              </>
+            )}
+          </div>
+        </div>
+
+        {saveFailed && (
+          <p class="error form-error" role="alert">
+            {t('saveError')}
+          </p>
+        )}
+
+        <div class="form-actions">
+          <button
+            type="button"
+            class="button"
+            onClick={() => {
+              onDone(null);
+            }}
+          >
+            {t('cancel')}
+          </button>
+          <button
+            type="submit"
+            class="button button-primary"
+            aria-disabled={saving ? 'true' : undefined}
+          >
+            {t('save')}
           </button>
         </div>
-        {fieldError('defaultModel')}
-        <p id="provider-models-status" class="field-hint" role="status">
-          {modelsStatus === 'loading' && t('modelsLoading')}
-          {modelsStatus === 'loaded' && t('modelsLoaded')}
-          {modelsStatus === 'failed' && t('modelsFailed')}
-        </p>
-      </div>
-
-      <div class="field">
-        <label for="provider-contextBudget">{t('fieldContextBudget')}</label>
-        <input
-          id="provider-contextBudget"
-          data-field="contextBudget"
-          type="text"
-          inputMode="numeric"
-          value={draft.contextBudget}
-          aria-invalid={errors.contextBudget ? true : undefined}
-          aria-describedby={describedBy('contextBudget', 'provider-contextBudget-hint')}
-          onInput={(event) => {
-            update({ contextBudget: event.currentTarget.value });
-          }}
-        />
-        {fieldError('contextBudget')}
-        <p id="provider-contextBudget-hint" class="field-hint">
-          {t('contextBudgetHint')}
-        </p>
-      </div>
-
-      {isOpenAi && <p class="field-hint help">{t('localServerHelp')}</p>}
-
-      <div class="test-connection">
-        <button
-          type="button"
-          class="button"
-          aria-disabled={test.state === 'running' ? 'true' : undefined}
-          onClick={() => {
-            if (test.state !== 'running') testConnection();
-          }}
-        >
-          {t('testConnection')}
-        </button>
-        <div class="test-result" role="status">
-          {test.state === 'running' && <p class="muted">{t('testing')}</p>}
-          {test.state === 'ok' && <p class="result-ok">{t('testOk')}</p>}
-          {test.state === 'error' && (
-            <>
-              <p class="result-error">{test.message}</p>
-              {test.detail && <p class="result-detail">{test.detail}</p>}
-            </>
-          )}
-        </div>
-      </div>
-
-      {saveFailed && (
-        <p class="error form-error" role="alert">
-          {t('saveError')}
-        </p>
-      )}
-
-      <div class="form-actions">
-        <button
-          type="button"
-          class="button"
-          onClick={() => {
-            onDone(null);
-          }}
-        >
-          {t('cancel')}
-        </button>
-        <button
-          type="submit"
-          class="button button-primary"
-          aria-disabled={saving ? 'true' : undefined}
-        >
-          {t('save')}
-        </button>
       </div>
     </form>
   );

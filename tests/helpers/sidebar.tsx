@@ -8,12 +8,21 @@ import { openRepository, type Repository } from '@/shared/db/repository';
 import { useLocale, type Locale } from './i18n';
 import { fakePermissions } from './permissions';
 
+/** The extension version the fake browser's manifest reports. */
+export const TEST_VERSION = '9.8.7';
+
 /**
  * A fresh browser, locale and empty IndexedDB, with a clock that ticks per
  * call. Host permissions start as installed: the three native provider hosts.
  */
 export async function freshRepository(locale: Locale = 'en'): Promise<Repository> {
   fakeBrowser.reset();
+  // The fake browser has no manifest; the settings footer shows its version.
+  fakeBrowser.runtime.getManifest = () => ({
+    manifest_version: 3,
+    name: 'Browser Sidekick',
+    version: TEST_VERSION,
+  });
   useLocale(locale);
   fakePermissions();
   globalThis.indexedDB = new IDBFactory();
