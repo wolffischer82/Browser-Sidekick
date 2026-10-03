@@ -524,7 +524,7 @@ Spec: `specs/redesign.md`. Branch `feature/redesign`. Status values as above.
 
 ## T17 Visual foundation
 
-Status: in progress (implementer's gate passed; awaiting the gate-checker and the orchestrator's UI check)
+Status: done (2026-10-03; gate-checker PASS-WITH-NOTES, orchestrator UI check in Chromium and Firefox 140)
 
 ### Plan
 
@@ -542,7 +542,7 @@ Status: in progress (implementer's gate passed; awaiting the gate-checker and th
 - [x] Every interactive element shows the focus ring on keyboard focus (global `:focus-visible` rule; e2e tabs through the main view and checks every element reached).
 - [x] Contrast of each text token on its background meets 4.5:1 in both themes (`tests/style-contrast.test.ts`; filled Delete uses `--on-accent`, decisions.md Redesign T17-7).
 - [x] No behaviour change: the existing unit and e2e suites pass unchanged (no selector changes were needed); header buttons stay 30 px until T18 so the thinking-levels narrow-header e2e keeps passing (decisions.md Redesign T17-10).
-- [ ] UI check in both browsers (orchestrator).
+- [x] UI check in both browsers (orchestrator): the Chromium screens `test-results/screens/T17-*.png`, and `dist/firefox-ext` installed headless in Firefox 140 ESR over WebDriver BiDi with the side panel page rendered in a tab, light and dark: body font Geist, `document.fonts` reports Geist loaded.
 
 ### Tests
 
