@@ -205,14 +205,7 @@ test.describe('summarize', () => {
     const first = answers(sidebar).first();
     await expect(first.locator('h3')).toHaveCount(3);
     await expect(first.locator('li')).toHaveCount(2);
-    await expect(first.locator('button.citation')).toHaveText([
-      '[1]',
-      '[1]',
-      '[2]',
-      '[2]',
-      '[1]',
-      '[2]',
-    ]);
+    await expect(first.locator('button.citation')).toHaveText(['1', '1', '2', '2', '1', '2']);
     await expect(
       first.getByRole('button', { name: `Source 2: ${DASHBOARD}` }).first(),
     ).toBeVisible();
@@ -255,7 +248,7 @@ test.describe('summarize', () => {
     await screens(sidebar, 'T11-04-first-action-title');
 
     // A citation of the summary leads to its page.
-    await first.locator('button.citation', { hasText: '[1]' }).first().click();
+    await first.locator('button.citation[data-citation="1"]').first().click();
     await expect(pinRow(sidebar, ARTICLE)).toHaveAttribute('data-current', '');
 
     // 4. With the eye, the current tab is left out of the next summary.

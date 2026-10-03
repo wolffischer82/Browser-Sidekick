@@ -184,7 +184,7 @@ test.describe('chat', () => {
     const first = answers(sidebar).first();
     await expect(first.locator('li')).toHaveCount(2);
     await expect(first.locator('pre code')).toContainText('Departure 21:04');
-    await expect(first.locator('button.citation')).toHaveText(['[1]', '[1]', '[2]']);
+    await expect(first.locator('button.citation')).toHaveText(['1', '1', '2']);
     await expect(first).toContainText('stays plain [7].');
     // Citations are buttons without an address; the answer has no links at all.
     await expect(first.getByRole('button', { name: `Source 2: ${DASHBOARD}` })).toBeVisible();
@@ -225,16 +225,16 @@ test.describe('chat', () => {
 
     // 4. Citation [1] focuses the pinned article's tab.
     expect(await activeTabUrl(browser)).toBe(server.url('non-article.html'));
-    await first.locator('button.citation', { hasText: '[1]' }).first().click();
+    await first.locator('button.citation[data-citation="1"]').first().click();
     await expect.poll(() => activeTabUrl(browser)).toBe(server.url('article.html'));
     await expect(pinRow(sidebar, ARTICLE)).toHaveAttribute('data-current', '');
     // Ctrl-click and middle-click can't bypass the handler: no new tab opens.
     const tabCount = browser.pages().length;
-    await first.locator('button.citation', { hasText: '[2]' }).click({ modifiers: ['Control'] });
+    await first.locator('button.citation[data-citation="2"]').click({ modifiers: ['Control'] });
     await expect.poll(() => activeTabUrl(browser)).toBe(server.url('non-article.html'));
-    await first.locator('button.citation', { hasText: '[1]' }).first().click({ button: 'middle' });
+    await first.locator('button.citation[data-citation="1"]').first().click({ button: 'middle' });
     // The keyboard works too.
-    await first.locator('button.citation', { hasText: '[1]' }).first().focus();
+    await first.locator('button.citation[data-citation="1"]').first().focus();
     await sidebar.keyboard.press('Enter');
     await expect.poll(() => activeTabUrl(browser)).toBe(server.url('article.html'));
     expect(browser.pages()).toHaveLength(tabCount);

@@ -93,7 +93,9 @@ describe('citations', () => {
   it('turns [n] into a button for the source with that number, without an address', () => {
     const box = html('Trains are back [1]. The dashboard agrees [3].');
     const buttons = chips(box);
-    expect(buttons.map((b) => b.textContent)).toEqual(['[1]', '[3]']);
+    // The number only, no brackets (redesign spec 5.3).
+    expect(buttons.map((b) => b.textContent)).toEqual(['1', '3']);
+    expect(box.textContent.trim()).toBe('Trains are back 1. The dashboard agrees 3.');
     const first = buttons[0];
     expect(first?.type).toBe('button');
     expect(first?.dataset.citation).toBe('1');
@@ -115,7 +117,9 @@ describe('citations', () => {
   it('makes a button for each number of a group', () => {
     const box = html('Both say so [1, 3] and [1][3], not [1, 2].');
     expect(chips(box).map((b) => b.dataset.citation)).toEqual(['1', '3', '1', '3', '1']);
-    expect(box.textContent.trim()).toBe('Both say so [1, 3] and [1][3], not [1, 2].');
+    expect(chips(box).map((b) => b.textContent)).toEqual(['1', '3', '1', '3', '1']);
+    // Chips stand side by side; a number without a source keeps its brackets.
+    expect(box.textContent.trim()).toBe('Both say so 13 and 13, not 1[2].');
   });
 
   it('leaves code and links alone', () => {
