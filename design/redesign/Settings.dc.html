@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Settings</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=Geist+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="{{vars}}">
+<div style="width: 400px; height: 900px; box-sizing: border-box; display: flex; flex-direction: column; background: var(--bg); color: var(--ink); font-family: 'Geist', ui-sans-serif, system-ui, sans-serif; font-size: 14px; line-height: 1.45; overflow: hidden">
+
+  <header style="display: flex; align-items: center; gap: 4px; padding: 10px 8px; background: var(--surface); border-bottom: 1px solid var(--line)">
+    <button aria-label="Back" style="width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border: 0; border-radius: 10px; background: transparent; color: var(--muted)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg></button>
+    <h1 style="margin: 0; padding-left: 4px; font-size: 16px; font-weight: 600; letter-spacing: -0.01em">Settings</h1>
+  </header>
+
+  <div style="flex: 1; overflow: hidden; padding: 16px 12px; display: flex; flex-direction: column; gap: 20px">
+
+    <section style="display: flex; flex-direction: column; gap: 8px">
+      <div style="display: flex; align-items: center; padding: 0 4px">
+        <h2 style="flex: 1; margin: 0; font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted)">Providers</h2>
+        <button style="height: 30px; display: flex; align-items: center; gap: 6px; padding: 0 10px; border: 0; border-radius: 8px; background: transparent; color: var(--accent); font: inherit; font-size: 13px; font-weight: 600"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></svg>Add provider</button>
+      </div>
+      <div style="background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden">
+        <div style="display: flex; align-items: flex-start; gap: 12px; padding: 12px; border-bottom: 1px solid var(--line)">
+          <span style="width: 32px; height: 32px; flex: none; border-radius: 9px; background: var(--sunken); color: var(--ink); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700">A</span>
+          <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px">
+            <div style="display: flex; align-items: center; gap: 8px"><span style="font-weight: 600">Anthropic</span><span style="padding: 1px 7px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-size: 11px; font-weight: 600">Default</span></div>
+            <div style="font-size: 12.5px; color: var(--muted)">Anthropic · <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 12px">claude-sonnet-5-5</span></div>
+            <div style="display: flex; gap: 14px; margin-top: 4px; font-size: 12.5px; font-weight: 500"><a href="#" style="color: var(--accent); text-decoration: none">Edit</a></div>
+          </div>
+          <button aria-label="Delete Anthropic" style="width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border: 0; border-radius: 8px; background: transparent; color: var(--muted)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"></path></svg></button>
+        </div>
+        <div style="display: flex; align-items: flex-start; gap: 12px; padding: 12px; border-bottom: 1px solid var(--line)">
+          <span style="width: 32px; height: 32px; flex: none; border-radius: 9px; background: var(--sunken); color: var(--ink); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700">O</span>
+          <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px">
+            <div style="display: flex; align-items: center; gap: 8px"><span style="font-weight: 600">Local Ollama</span><span style="padding: 1px 7px; border-radius: 999px; background: var(--amber-soft); color: var(--amber); font-size: 11px; font-weight: 600">No access</span></div>
+            <div style="font-size: 12.5px; color: var(--muted)">OpenAI-compatible · <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 12px">llama3.1:8b</span></div>
+            <div style="margin-top: 6px; padding: 8px 10px; border-radius: 8px; background: var(--amber-soft); color: var(--amber); font-size: 12.5px; line-height: 1.4">The extension isn't allowed to contact this provider's server. Grant access to use it. <a href="#" style="color: inherit; font-weight: 600">Grant access</a></div>
+            <div style="display: flex; gap: 14px; margin-top: 6px; font-size: 12.5px; font-weight: 500"><a href="#" style="color: var(--accent); text-decoration: none">Make default</a><a href="#" style="color: var(--accent); text-decoration: none">Edit</a></div>
+          </div>
+          <button aria-label="Delete Local Ollama" style="width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border: 0; border-radius: 8px; background: transparent; color: var(--muted)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"></path></svg></button>
+        </div>
+        <div style="display: flex; align-items: flex-start; gap: 12px; padding: 12px">
+          <span style="width: 32px; height: 32px; flex: none; border-radius: 9px; background: var(--sunken); color: var(--ink); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700">G</span>
+          <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px">
+            <div style="font-weight: 600">Gemini</div>
+            <div style="font-size: 12.5px; color: var(--muted)">Google Gemini · <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 12px">[model]</span></div>
+            <div style="display: flex; gap: 14px; margin-top: 4px; font-size: 12.5px; font-weight: 500"><a href="#" style="color: var(--accent); text-decoration: none">Make default</a><a href="#" style="color: var(--accent); text-decoration: none">Edit</a></div>
+          </div>
+          <button aria-label="Delete Gemini" style="width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border: 0; border-radius: 8px; background: transparent; color: var(--muted)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"></path></svg></button>
+        </div>
+      </div>
+    </section>
+
+    <section style="display: flex; flex-direction: column; gap: 8px">
+      <h2 style="margin: 0; padding: 0 4px; font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted)">Page access</h2>
+      <div style="background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 12px">
+        <p style="margin: 0; font-size: 13px; color: var(--muted); line-height: 1.5">Sidekick reads the current tab and the pages you pin. Without access to all sites, it can only read a page you pin from its context menu.</p>
+        <div style="display: flex; align-items: center; gap: 10px">
+          <span style="display: flex; align-items: center; gap: 7px; flex: 1; font-size: 13px; font-weight: 500"><span style="width: 8px; height: 8px; border-radius: 50%; background: var(--amber)"></span>Not allowed</span>
+          <button style="height: 34px; padding: 0 14px; border: 0; border-radius: 9px; background: var(--accent); color: var(--on-accent); font: inherit; font-size: 13px; font-weight: 600">Allow on all sites</button>
+        </div>
+      </div>
+    </section>
+
+    <section style="display: flex; flex-direction: column; gap: 8px">
+      <h2 style="margin: 0; padding: 0 4px; font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted)">Delete all data</h2>
+      <div style="background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 12px">
+        <p style="margin: 0; font-size: 13px; color: var(--muted); line-height: 1.5">Removes all sessions, pinned pages and chat history from this device.</p>
+        <label style="display: flex; align-items: center; gap: 10px; font-size: 13px"><input type="checkbox" style="width: 16px; height: 16px; margin: 0; accent-color: var(--accent)">Also delete providers and API keys</label>
+        <div><button style="height: 34px; padding: 0 14px; border: 1px solid color-mix(in srgb, var(--red) 45%, var(--line)); border-radius: 9px; background: transparent; color: var(--red); font: inherit; font-size: 13px; font-weight: 600">Delete all data</button></div>
+      </div>
+    </section>
+
+    <div style="text-align: center; font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; color: var(--muted)">Browser Sidekick 0.1.0</div>
+  </div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"accent":{"editor":"color","default":"#2D5BE3","options":["#2D5BE3","#0F766E","#C2410C","#7C3AED"]},"$preview":{"width":400,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const accent = this.props.accent ?? '#2D5BE3';
+    const L = { bg: '#F6F6F3', surface: '#FFFFFF', sunken: '#EFEFEB', ink: '#17181B', muted: '#5D616A', line: '#E4E4DF', green: '#1E7A46', amber: '#7A5300', amberSoft: '#FBF0D9', red: '#B42318', shadow: '0 1px 2px rgba(20,20,25,.05), 0 6px 20px rgba(20,20,25,.06)' };
+    const D = { bg: '#111214', surface: '#1A1B1E', sunken: '#24252A', ink: '#ECEDEF', muted: '#A2A6AE', line: '#2D2F35', green: '#6FCF97', amber: '#F1C96B', amberSoft: '#3A2F14', red: '#F97066', shadow: '0 1px 2px rgba(0,0,0,.4), 0 6px 20px rgba(0,0,0,.3)' };
+    const t = dark ? D : L;
+    const acc = dark ? 'color-mix(in srgb, ' + accent + ' 55%, #ffffff)' : accent;
+    const vars = '--bg:' + t.bg + ';--surface:' + t.surface + ';--sunken:' + t.sunken + ';--ink:' + t.ink + ';--muted:' + t.muted + ';--line:' + t.line + ';--green:' + t.green + ';--amber:' + t.amber + ';--amber-soft:' + t.amberSoft + ';--red:' + t.red + ';--shadow:' + t.shadow + ';--accent:' + acc + ';--accent-soft:color-mix(in srgb, ' + acc + ' ' + (dark ? 16 : 9) + '%, ' + t.surface + ');--on-accent:' + (dark ? '#0E1013' : '#FFFFFF') + ';width:400px;height:900px';
+    return { vars };
+  }
+}
+</script>
+</body>
+</html>

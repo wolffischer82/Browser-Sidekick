@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Style sheet</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=Geist+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 720px; height: 900px; box-sizing: border-box; padding: 40px; display: flex; flex-direction: column; gap: 32px; background: #FFFFFF; color: #17181B; font-family: 'Geist', ui-sans-serif, system-ui, sans-serif; font-size: 14px; line-height: 1.45">
+
+  <div>
+    <h1 style="margin: 0; font-size: 28px; font-weight: 600; letter-spacing: -0.02em">Style sheet</h1>
+    <p style="margin: 4px 0 0; color: #5D616A">Tokens behind the side panel. Fonts are bundled with the extension, not loaded from the web.</p>
+  </div>
+
+  <section style="display: flex; flex-direction: column; gap: 12px">
+    <h2 style="margin: 0; font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: #5D616A">Type</h2>
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px">
+      <div style="padding: 16px; border: 1px solid #E4E4DF; border-radius: 12px; display: flex; flex-direction: column; gap: 6px">
+        <div style="font-size: 34px; font-weight: 600; letter-spacing: -0.02em">Geist</div>
+        <div style="font-size: 12.5px; color: #5D616A">UI and answers · 400 / 500 / 600</div>
+        <div style="font-size: 15px; font-weight: 600">15 Session title</div>
+        <div style="font-size: 14px">14 Body and answers, line-height 1.6</div>
+        <div style="font-size: 13px; font-weight: 500">13 Pin titles, buttons</div>
+        <div style="font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: #5D616A">12 Section labels</div>
+      </div>
+      <div style="padding: 16px; border: 1px solid #E4E4DF; border-radius: 12px; display: flex; flex-direction: column; gap: 6px; font-family: 'Geist Mono', ui-monospace, monospace">
+        <div style="font-size: 34px; font-weight: 500; letter-spacing: -0.02em">Geist Mono</div>
+        <div style="font-size: 12.5px; color: #5D616A; font-family: 'Geist', ui-sans-serif, system-ui, sans-serif">Code, citations, model names, counts</div>
+        <div style="font-size: 12.5px">tokio::spawn</div>
+        <div style="font-size: 11px; color: #5D616A">Anthropic · claude-sonnet-5-5</div>
+        <div style="display: flex; gap: 6px"><span style="min-width: 18px; height: 18px; padding: 0 5px; box-sizing: border-box; border-radius: 6px; background: #EEF2FC; color: #2D5BE3; font-size: 11px; display: flex; align-items: center; justify-content: center">1</span><span style="min-width: 18px; height: 18px; padding: 0 5px; box-sizing: border-box; border-radius: 6px; background: #EEF2FC; color: #2D5BE3; font-size: 11px; display: flex; align-items: center; justify-content: center">2</span><span style="min-width: 18px; height: 18px; padding: 0 5px; box-sizing: border-box; border-radius: 6px; background: #EEF2FC; color: #2D5BE3; font-size: 11px; display: flex; align-items: center; justify-content: center">5</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section style="display: flex; flex-direction: column; gap: 12px">
+    <h2 style="margin: 0; font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: #5D616A">Colour · light / dark</h2>
+    <div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px">
+      <div style="display: flex; flex-direction: column; gap: 6px"><div style="height: 44px; border-radius: 8px; display: flex; overflow: hidden; border: 1px solid #E4E4DF"><span style="flex: 1; background: #F6F6F3"></span><span style="flex: 1; background: #111214"></span></div><div style="font-size: 12px; font-weight: 600">bg</div><div style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; color: #5D616A">#F6F6F3 / #111214</div></div>
+      <div style="display: flex; flex-direction: column; gap: 6px"><div style="height: 44px; border-radius: 8px; display: flex; overflow: hidden; border: 1px solid #E4E4DF"><span style="flex: 1; background: #FFFFFF"></span><span style="flex: 1; background: #1A1B1E"></span></div><div style="font-size: 12px; font-weight: 600">surface</div><div style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; color: #5D616A">#FFFFFF / #1A1B1E</div></div>
+      <div style="display: flex; flex-direction: column; gap: 6px"><div style="height: 44px; border-radius: 8px; display: flex; overflow: hidden; border: 1px solid #E4E4DF"><span style="flex: 1; background: #EFEFEB"></span><span style="flex: 1; background: #24252A"></span></div><div style="font-size: 12px; font-weight: 600">sunken</div><div style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; color: #5D616A">#EFEFEB / #24252A</div></div>
+      <div style="display: flex; flex-direction: column; gap: 6px"><div style="height: 44px; border-radius: 8px; display: flex; overflow: hidden; border: 1px solid #E4E4DF"><span style="flex: 1; background: #E4E4DF"></span><span style="flex: 1; background: #2D2F35"></span></div><div style="font-size: 12px; font-weight: 600">line</div><div style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; color: #5D616A">#E4E4DF / #2D2F35</div></div>
+      <div style="display: flex; flex-direction: column; gap: 6px"><div style="height: 44px; border-radius: 8px; display: flex; overflow: hidden; border: 1px solid #E4E4DF"><span style="flex: 1; background: #17181B"></span><span style="flex: 1; background: #ECEDEF"></span></div><div style="font-size: 12px; font-weight: 600">ink</div><div style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; color: #5D616A">#17181B / #ECEDEF</div></div>
+      <div style="display: flex; flex-direction: column; gap: 6px"><div style="height: 44px; border-radius: 8px; display: flex; overflow: hidden; border: 1px solid #E4E4DF"><span style="flex: 1; background: #5D616A"></span><span style="flex: 1; background: #A2A6AE"></span></div><div style="font-size: 12px; font-weight: 600">muted</div><div style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; color: #5D616A">#5D616A / #A2A6AE</div></div>
+      <div style="display: flex; flex-direction: column; gap: 6px"><div style="height: 44px; border-radius: 8px; display: flex; overflow: hidden; border: 1px solid #E4E4DF"><span style="flex: 1; background: #2D5BE3"></span><span style="flex: 1; background: #8EA8EE"></span></div><div style="font-size: 12px; font-weight: 600">accent</div><div style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; color: #5D616A">#2D5BE3 / mix 55% white</div></div>
+      <div style="display: flex; flex-direction: column; gap: 6px"><div style="height: 44px; border-radius: 8px; display: flex; overflow: hidden; border: 1px solid #E4E4DF"><span style="flex: 1; background: #1E7A46"></span><span style="flex: 1; background: #6FCF97"></span></div><div style="font-size: 12px; font-weight: 600">ok</div><div style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; color: #5D616A">#1E7A46 / #6FCF97</div></div>
+      <div style="display: flex; flex-direction: column; gap: 6px"><div style="height: 44px; border-radius: 8px; display: flex; overflow: hidden; border: 1px solid #E4E4DF"><span style="flex: 1; background: #7A5300"></span><span style="flex: 1; background: #F1C96B"></span></div><div style="font-size: 12px; font-weight: 600">warning</div><div style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; color: #5D616A">#7A5300 / #F1C96B</div></div>
+      <div style="display: flex; flex-direction: column; gap: 6px"><div style="height: 44px; border-radius: 8px; display: flex; overflow: hidden; border: 1px solid #E4E4DF"><span style="flex: 1; background: #B42318"></span><span style="flex: 1; background: #F97066"></span></div><div style="font-size: 12px; font-weight: 600">danger</div><div style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; color: #5D616A">#B42318 / #F97066</div></div>
+    </div>
+  </section>
+
+  <section style="display: flex; flex-direction: column; gap: 12px">
+    <h2 style="margin: 0; font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: #5D616A">Shape and controls</h2>
+    <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 16px">
+      <button style="height: 34px; padding: 0 14px; border: 0; border-radius: 9px; background: #2D5BE3; color: #FFFFFF; font: inherit; font-size: 13px; font-weight: 600">Primary</button>
+      <button style="height: 34px; padding: 0 14px; border: 1px solid #E4E4DF; border-radius: 9px; background: #FFFFFF; color: #17181B; font: inherit; font-size: 13px; font-weight: 500">Secondary</button>
+      <button style="height: 34px; padding: 0 14px; border: 1px solid #E5B6B1; border-radius: 9px; background: transparent; color: #B42318; font: inherit; font-size: 13px; font-weight: 600">Danger</button>
+      <span style="padding: 1px 7px; border-radius: 999px; background: #EEF2FC; color: #2D5BE3; font-size: 11px; font-weight: 600">Default</span>
+      <span style="padding: 1px 7px; border-radius: 999px; background: #FBF0D9; color: #7A5300; font-size: 11px; font-weight: 600">No access</span>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; font-size: 12px; color: #5D616A">
+      <div style="display: flex; flex-direction: column; gap: 6px"><span style="height: 40px; border: 1px solid #C9C9C3; border-radius: 6px"></span>6 · code, citations</div>
+      <div style="display: flex; flex-direction: column; gap: 6px"><span style="height: 40px; border: 1px solid #C9C9C3; border-radius: 9px"></span>8–10 · buttons, chips</div>
+      <div style="display: flex; flex-direction: column; gap: 6px"><span style="height: 40px; border: 1px solid #C9C9C3; border-radius: 12px"></span>12 · cards, lists</div>
+      <div style="display: flex; flex-direction: column; gap: 6px"><span style="height: 40px; border: 1px solid #C9C9C3; border-radius: 16px"></span>16 · composer, bubbles</div>
+    </div>
+    <p style="margin: 0; font-size: 12.5px; color: #5D616A">Spacing on a 4 px grid: 4 · 8 · 12 · 16 · 24. Icons 1.8 px stroke, round caps, 15–18 px. Icon buttons 36 px in the header, 28–30 px inside rows.</p>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":720,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>
