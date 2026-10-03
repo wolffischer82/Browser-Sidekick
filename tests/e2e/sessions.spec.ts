@@ -23,6 +23,13 @@ async function rename(page: Page, name: string): Promise<void> {
   await expect(title(page)).toHaveText(name);
 }
 
+/** Clicks a row's delete button, which shows on row hover (redesign spec 5.6). */
+async function clickDelete(page: Page, name: string): Promise<void> {
+  const button = page.getByRole('button', { name: `Delete “${name}”` });
+  await drawer(page).getByRole('listitem').filter({ has: button }).hover();
+  await drawer(page).locator(button).click();
+}
+
 async function openDrawer(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'Sessions' }).click();
   await expect(drawer(page)).toBeVisible();
@@ -69,8 +76,10 @@ test('sessions: create, rename, switch, delete and persist', async () => {
     await expect(drawer(page).locator('.session-item-meta').first()).toHaveText('now · 0 pins');
     await screens(page, 'T03-03-drawer-several-sessions');
 
-    // Switch with the keyboard: focus lands on Close, then Tab goes row, delete, row.
+    // Switch with the keyboard: focus lands on Close, then Tab goes New
+    // session, row, delete, row.
     await expect(drawer(page).getByRole('button', { name: 'Close' })).toBeFocused();
+    await page.keyboard.press('Tab');
     await page.keyboard.press('Tab');
     await page.keyboard.press('Tab');
     await page.keyboard.press('Tab');
@@ -83,7 +92,7 @@ test('sessions: create, rename, switch, delete and persist', async () => {
     // Delete another session: confirmation, then Cancel, then Delete.
     await page.keyboard.press('Enter');
     await expect(drawer(page)).toBeVisible();
-    await drawer(page).getByRole('button', { name: 'Delete “Pricing research”' }).click();
+    await clickDelete(page, 'Pricing research');
     await expect(
       drawer(page).getByText('Delete this session with its pins and messages?'),
     ).toBeVisible();
@@ -92,13 +101,13 @@ test('sessions: create, rename, switch, delete and persist', async () => {
     await page.keyboard.press('Escape');
     await expect(rows(page)).toHaveCount(3);
     await expect(drawer(page)).toBeVisible();
-    await drawer(page).getByRole('button', { name: 'Delete “Pricing research”' }).click();
+    await clickDelete(page, 'Pricing research');
     await drawer(page).getByRole('button', { name: 'Delete', exact: true }).click();
     await expect(rows(page)).toHaveText(['New session', 'Travel plans']);
     await expect(title(page)).toHaveText('Travel plans');
 
     // Delete the active session: switches to the most recent remaining one.
-    await drawer(page).getByRole('button', { name: 'Delete “Travel plans”' }).click();
+    await clickDelete(page, 'Travel plans');
     await drawer(page).getByRole('button', { name: 'Delete', exact: true }).click();
     await expect(rows(page)).toHaveText(['New session']);
     await expect(title(page)).toHaveText('New session');
@@ -110,7 +119,7 @@ test('sessions: create, rename, switch, delete and persist', async () => {
     await page.getByRole('button', { name: 'New session' }).click();
     await rename(page, 'Temporary');
     await openDrawer(page);
-    await drawer(page).getByRole('button', { name: 'Delete “Temporary”' }).click();
+    await clickDelete(page, 'Temporary');
     await drawer(page).getByRole('button', { name: 'Delete', exact: true }).click();
     await expect(rows(page)).toHaveText(['Survivor']);
     await expect(title(page)).toHaveText('Survivor');
@@ -142,7 +151,7 @@ test('sessions: deleting the only session starts a new empty one', async () => {
     const page = await openSidebar(context, await extensionId(context));
     await rename(page, 'Only');
     await openDrawer(page);
-    await drawer(page).getByRole('button', { name: 'Delete “Only”' }).click();
+    await clickDelete(page, 'Only');
     await drawer(page).getByRole('button', { name: 'Delete', exact: true }).click();
     await expect(rows(page)).toHaveText(['New session']);
     await expect(title(page)).toHaveText('New session');
