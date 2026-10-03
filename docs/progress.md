@@ -589,7 +589,7 @@ Status: done (2026-10-03; gate-checker PASS-WITH-NOTES, follow-up PASS, orchestr
 
 ## T19 Session tabs and banners
 
-Status: in progress
+Status: done (2026-10-03; awaiting gate-checker and the orchestrator's UI check)
 
 ### Plan
 
@@ -599,3 +599,16 @@ Status: in progress
 - Icons: play, file, shield, spinner. Strings: `sessionTabsLabel`, `pinButton` (en, de); `sessionTabsHeading` removed.
 - Tests: update `sidepanel-session-tabs`, `sidepanel-access`, `sidepanel-app`, `sidepanel-drawer` and the e2e toggle names; new component tests for row states, fallback icons, numbering, current row included/excluded, toggle name; e2e `tests/e2e/session-tabs.spec.ts` (page, YouTube and PDF pins, numbers against a cited answer, excluded current tab, keyboard open; screens T19-*).
 - Open questions: none so far.
+
+### Acceptance
+
+- [x] Every bullet of spec 5.2 and 5.5 holds (component tests in `tests/sidepanel-session-tabs.test.tsx` and `tests/sidepanel-access.test.tsx`; e2e `tests/e2e/session-tabs.spec.ts`; decisions.md Redesign T19).
+- [x] The number on each pin row and on the current-tab row equals the citation number the model receives, with a failed pin, an extracting pin, and the current tab unpinned, excluded and pinned (`tests/chat-citation.test.ts`; e2e compares the rows with the `<<<PAGE n>>>` lines of each request and a cited answer).
+- [x] Row actions are reachable and usable by keyboard alone (e2e: Tab from the toggle reaches Open, the actions show with the focus ring, Enter opens the page; decisions.md Redesign T19-4).
+- [ ] UI check in both browsers (orchestrator).
+
+### Tests
+
+- `tests/chat-citation.test.ts`: the helper, and `assembleContext` taking its numbers from it; non-ready pins keep their numbers; no current-tab number when the tab isn't sent.
+- `tests/sidepanel-session-tabs.test.tsx`: toggle name and count pill; meta lines with numbers, host, type, "Current tab", "Truncated"; ready dot with hidden "Ready", spinner with "Extracting…", "Failed" with the reason; fallback icons by type; actions in the DOM and tab order; current-tab row with the Pin text button, included and excluded; pinned current tab; not-accessible and restricted rows; German. Updated names in `sidepanel-app`, `sidepanel-access` (plus the banner card), `sidepanel-drawer`.
+- e2e `tests/e2e/session-tabs.spec.ts`: screens `T19-01-first-run`, `T19-02-all-states`, `T19-03-row-hovered`, `T19-04-collapsed`, `T19-05-provider-notice` (each also `-dark`). Updated `pinning.spec.ts` (hover before row actions; toggle name), `page-access.spec.ts`, `sessions.spec.ts` (toggle name), `youtube.spec.ts`, `pdf.spec.ts` (type selector).
