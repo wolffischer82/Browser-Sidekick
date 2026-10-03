@@ -249,25 +249,28 @@ textarea {
   cursor: pointer;
 }
 
-/* Header */
+/* Header (redesign spec 5.1) */
 
 .header {
   display: flex;
   flex: none;
   align-items: center;
   gap: 4px;
-  padding: 4px 6px;
+  padding: 10px 8px;
   border-bottom: 1px solid var(--line);
+  background: var(--surface);
 }
 
-/*
- * The header's icon buttons stay 30 px while the model and thinking menus
- * share the header; they become 36 px when the menus move to the composer
- * (redesign T18; decisions.md Redesign T17).
- */
+.header-button {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+}
 
 .header-title {
+  display: flex;
   flex: 1;
+  flex-direction: column;
   min-width: 0;
 }
 
@@ -275,12 +278,14 @@ textarea {
   display: block;
   width: 100%;
   overflow: hidden;
-  padding: 4px 8px;
+  padding: 0 6px;
   border: 1px solid transparent;
   border-radius: 8px;
   background: none;
   font-size: 15px;
   font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.4;
   text-align: left;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -293,12 +298,23 @@ textarea {
 
 .session-title-input {
   width: 100%;
-  padding: 4px 8px;
+  padding: 0 6px;
   border: 1px solid var(--accent);
   border-radius: 8px;
   background: var(--surface);
   font-size: 15px;
   font-weight: 600;
+  line-height: 1.4;
+}
+
+.header-subtitle {
+  overflow: hidden;
+  margin: 0;
+  padding: 0 7px;
+  color: var(--muted);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* Session tabs */

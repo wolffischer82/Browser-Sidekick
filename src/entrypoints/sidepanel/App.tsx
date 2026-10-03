@@ -121,23 +121,52 @@ export function App({ repository }: Props) {
   });
 
   /**
-   * Re-reads the pins of session `id` and its title (the first pin sets the
-   * fallback title, D11), if that session is still shown.
+   * Takes the stored title (the first pin sets the fallback title, D11) and
+   * last activity (the header's subtitle) of the shown session.
    */
+  const applyStored = (session: Session) => {
+    setActive((shown) =>
+      shown?.id === session.id &&
+      (shown.title !== session.title ||
+        shown.titleSource !== session.titleSource ||
+        shown.updatedAt !== session.updatedAt)
+        ? {
+            ...shown,
+            title: session.title,
+            titleSource: session.titleSource,
+            updatedAt: session.updatedAt,
+          }
+        : shown,
+    );
+  };
+
+  /** Re-reads the pins of session `id` and its title, if that session is still shown. */
   const reloadPins = async (r: Repository, id: string | null): Promise<void> => {
     if (!id) return;
     const read = ++pinsRead.current;
     const [list, session] = await Promise.all([r.listPins(id), r.getSession(id)]);
     if (read !== pinsRead.current || activeId.current !== id) return;
     setPins(list);
-    if (!session) return;
-    setActive((shown) =>
-      shown?.id === id &&
-      (shown.title !== session.title || shown.titleSource !== session.titleSource)
-        ? { ...shown, title: session.title, titleSource: session.titleSource }
-        : shown,
-    );
+    if (session) applyStored(session);
   };
+
+  // A stored question or answer bumps the session's last activity.
+  useEffect(() => {
+    const id = activeId.current;
+    if (!repo || !id || chat.messages.length === 0) return;
+    const effect = { cancelled: false };
+    repo.getSession(id).then(
+      (session) => {
+        if (!effect.cancelled && session) applyStored(session);
+      },
+      () => {
+        console.error('Sidekick: a session could not be read.');
+      },
+    );
+    return () => {
+      effect.cancelled = true;
+    };
+  }, [repo, chat.messages]);
 
   useEffect(() => {
     // An object, so the async closure sees the cleanup's write.
@@ -452,6 +481,8 @@ export function App({ repository }: Props) {
       <div class="app-body" inert={drawer !== null}>
         <Header
           title={displayTitle(active)}
+          pinCount={pins.length}
+          updatedAt={active.updatedAt}
           drawerOpen={drawer !== null}
           drawerButtonRef={drawerButtonRef}
           onOpenDrawer={() => {

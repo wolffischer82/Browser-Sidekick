@@ -1,19 +1,25 @@
-import { cleanup, fireEvent, screen, waitFor } from '@testing-library/preact';
-import { afterEach, describe, expect, it } from 'vitest';
-import type { Repository } from '@/shared/db/repository';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/preact';
+import { createRef } from 'preact';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { fakeBrowser } from 'wxt/testing/fake-browser';
+import { Header, SUBTITLE_REFRESH_MS } from '@/entrypoints/sidepanel/components/Header';
+import { openRepository, type NewPin, type Repository } from '@/shared/db/repository';
 import { getSettings, updateSettings } from '@/shared/settings';
+import { useLocale, type Locale } from './helpers/i18n';
 import { freshRepository, renderSidebar, titleButton } from './helpers/sidebar';
 
-let repo: Repository;
+let repo: Repository | undefined;
 
 afterEach(() => {
   cleanup();
-  repo.close();
+  repo?.close();
+  repo = undefined;
+  vi.useRealTimers();
 });
 
 async function activeSession() {
   const { activeSessionId } = await getSettings();
-  return repo.getSession(activeSessionId ?? '');
+  return repo?.getSession(activeSessionId ?? '');
 }
 
 function titleInput(): HTMLInputElement {
@@ -153,5 +159,105 @@ describe('inline rename edge cases', () => {
       expect(document.activeElement).toBe(titleButton());
     });
     expect(calls).toBe(1);
+  });
+});
+
+const subtitle = () => document.querySelector('.header-subtitle')?.textContent;
+
+function pin(n: number): NewPin {
+  return { url: `https://news.example/${String(n)}`, title: `Page ${String(n)}`, kind: 'page' };
+}
+
+/** Renders the header alone, `updatedAt` milliseconds before the fake clock's start. */
+function renderHeader(pinCount: number, ago: number, locale: Locale = 'en') {
+  fakeBrowser.reset();
+  useLocale(locale);
+  vi.useFakeTimers({ now: new Date('2026-10-03T12:00:00') });
+  render(
+    <Header
+      title="Night trains"
+      pinCount={pinCount}
+      updatedAt={Date.now() - ago}
+      drawerOpen={false}
+      drawerButtonRef={createRef()}
+      onOpenDrawer={() => undefined}
+      onRename={() => undefined}
+      onNewSession={() => undefined}
+      onOpenSettings={() => undefined}
+    />,
+  );
+}
+
+describe('header subtitle (redesign spec 5.1)', () => {
+  it('reads "No pins yet" for a session without pins, outside the rename button', async () => {
+    repo = await freshRepository();
+    await renderSidebar(repo);
+    expect(subtitle()).toBe('No pins yet');
+    const button = screen.getByRole('button', { name: 'Session title: New session' });
+    expect(button.contains(document.querySelector('.header-subtitle'))).toBe(false);
+    expect(button.closest('header')?.querySelector('.header-subtitle')).not.toBeNull();
+  });
+
+  it('shows the pin count and the last activity of the session', async () => {
+    repo = await freshRepository();
+    const session = await repo.createSession({ providerId: null, model: null });
+    await repo.addPin(session.id, pin(1));
+    await repo.addPin(session.id, pin(2));
+    await updateSettings({ activeSessionId: session.id });
+    await renderSidebar(repo);
+    // The test clock starts an hour back.
+    expect(subtitle()).toMatch(/^2 pins · active (\d+ minutes|1 hour) ago$/);
+    // The rename button's name is the title only.
+    expect(screen.getByRole('button', { name: 'Session title: New session' })).toBe(titleButton());
+  });
+
+  it('uses the singular for one pin', () => {
+    renderHeader(1, 5 * 60_000);
+    expect(subtitle()).toBe('1 pin · active 5 minutes ago');
+  });
+
+  it('refreshes the relative time while shown', async () => {
+    renderHeader(3, 10_000);
+    expect(subtitle()).toBe('3 pins · active now');
+    await act(() => {
+      vi.advanceTimersByTime(SUBTITLE_REFRESH_MS);
+    });
+    expect(subtitle()).toBe('3 pins · active now');
+    await act(() => {
+      vi.advanceTimersByTime(SUBTITLE_REFRESH_MS);
+    });
+    expect(subtitle()).toBe('3 pins · active 1 minute ago');
+    await act(() => {
+      vi.advanceTimersByTime(2 * 60_000);
+    });
+    expect(subtitle()).toBe('3 pins · active 3 minutes ago');
+  });
+
+  it('has no pins and no time in German either', () => {
+    renderHeader(0, 60_000, 'de');
+    expect(subtitle()).toBe('Noch keine Pins');
+  });
+
+  it('reads the German pin count and activity', () => {
+    renderHeader(2, 2 * 60_000, 'de');
+    expect(subtitle()).toBe('2 Pins · aktiv vor 2 Minuten');
+  });
+
+  it('follows the session when a question is stored', async () => {
+    (await freshRepository()).close();
+    let clock = Date.now() - 3 * 60 * 60 * 1000;
+    repo = await openRepository({ now: () => clock });
+    const session = await repo.createSession({ providerId: null, model: null });
+    await repo.addPin(session.id, pin(1));
+    await updateSettings({ activeSessionId: session.id });
+    await renderSidebar(repo);
+    expect(subtitle()).toBe('1 pin · active 3 hours ago');
+    // Another sidebar stores a question; this one re-reads the session.
+    clock = Date.now();
+    await repo.addMessage(session.id, { role: 'user', kind: 'ask', text: 'Why?' });
+    await fakeBrowser.runtime.sendMessage({ type: 'messages-changed', sessionId: session.id });
+    await waitFor(() => {
+      expect(subtitle()).toBe('1 pin · active now');
+    });
   });
 });
