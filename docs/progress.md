@@ -553,7 +553,7 @@ Status: done (2026-10-03; gate-checker PASS-WITH-NOTES, orchestrator UI check in
 
 ## T18 Header, composer and transcript
 
-Status: done (2026-10-03, implementer gate passed; gate-checker and the orchestrator's UI check pending)
+Status: done (2026-10-03; gate-checker PASS-WITH-NOTES, follow-up PASS, orchestrator UI check in Chromium and Firefox 140)
 
 ### Plan
 
@@ -572,7 +572,7 @@ Status: done (2026-10-03, implementer gate passed; gate-checker and the orchestr
 - [x] Send and Enter behave identically in every state: empty or blank input, streaming, no provider, no access (`sidepanel-composer.test.tsx`; e2e: Send disabled and Enter not sending while streaming).
 - [x] Summarize keeps its unavailable tooltip, now above the button and right-aligned (`sidepanel-composer.test.tsx`, `summarize.spec.ts`).
 - [x] Citations show numbers only and keep their accessible names and click behaviour (`chat-markdown.test.ts`, `sidepanel-composer.test.tsx`, `chat.spec.ts`, `composer.spec.ts`).
-- [ ] UI check in both browsers: the orchestrator's. Chromium screens `test-results/screens/T18-*-400.png` and `-320.png` (each also `-dark`) were compared with `Main.dc.html` and `Welcome.dc.html`; Firefox not looked at by the implementer.
+- [x] UI check in both browsers (orchestrator): the Chromium screens `test-results/screens/T18-*-400.png` and `-320.png` (each also `-dark`) compared with `Main.dc.html` and `Welcome.dc.html`; two polish fixes followed (T18-12, T18-13). `dist/firefox-ext` rendered headless in Firefox 140 ESR at 320 px, light and dark: header subtitle, composer card, empty state.
 
 ### Tests
 
