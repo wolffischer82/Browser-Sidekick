@@ -615,7 +615,7 @@ Status: done (2026-10-03; gate-checker PASS, orchestrator UI check in Chromium a
 
 ## T20 Drawer, settings, README, final report
 
-Status: in progress
+Status: in progress (2026-10-03; everything but the e2e item and the UI check; questions.md Redesign 1)
 
 ### Plan
 
@@ -626,3 +626,21 @@ Status: in progress
 - Tests: component tests for drawer groups, active row, delete on hover/focus, New session in the drawer; provider tile and badges, page access dot, version footer; update drawer, settings and access tests; e2e `tests/e2e/drawer-settings.spec.ts` (sessions with set activity times, delete, new from drawer; add and edit a provider against the mock LLM; screens T20-* light and dark); update `sessions.spec.ts` keyboard path.
 - README: drawer grouping line if needed; final report `docs/redesign-report.md`.
 - Open questions: none so far.
+
+### Acceptance
+
+- [x] Every bullet of spec 5.6 and 5.7 holds (component tests in `tests/sidepanel-drawer-layout.test.tsx`, `tests/sidepanel-drawer.test.tsx`, `tests/sidepanel-settings.test.tsx`; decisions.md Redesign T20). The drawer's keyboard path and hover delete are also covered by the updated `sessions.spec.ts`.
+- [x] Grouping is correct around midnight and on Mondays (`tests/date-groups.test.ts`, run in UTC, Europe/Berlin, America/Los_Angeles and Pacific/Kiritimati; `tests/sidepanel-drawer-layout.test.tsx` for Monday).
+- [x] The README matches the shipped UI (Features: date-grouped Sessions list; the model, thinking and Settings lines were updated in T17 and T18).
+- [ ] The final report `docs/redesign-report.md` is written: the file write was declined by the permission prompt; open owner question (questions.md Redesign 2).
+- [ ] e2e for spec 5.6 and 5.7 (`tests/e2e/drawer-settings.spec.ts`, screens T20-01 to T20-08): the file write was declined by the permission prompt; open owner question (questions.md Redesign 1).
+- [ ] UI check in both browsers (orchestrator).
+
+### Tests
+
+- `tests/date-groups.test.ts`: today, this week from Monday, earlier, local midnight, Monday and Sunday, future times, daylight-saving changes, month boundary; empty groups left out, order kept.
+- `tests/sidepanel-drawer-layout.test.tsx`: groups and their labels (en, de), empty groups, Monday, active row dot, meta line, delete button per row in the tab order, the hover/focus CSS rule, confirm card, New session button.
+- `tests/sidepanel-drawer.test.tsx`: New session from the drawer starts and shows a session, closes the drawer, returns focus.
+- `tests/sidepanel-settings.test.tsx`: section labels above cards, Add provider text button, provider tile, badges, model in mono, no-access notice, confirm card, page access dot (ok and warning), version footer from the manifest, provider form in a card.
+- Updated `tests/e2e/sessions.spec.ts` (Tab path with the drawer's New session; delete after hovering the row). `tests/helpers/sidebar.tsx` fakes `runtime.getManifest`.
+- Gate (2026-10-03): lint, typecheck, 1324 unit tests in 55 files, build, check:dist, lint:firefox (0 errors, 18 warnings), 21 e2e tests passed.
