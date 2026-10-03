@@ -256,15 +256,15 @@ textarea {
   flex: none;
   align-items: center;
   gap: 4px;
-  padding: 4px 8px;
+  padding: 4px 6px;
   border-bottom: 1px solid var(--line);
 }
 
-.header .icon-button {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-}
+/*
+ * The header's icon buttons stay 30 px while the model and thinking menus
+ * share the header; they become 36 px when the menus move to the composer
+ * (redesign T18; decisions.md Redesign T17).
+ */
 
 .header-title {
   flex: 1;
