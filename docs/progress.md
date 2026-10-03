@@ -553,7 +553,7 @@ Status: done (2026-10-03; gate-checker PASS-WITH-NOTES, orchestrator UI check in
 
 ## T18 Header, composer and transcript
 
-Status: in progress
+Status: done (2026-10-03, implementer gate passed; gate-checker and the orchestrator's UI check pending)
 
 ### Plan
 
@@ -564,3 +564,19 @@ Status: in progress
 - Strings: header activity, no pins, Send, keyboard hint (en, de); `thinkingButton` removed. Session-tabs strings stay for T19.
 - Tests: Header component tests (subtitle, refresh with fake timers), composer (Send states, hints, Enter/Send parity), Thinking text and name, citation text and name, narrow Summarize; update header, thinking, summarize, chat, markdown tests; e2e `tests/e2e/composer.spec.ts` (Send, both menus, Summarize, Stop, screens T18-* at 400 and 320 light and dark); `thinking.spec.ts` narrow-header test becomes a composer-toolbar fit test.
 - Open questions: none so far.
+
+### Acceptance
+
+- [x] Every bullet of spec 5.1, 5.3 and 5.4 holds (component tests in `tests/sidepanel-header.test.tsx`, `tests/sidepanel-composer.test.tsx`, `tests/sidepanel-thinking.test.tsx`; e2e `tests/e2e/composer.spec.ts`). Deviation: the model menu stays hidden without any provider, as today (decisions.md Redesign T18-6).
+- [x] Model and Thinking menus work from the composer with mouse and keyboard, open upward and stay inside the panel at 320 and 600+ px (`composer.spec.ts` at 320 and 400 px; `thinking.spec.ts` at 320, 400 and 640 px).
+- [x] Send and Enter behave identically in every state: empty or blank input, streaming, no provider, no access (`sidepanel-composer.test.tsx`; e2e: Send disabled and Enter not sending while streaming).
+- [x] Summarize keeps its unavailable tooltip, now above the button and right-aligned (`sidepanel-composer.test.tsx`, `summarize.spec.ts`).
+- [x] Citations show numbers only and keep their accessible names and click behaviour (`chat-markdown.test.ts`, `sidepanel-composer.test.tsx`, `chat.spec.ts`, `composer.spec.ts`).
+- [ ] UI check in both browsers: the orchestrator's. Chromium screens `test-results/screens/T18-*-400.png` and `-320.png` (each also `-dark`) were compared with `Main.dc.html` and `Welcome.dc.html`; Firefox not looked at by the implementer.
+
+### Tests
+
+- `tests/sidepanel-header.test.tsx`: subtitle without pins, with pins, singular, refresh every 30 s (fake timers), German, following a stored question; the rename button's name excludes the subtitle.
+- `tests/sidepanel-composer.test.tsx`: Send placement, disabled states and parity with Enter, Shift+Enter, focus after Send; keyboard hint versus the no-provider and no-access hints and the faded card; German; Summarize name, icon, tooltip and the narrow rule; model button dot and "No model"; citation text, name and click; the empty-state illustration.
+- Updated: `tests/sidepanel-thinking.test.tsx` (level name only, toolbar order), `tests/chat-markdown.test.ts`, `tests/sidepanel-chat.test.tsx`, `tests/sidepanel-reasoning.test.tsx` (citation text), `tests/e2e/thinking.spec.ts` (toolbar fit replaces the narrow header), `tests/e2e/summarize.spec.ts` (keyboard path to Summarize, citation text), `tests/e2e/chat.spec.ts` (citation selectors).
+- e2e `tests/e2e/composer.spec.ts`: screens `T18-01-no-provider`, `T18-02-idle`, `T18-03-model-menu-open`, `T18-04-thinking-menu-open`, `T18-05-streaming`, `T18-06-answer-citations`, each at `-400` and `-320`, light and `-dark`.
