@@ -49,8 +49,8 @@ Tests at the end of T20: 1324 unit and component tests in 55 files, and 23 Playw
 
 ## Manual checks
 
-- **Chromium.** The orchestrator compared the e2e screenshots with the mockups for T17, T18 and T19; two polish fixes followed in T18 (decisions.md Redesign T18-12, T18-13). I checked the T20 screens (`T20-01` to `T20-08`) against `Sessions.dc.html` and `Settings.dc.html`. The orchestrator's UI check for T20 is still open.
-- **Firefox 140 ESR.** The orchestrator rendered `dist/firefox-ext` headless after T17, T18 and T19, in the first-run state, light and dark. Geist and Geist Mono loaded, and these rendered as in Chromium: the header subtitle, composer card, empty state, access banner card, section label with count, and the restricted current-tab row. Details per task are in `docs/progress.md`. The T20 drawer and settings are part of the open T20 UI check.
+- **Chromium.** The orchestrator compared the e2e screenshots with the mockups for T17, T18 and T19; two polish fixes followed in T18 (decisions.md Redesign T18-12, T18-13). I checked the T20 screens (`T20-01` to `T20-08`) against `Sessions.dc.html` and `Settings.dc.html`. The orchestrator also loaded the T20 build in Chromium with four sessions of different ages and looked at the drawer (groups, hover delete, active dot), settings and the provider form, light and dark, at 400 px with no horizontal overflow.
+- **Firefox 140 ESR.** The orchestrator rendered `dist/firefox-ext` headless after T17, T18 and T19, in the first-run state, light and dark. Geist and Geist Mono loaded, and these rendered as in Chromium: the header subtitle, composer card, empty state, access banner card, section label with count, and the restricted current-tab row. Details per task are in `docs/progress.md`. After T20 it also opened the drawer and settings there, light and dark: groups, active dot, section cards, the page access dot and the version footer read from the manifest rendered as in Chromium.
 - **Left for the owner**, in Chrome and Firefox: the final look and feel, the toolbar icon, and a real provider.
 
 ## Screenshots per mockup

@@ -615,7 +615,7 @@ Status: done (2026-10-03; gate-checker PASS, orchestrator UI check in Chromium a
 
 ## T20 Drawer, settings, README, final report
 
-Status: in progress (2026-10-03; all but the orchestrator's UI check)
+Status: done (2026-10-03; gate-checker PASS, orchestrator UI check in Chromium and Firefox 140)
 
 ### Plan
 
@@ -634,7 +634,7 @@ Status: in progress (2026-10-03; all but the orchestrator's UI check)
 - [x] The README matches the shipped UI (Features: date-grouped Sessions list; the model, thinking and Settings lines were updated in T17 and T18).
 - [x] The final report `docs/redesign-report.md` is written (allowed by the owner after the permission prompt first declined it; questions.md Redesign closed 2).
 - [x] e2e for spec 5.6 and 5.7 (`tests/e2e/drawer-settings.spec.ts`, screens T20-01 to T20-08, light and dark); allowed by the owner after the permission prompt first declined it (questions.md Redesign closed 1).
-- [ ] UI check in both browsers (orchestrator).
+- [x] UI check in both browsers (orchestrator): the T20 build loaded in Chromium with four sessions of different ages (drawer groups, hover delete, active dot, settings, provider form; light and dark; no overflow at 400 px), and `dist/firefox-ext` rendered headless in Firefox 140 ESR with the drawer and settings opened, light and dark.
 
 ### Tests
 
