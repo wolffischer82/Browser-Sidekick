@@ -228,7 +228,7 @@ test.describe('composer', () => {
     await expect(thinkingButton(sidebar)).toBeFocused();
     // Escape closes a list without a change.
     await sidebar.keyboard.press('ArrowDown');
-    await expect(levelList(sidebar)).toBeVisible();
+    await expect(levelList(sidebar).getByRole('option', { name: 'High' })).toBeFocused();
     await sidebar.keyboard.press('Escape');
     await expect(levelList(sidebar)).toHaveCount(0);
     await expect(thinkingButton(sidebar)).toHaveText('High');
