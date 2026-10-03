@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'preact/hooks';
 import { t, type MessageKey } from '@/shared/i18n';
 import type { ThinkingLevel } from '@/shared/model';
 import { THINKING_OPTIONS } from '@/shared/thinking';
-import { ChevronDownIcon } from './icons';
+import { ChevronDownIcon, LightbulbIcon } from './icons';
+import { useUpwardList } from './upward-list';
 
 interface Props {
   /** The session's level; `null` is Default. */
@@ -21,16 +22,20 @@ const labelOf = (level: ThinkingLevel | null) => t(LABELS[level ?? 'default']);
 const optionId = (level: ThinkingLevel | null) => `thinking-option-${level ?? 'default'}`;
 
 /**
- * The session's thinking level (specs/thinking-levels.md 4.1): a button
- * reading "Thinking: <level>" that opens a listbox of Default, Low, Medium
- * and High. It works like the model menu next to it: arrow keys, Home and
- * End move, Enter or Space choose, Escape or Tab close. The parent leaves it
- * out when the session's model is known not to take a level.
+ * The session's thinking level (specs/thinking-levels.md 4.1) in the
+ * composer's toolbar (redesign spec 5.4): a lightbulb button showing the
+ * level's name that opens a listbox of Default, Low, Medium and High upward.
+ * Its accessible name and tooltip read "Thinking level: <level>". It works
+ * like the model menu next to it: arrow keys, Home and End move, Enter or
+ * Space choose, Escape or Tab close. The parent leaves it out when the
+ * session's model is known not to take a level.
  */
 export function ThinkingMenu({ level, onChoose }: Props) {
   const [open, setOpen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const rootRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+  useUpwardList(open, buttonRef, listRef);
 
   const focusOption = (index: number) => {
     const option = THINKING_OPTIONS[Math.max(0, Math.min(THINKING_OPTIONS.length - 1, index))];
@@ -105,7 +110,7 @@ export function ThinkingMenu({ level, onChoose }: Props) {
         ref={buttonRef}
         id="thinking-button"
         type="button"
-        class="model-button"
+        class="model-button thinking-button"
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-label={t('thinkingMenuLabel', value)}
@@ -120,11 +125,13 @@ export function ThinkingMenu({ level, onChoose }: Props) {
           }
         }}
       >
-        <span class="model-button-text">{t('thinkingButton', value)}</span>
+        <LightbulbIcon />
+        <span class="model-button-text">{value}</span>
         <ChevronDownIcon />
       </button>
       {open && (
         <div
+          ref={listRef}
           class="model-list thinking-list"
           role="listbox"
           aria-label={t('thinkingLevel')}

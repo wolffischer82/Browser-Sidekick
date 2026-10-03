@@ -31,7 +31,6 @@ import {
 } from '@/shared/settings';
 import { AccessBanner } from './components/AccessBanner';
 import { useChat, type TabContext } from './chat/useChat';
-import { ActionBar } from './components/ActionBar';
 import { Composer, type ComposerState } from './components/Composer';
 import { Header } from './components/Header';
 import { ModelMenu } from './components/ModelMenu';
@@ -478,38 +477,6 @@ export function App({ repository }: Props) {
             setFocusPageAccess(false);
             setView('settings');
           }}
-          modelMenu={
-            (groups.length > 0 || active.providerId !== null) && (
-              <ModelMenu
-                groups={groups}
-                providerId={active.providerId}
-                model={active.model}
-                providerLabel={sessionProvider?.label ?? null}
-                onChoose={(providerId, model) => {
-                  run(async (r) => {
-                    const updated = await r.updateSession(active.id, { providerId, model });
-                    if (updated) setActive(updated);
-                    setNotice('none');
-                  });
-                }}
-              />
-            )
-          }
-          thinkingMenu={
-            // Hidden without a provider or model and for a model known not to
-            // take a level; the stored level is kept (thinking-levels 4.1).
-            showsThinkingControl(sessionProvider, active.model) && (
-              <ThinkingMenu
-                level={sessionThinkingLevel(active)}
-                onChoose={(thinkingLevel) => {
-                  run(async (r) => {
-                    const updated = await r.updateSession(active.id, { thinkingLevel });
-                    if (updated) setActive(updated);
-                  });
-                }}
-              />
-            )
-          }
         />
         {notice !== 'none' && (
           <p class="notice" role="status">
@@ -584,15 +551,45 @@ export function App({ repository }: Props) {
             });
           }}
         />
-        <ActionBar
-          state={summarize}
-          onSummarize={() => {
-            chat.summarize(tabContext());
-          }}
-        />
         <Composer
           state={composerState}
           busy={chat.busy}
+          summarize={summarize}
+          onSummarize={() => {
+            chat.summarize(tabContext());
+          }}
+          modelMenu={
+            (groups.length > 0 || active.providerId !== null) && (
+              <ModelMenu
+                groups={groups}
+                providerId={active.providerId}
+                model={active.model}
+                providerLabel={sessionProvider?.label ?? null}
+                onChoose={(providerId, model) => {
+                  run(async (r) => {
+                    const updated = await r.updateSession(active.id, { providerId, model });
+                    if (updated) setActive(updated);
+                    setNotice('none');
+                  });
+                }}
+              />
+            )
+          }
+          thinkingMenu={
+            // Hidden without a provider or model and for a model known not to
+            // take a level; the stored level is kept (thinking-levels 4.1).
+            showsThinkingControl(sessionProvider, active.model) && (
+              <ThinkingMenu
+                level={sessionThinkingLevel(active)}
+                onChoose={(thinkingLevel) => {
+                  run(async (r) => {
+                    const updated = await r.updateSession(active.id, { thinkingLevel });
+                    if (updated) setActive(updated);
+                  });
+                }}
+              />
+            )
+          }
           onSend={(question) => {
             chat.send(question, tabContext());
           }}

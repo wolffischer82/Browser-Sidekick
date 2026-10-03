@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'preact/hooks';
 import { t } from '@/shared/i18n';
 import type { ModelGroup } from '@/shared/providers';
 import { ChevronDownIcon } from './icons';
+import { useUpwardList } from './upward-list';
 
 interface Props {
   groups: ModelGroup[];
@@ -19,14 +20,17 @@ interface Option {
 }
 
 /**
- * The session's model (spec 5.2 item 1, D15): a button that opens a listbox
- * of every usable provider's models, grouped by provider. Arrow keys, Home
- * and End move, Enter or Space choose, Escape or Tab close.
+ * The session's model (spec 5.2 item 1, D15) in the composer's toolbar
+ * (redesign spec 5.4): a pill that opens a listbox of every usable
+ * provider's models, grouped by provider, upward from the composer. Arrow
+ * keys, Home and End move, Enter or Space choose, Escape or Tab close.
  */
 export function ModelMenu({ groups, providerId, model, providerLabel, onChoose }: Props) {
   const [open, setOpen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const rootRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+  useUpwardList(open, buttonRef, listRef);
 
   const options: Option[] = groups.flatMap((group, g) =>
     group.models.map((m, i) => ({
@@ -112,6 +116,7 @@ export function ModelMenu({ groups, providerId, model, providerLabel, onChoose }
         id="model-button"
         type="button"
         class="model-button"
+        data-empty={model === null ? '' : undefined}
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-label={t('modelMenuLabel', fullName)}
@@ -126,11 +131,18 @@ export function ModelMenu({ groups, providerId, model, providerLabel, onChoose }
           }
         }}
       >
+        {model !== null && <span class="model-dot" aria-hidden="true" />}
         <span class="model-button-text">{name}</span>
         <ChevronDownIcon />
       </button>
       {open && (
-        <div class="model-list" role="listbox" aria-label={t('model')} onKeyDown={onListKeyDown}>
+        <div
+          ref={listRef}
+          class="model-list"
+          role="listbox"
+          aria-label={t('model')}
+          onKeyDown={onListKeyDown}
+        >
           {groups.map((group, g) => (
             <div
               key={group.providerId}

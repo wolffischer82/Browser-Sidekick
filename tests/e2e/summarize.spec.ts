@@ -158,14 +158,18 @@ test.describe('summarize', () => {
     await summarize(sidebar).click({ force: true });
     await sidebar.mouse.move(200, 100);
     await expect(tooltip(sidebar)).toBeHidden();
-    // The keyboard reaches the button and shows the same tooltip.
+    // The keyboard reaches the button in the composer's toolbar, after the
+    // model and thinking menus, and shows the same tooltip.
     await input(sidebar).focus();
-    await sidebar.keyboard.press('Shift+Tab');
+    for (let i = 0; i < 4; i++) {
+      if (await summarize(sidebar).evaluate((el) => el === document.activeElement)) break;
+      await sidebar.keyboard.press('Tab');
+    }
     await expect(summarize(sidebar)).toBeFocused();
     await expect(tooltip(sidebar)).toBeVisible();
     await sidebar.keyboard.press('Enter');
-    await sidebar.keyboard.press('Tab');
-    await expect(input(sidebar)).toBeFocused();
+    await sidebar.keyboard.press('Shift+Tab');
+    await expect(summarize(sidebar)).not.toBeFocused();
     await expect(tooltip(sidebar)).toBeHidden();
     await expect(questions(sidebar)).toHaveCount(0);
     expect(chats(mock)).toHaveLength(0);

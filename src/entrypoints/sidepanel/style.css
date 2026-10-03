@@ -589,16 +589,7 @@ textarea {
   font-size: 12px;
 }
 
-/* Action bar and input */
-
-.action-bar {
-  display: flex;
-  flex: none;
-  gap: 8px;
-  padding: 8px 12px 0;
-}
-
-/* A tooltip drawn by the page: shown on hover and on keyboard focus. */
+/* Tooltip drawn by the page: shown on hover and on keyboard focus. */
 
 .tooltip-anchor {
   position: relative;
@@ -628,31 +619,141 @@ textarea {
   visibility: visible;
 }
 
+/* Composer (redesign spec 5.4): input and toolbar in one card */
+
 .composer {
   flex: none;
   padding: 8px 12px 12px;
+}
+
+.composer-card {
+  padding: 4px 6px 6px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.composer-card[data-unavailable] {
+  opacity: 0.7;
 }
 
 .composer-input {
   display: block;
   width: 100%;
   min-height: 52px;
-  padding: 8px 12px;
-  border: 1px solid var(--line);
-  border-radius: 16px;
-  background: var(--surface);
-  resize: vertical;
+  padding: 8px 8px 4px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  font-size: 14px;
+  resize: none;
+}
+
+.composer-input::placeholder {
+  color: var(--muted);
+  opacity: 1;
 }
 
 .composer-input:disabled {
+  color: var(--muted);
+}
+
+.composer-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.composer-spacer {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.summarize-anchor {
+  flex: none;
+}
+
+/* The tooltip of a button at the right end opens above it, towards the left. */
+.summarize-anchor .tooltip {
+  right: 0;
+  left: auto;
+}
+
+.summarize-button {
+  gap: 6px;
+  min-height: 30px;
+  height: 30px;
+  padding: 0 10px;
+  border-radius: 8px;
+  font-size: 12.5px;
+}
+
+.summarize-button .icon,
+.thinking-button .icon:first-child {
+  flex: none;
+  width: 14px;
+  height: 14px;
+}
+
+.send-button {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background: var(--accent);
+  color: var(--on-accent);
+  cursor: pointer;
+}
+
+.send-button .icon {
+  width: 16px;
+  height: 16px;
+  stroke-width: 2.2;
+}
+
+.send-button:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+
+.send-button:disabled {
   background: var(--sunken);
   color: var(--muted);
+  cursor: default;
 }
 
 .composer-hint {
   margin: 8px 0 0;
   color: var(--muted);
   font-size: 12px;
+  text-align: center;
+}
+
+.composer-keys {
+  margin-top: 6px;
+  font-size: 11px;
+}
+
+/* Narrow panels: Summarize shows its icon only; its label stays the name. */
+@media (max-width: 359px) {
+  .summarize-button {
+    padding: 0 8px;
+  }
+
+  .summarize-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
 }
 
 /* Sessions drawer */
@@ -778,67 +879,34 @@ textarea {
   gap: 8px;
 }
 
-/* Header menus: the session's model and, next to it, its thinking level */
-
-.header-menus {
-  display: flex;
-  flex: none;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 4px;
-  min-width: 0;
-  max-width: 42%;
-}
-
-/* Both menus on one line take more room; the model name gives way first. */
-.header-menus[data-menus='2'] {
-  max-width: 62%;
-}
+/* Composer menus: the session's model and, next to it, its thinking level */
 
 .model-menu,
 .thinking-menu {
   position: relative;
 }
 
+/* The model name gives way first. */
 .model-menu {
   flex: 0 1 auto;
   min-width: 0;
-  max-width: 100%;
 }
 
 .thinking-menu {
   flex: none;
-  max-width: 100%;
-}
-
-/*
- * A narrow sidebar has no room for both menus beside the title: the thinking
- * level sits below the model, so its value stays readable, and the rest of
- * the header keeps to the first line.
- */
-@media (max-width: 519px) {
-  .header:has(.header-menus[data-menus='2']) {
-    align-items: flex-start;
-  }
-
-  .header-menus[data-menus='2'] {
-    flex-direction: column;
-    align-items: flex-end;
-    max-width: max(42%, 150px);
-  }
 }
 
 .model-button {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 6px;
   max-width: 100%;
   height: 30px;
-  padding: 0 4px 0 8px;
-  border: 1px solid var(--line);
+  padding: 0 8px;
+  border: 0;
   border-radius: 8px;
   background: var(--sunken);
-  color: var(--muted);
+  color: var(--ink);
   font-size: 12.5px;
   font-weight: 500;
   cursor: pointer;
@@ -846,13 +914,41 @@ textarea {
 
 .model-button:hover {
   background: var(--line);
-  color: var(--ink);
+}
+
+.model-button[data-empty] {
+  color: var(--muted);
+}
+
+.model-dot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
 }
 
 .model-button .icon {
   flex: none;
-  width: 14px;
-  height: 14px;
+  width: 12px;
+  height: 12px;
+  color: var(--muted);
+  stroke-width: 2.2;
+}
+
+.thinking-button {
+  gap: 5px;
+  background: transparent;
+  color: var(--muted);
+}
+
+.thinking-button:hover {
+  background: var(--sunken);
+  color: var(--ink);
+}
+
+.thinking-button .icon:first-child {
+  stroke-width: 1.8;
 }
 
 .model-button-text {
@@ -861,14 +957,14 @@ textarea {
   white-space: nowrap;
 }
 
+/* Opens upward, from the button's left edge; `upward-list.ts` caps its height and keeps it inside. */
 .model-list {
   position: absolute;
-  top: calc(100% + 4px);
-  right: 0;
+  bottom: calc(100% + 4px);
+  left: 0;
   z-index: 5;
   min-width: 200px;
-  max-width: min(320px, 90vw);
-  max-height: 60vh;
+  max-width: calc(100vw - 16px);
   overflow-y: auto;
   padding: 4px;
   border: 1px solid var(--line);

@@ -126,3 +126,24 @@ export const GlobeIcon = () => (
     <path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" />
   </Icon>
 );
+
+/** Thinking level. */
+export const LightbulbIcon = () => (
+  <Icon>
+    <path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z" />
+  </Icon>
+);
+
+/** Summarize: lines of falling length. */
+export const LinesIcon = () => (
+  <Icon>
+    <path d="M4 6h16M4 12h10M4 18h7" />
+  </Icon>
+);
+
+/** Send: arrow up. */
+export const ArrowUpIcon = () => (
+  <Icon>
+    <path d="M12 19V5M5 12l7-7 7 7" />
+  </Icon>
+);
