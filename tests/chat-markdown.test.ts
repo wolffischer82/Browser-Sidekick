@@ -108,6 +108,15 @@ describe('citations', () => {
     for (const b of buttons) expect(b.hasAttribute('href')).toBe(false);
   });
 
+  it('renders "text [1]." with one space before the chip and the full stop right after it', () => {
+    const box = html('text [1].');
+    const chip = chips(box)[0];
+    expect(chip?.previousSibling?.textContent).toBe('text ');
+    expect(chip?.nextSibling?.nodeType).toBe(Node.TEXT_NODE);
+    expect(chip?.nextSibling?.textContent).toBe('.');
+    expect(box.querySelector('p')?.innerHTML).toMatch(/^text <button [^>]*>1<\/button>\.$/);
+  });
+
   it('keeps numbers without a source as plain text', () => {
     const box = html('Unknown [2] and [99].');
     expect(box.querySelector('a, button')).toBeNull();

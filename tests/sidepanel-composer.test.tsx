@@ -295,6 +295,12 @@ describe('transcript (redesign spec 5.3)', () => {
     expect(screen.getByText('Local · gpt-a')).toBeTruthy();
   });
 
+  it('sets citation chips flush with the punctuation after them', () => {
+    const css = readFileSync(STYLE_PATH, 'utf8');
+    const rule = /\.answer-body button\.citation \{([^}]*)\}/.exec(css)?.[1] ?? '';
+    expect(rule).toMatch(/\bmargin: 0;/);
+  });
+
   it('shows the decorative illustration above the empty text', () => {
     renderTranscript([]);
     const empty = document.querySelector('.transcript-empty');

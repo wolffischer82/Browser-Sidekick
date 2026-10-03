@@ -242,6 +242,13 @@ test.describe('composer', () => {
       },
       { kind: 'stream', chunks: ['Night trains'] },
     );
+    // Focus shows on the card around the input, not on the input itself.
+    await input(sidebar).click();
+    await expect(sidebar.locator('.composer-card')).toHaveCSS('outline-style', 'solid');
+    await expect(sidebar.locator('.composer-card')).toHaveCSS('outline-width', '2px');
+    await expect(input(sidebar)).toHaveCSS('outline-style', 'none');
+    await summarize(sidebar).focus();
+    await expect(sidebar.locator('.composer-card')).toHaveCSS('outline-style', 'none');
     await input(sidebar).fill('What is new with night trains?');
     await expect(send(sidebar)).toBeEnabled();
     await send(sidebar).click();
@@ -266,6 +273,20 @@ test.describe('composer', () => {
     await expect(first.locator('button.citation')).toHaveText(['1', '1']);
     await expect(first.getByRole('button', { name: `Source 1: ${ARTICLE}` })).toHaveCount(2);
     await expect(first.locator('.answer-body')).not.toContainText('[1]');
+    // The full stop after a chip sits flush against it (Main.dc.html).
+    const gap = await first
+      .locator('button.citation')
+      .first()
+      .evaluate((chip) => {
+        const after = chip.nextSibling;
+        if (!after || after.nodeType !== Node.TEXT_NODE) return null;
+        const range = document.createRange();
+        range.setStart(after, 0);
+        range.setEnd(after, 1);
+        return range.getBoundingClientRect().left - chip.getBoundingClientRect().right;
+      });
+    expect(gap).not.toBeNull();
+    expect(Math.abs(gap ?? 99)).toBeLessThan(0.5);
     await expect(first).toContainText('Mock server · mock-small');
     await expect(send(sidebar)).toBeEnabled();
     await expect(subtitle(sidebar)).toHaveText('1 pin · active now');

@@ -85,7 +85,9 @@ async function focusRings(page: Page, presses: number): Promise<{ what: string; 
     const result = await page.evaluate((ring) => {
       const el = document.activeElement;
       if (!el || el === document.body) return undefined;
-      const style = getComputedStyle(el);
+      // The question input shows its focus on the composer card (decisions.md Redesign T18).
+      const ringed = el.id === 'composer-input' ? (el.closest('.composer-card') ?? el) : el;
+      const style = getComputedStyle(ringed);
       const name =
         el.getAttribute('aria-label') ??
         el.getAttribute('title') ??
@@ -94,6 +96,7 @@ async function focusRings(page: Page, presses: number): Promise<{ what: string; 
         what: `${el.tagName.toLowerCase()}${el.id ? `#${el.id}` : ''} "${name}"`,
         ok:
           el.matches(':focus-visible') &&
+          (ringed === el || getComputedStyle(el).outlineStyle === 'none') &&
           style.outlineStyle === 'solid' &&
           style.outlineWidth === '2px' &&
           style.outlineOffset === '2px' &&
