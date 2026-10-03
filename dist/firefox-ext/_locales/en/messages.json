@@ -93,15 +93,9 @@
       }
     }
   },
-  "sessionTabsHeading": {
-    "message": "Session tabs ($COUNT$)",
-    "description": "Collapsible section listing pinned pages and the current tab.",
-    "placeholders": {
-      "count": {
-        "content": "$1",
-        "example": "2"
-      }
-    }
+  "sessionTabsLabel": {
+    "message": "Session tabs",
+    "description": "Label of the collapsible section listing pinned pages and the current tab; the count is shown beside it."
   },
   "sessionTabsEmpty": {
     "message": "No pinned pages yet.",
@@ -605,6 +599,10 @@
   "pinToSession": {
     "message": "Pin to session",
     "description": "Pin needle on the current-tab row (tooltip and label)."
+  },
+  "pinButton": {
+    "message": "Pin",
+    "description": "Visible text of the button on the current-tab row that pins it; its accessible name is “Pin to session”."
   },
   "excludeFromQuestions": {
     "message": "Exclude from questions",

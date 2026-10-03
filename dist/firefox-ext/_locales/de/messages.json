@@ -93,15 +93,9 @@
       }
     }
   },
-  "sessionTabsHeading": {
-    "message": "Sitzungs-Tabs ($COUNT$)",
-    "description": "Collapsible section listing pinned pages and the current tab.",
-    "placeholders": {
-      "count": {
-        "content": "$1",
-        "example": "2"
-      }
-    }
+  "sessionTabsLabel": {
+    "message": "Sitzungs-Tabs",
+    "description": "Label of the collapsible section listing pinned pages and the current tab; the count is shown beside it."
   },
   "sessionTabsEmpty": {
     "message": "Noch keine Seiten angeheftet.",
@@ -605,6 +599,10 @@
   "pinToSession": {
     "message": "An Sitzung anheften",
     "description": "Pin needle on the current-tab row (tooltip and label)."
+  },
+  "pinButton": {
+    "message": "Anheften",
+    "description": "Visible text of the button on the current-tab row that pins it; its accessible name is “Pin to session”."
   },
   "excludeFromQuestions": {
     "message": "Aus Fragen ausschließen",
