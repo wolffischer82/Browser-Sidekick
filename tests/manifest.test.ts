@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { access, mkdtemp, readFile, rm } from 'node:fs/promises';
+import { access, mkdtemp, readdir, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { afterAll, describe, expect, it } from 'vitest';
@@ -21,6 +21,25 @@ async function exists(browser: 'chrome' | 'firefox', file: string): Promise<bool
     () => true,
     () => false,
   );
+}
+
+/** Redesign T17: the bundled fonts and their licence ship in the build. */
+async function expectFonts(browser: 'chrome' | 'firefox'): Promise<void> {
+  const dir = built[browser];
+  if (!dir) throw new Error(`No ${browser} build yet.`);
+  expect(await exists(browser, 'assets/OFL.txt')).toBe(true);
+  const assets = await readdir(join(dir, 'assets'));
+  for (const font of [
+    'geist-latin-wght-normal',
+    'geist-latin-ext-wght-normal',
+    'geist-mono-latin-wght-normal',
+    'geist-mono-latin-ext-wght-normal',
+  ]) {
+    expect(
+      assets.some((f) => f.startsWith(`${font}-`) && f.endsWith('.woff2')),
+      font,
+    ).toBe(true);
+  }
 }
 
 async function buildManifest(browser: 'chrome' | 'firefox'): Promise<Record<string, unknown>> {
@@ -68,6 +87,7 @@ describe('manifest', () => {
     expect(manifest.content_security_policy).toBeUndefined();
     expect(await exists('chrome', 'offscreen.html')).toBe(true);
     expect(await exists('chrome', 'pdf.worker.js')).toBe(true);
+    await expectFonts('chrome');
     expect(manifest).toMatchSnapshot();
   }, 60_000);
 
@@ -90,6 +110,7 @@ describe('manifest', () => {
     expect(manifest.content_security_policy).toBeUndefined();
     expect(await exists('firefox', 'offscreen.html')).toBe(false);
     expect(await exists('firefox', 'pdf.worker.js')).toBe(true);
+    await expectFonts('firefox');
     expect(manifest).toMatchSnapshot();
   }, 60_000);
 });
