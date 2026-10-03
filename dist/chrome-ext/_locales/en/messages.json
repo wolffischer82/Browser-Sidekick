@@ -39,6 +39,20 @@
     "message": "Session title",
     "description": "Label of the inline rename field."
   },
+  "headerActive": {
+    "message": "active $TIME$",
+    "description": "Header subtitle: the session's last activity, after the pin count. $1 is a relative time such as \"2 minutes ago\".",
+    "placeholders": {
+      "time": {
+        "content": "$1",
+        "example": "2 minutes ago"
+      }
+    }
+  },
+  "headerNoPins": {
+    "message": "No pins yet",
+    "description": "Header subtitle of a session without pins."
+  },
   "close": {
     "message": "Close",
     "description": "Button that closes the sessions drawer."
@@ -129,6 +143,14 @@
   "inputPlaceholder": {
     "message": "Ask about these pages…",
     "description": "Placeholder of the question input."
+  },
+  "send": {
+    "message": "Send",
+    "description": "Accessible name and tooltip of the button that sends the question, like Enter."
+  },
+  "composerHint": {
+    "message": "Enter to send · Shift+Enter for a new line",
+    "description": "Keyboard hint under the question input."
   },
   "noProviderHint": {
     "message": "Add a provider in settings to ask questions.",
@@ -430,7 +452,7 @@
   },
   "modelMenuLabel": {
     "message": "Model: $MODEL$",
-    "description": "Accessible name of the header model button.",
+    "description": "Accessible name of the composer model button.",
     "placeholders": {
       "model": {
         "content": "$1",
@@ -440,25 +462,15 @@
   },
   "noModel": {
     "message": "No model",
-    "description": "Header model button when the session has none."
+    "description": "Composer model button when the session has none."
   },
   "thinkingLevel": {
     "message": "Thinking level",
-    "description": "Label of the header's thinking-level list."
-  },
-  "thinkingButton": {
-    "message": "Thinking: $LEVEL$",
-    "description": "Text of the header's thinking-level button: the label and the session's current level.",
-    "placeholders": {
-      "level": {
-        "content": "$1",
-        "example": "Default"
-      }
-    }
+    "description": "Label of the composer's thinking-level list."
   },
   "thinkingMenuLabel": {
     "message": "Thinking level: $LEVEL$",
-    "description": "Accessible name and tooltip of the header's thinking-level button.",
+    "description": "Accessible name and tooltip of the composer's thinking-level button.",
     "placeholders": {
       "level": {
         "content": "$1",
