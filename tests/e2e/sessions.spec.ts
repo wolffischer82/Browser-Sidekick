@@ -39,7 +39,7 @@ test('sessions: create, rename, switch, delete and persist', async () => {
     // First run: one empty session with the fallback title.
     await expect(title(page)).toHaveText('New session');
     // No pins; the one row is the current tab (T06), here not accessible.
-    await expect(page.getByRole('button', { name: 'Session tabs (1)' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Session tabs 1' })).toBeVisible();
     await expect(page.getByText('No pinned pages yet.')).toBeVisible();
     await expect(page.getByRole('textbox', { name: 'Ask about these pages…' })).toBeDisabled();
     await screens(page, 'T03-01-empty-first-run');

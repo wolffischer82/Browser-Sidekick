@@ -62,7 +62,7 @@ test.describe('page access', () => {
     await expect(banner(sidebar).getByRole('button', { name: 'Allow on all sites' })).toBeVisible();
     await expect(currentRow(sidebar)).toContainText('Current tab not accessible');
     await expect(currentRow(sidebar)).toContainText('right-click the page');
-    await expect(sidebar.getByRole('button', { name: 'Session tabs (1)' })).toBeVisible();
+    await expect(sidebar.getByRole('button', { name: 'Session tabs 1' })).toBeVisible();
     await screens(sidebar, 'T06-01-banner');
 
     // Without access the extractor can't run in the tab.
@@ -84,7 +84,7 @@ test.describe('page access', () => {
     // Dismiss: the banner goes and stays gone after reopening the sidebar.
     await sidebar.getByRole('button', { name: 'Dismiss' }).click();
     await expect(banner(sidebar)).toHaveCount(0);
-    await expect(sidebar.getByRole('button', { name: 'Session tabs (1)' })).toBeFocused();
+    await expect(sidebar.getByRole('button', { name: 'Session tabs 1' })).toBeFocused();
     await screens(sidebar, 'T06-02-banner-dismissed');
     await sidebar.reload();
     await expect(currentRow(sidebar)).toContainText('Current tab not accessible');

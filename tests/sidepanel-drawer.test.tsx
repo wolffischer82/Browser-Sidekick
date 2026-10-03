@@ -73,7 +73,7 @@ describe('sessions drawer', () => {
       expect(titleButton().textContent).toBe('Alpha');
     });
     expect(screen.queryByRole('dialog')).toBeNull();
-    expect(screen.getByRole('button', { name: 'Session tabs (0)' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Session tabs 0' })).toBeTruthy();
     expect((await getSettings()).activeSessionId).toBe(alpha.id);
   });
 
@@ -132,7 +132,7 @@ describe('sessions drawer', () => {
     expect(within(drawer).getByRole('button', { current: true }).textContent).toContain(
       'New session',
     );
-    expect(screen.getByRole('button', { name: 'Session tabs (2)' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Session tabs 2' })).toBeTruthy();
     expect((await getSettings()).activeSessionId).toBe(gamma.id);
     expect(await repo.listPins(beta.id)).toEqual([]);
     expect(await repo.listMessages(beta.id)).toEqual([]);

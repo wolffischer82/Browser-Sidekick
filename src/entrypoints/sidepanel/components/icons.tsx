@@ -147,3 +147,32 @@ export const ArrowUpIcon = () => (
     <path d="M12 19V5M5 12l7-7 7 7" />
   </Icon>
 );
+
+/** A pinned YouTube video without a favicon. */
+export const PlayIcon = () => (
+  <Icon>
+    <path d="M8 5v14l11-7z" fill="currentColor" />
+  </Icon>
+);
+
+/** A pinned PDF without a favicon. */
+export const FileIcon = () => (
+  <Icon>
+    <path d="M14 3H6v18h12V7z" />
+    <path d="M14 3v4h4" />
+  </Icon>
+);
+
+/** Page access. */
+export const ShieldIcon = () => (
+  <Icon>
+    <path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6l8-3z" />
+  </Icon>
+);
+
+/** A pin being extracted; turns in CSS unless motion is reduced. */
+export const SpinnerIcon = () => (
+  <Icon>
+    <path d="M12 3a9 9 0 1 0 9 9" />
+  </Icon>
+);

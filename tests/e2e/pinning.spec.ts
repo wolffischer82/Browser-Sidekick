@@ -83,7 +83,7 @@ async function menuClickOpens(
 const currentRow = (page: Page) => page.locator('.tab-row[data-current]');
 const pinRow = (page: Page, title: string) => page.locator('li.pin-row', { hasText: title });
 const tabsHeading = (page: Page, n: number) =>
-  page.getByRole('button', { name: `Session tabs (${String(n)})` });
+  page.getByRole('button', { name: `Session tabs ${String(n)}` });
 
 /** Fires the real "Pin to Sidekick" listener in the background for the tab at `url`. */
 async function menuClick(context: BrowserContext, url: string): Promise<boolean> {

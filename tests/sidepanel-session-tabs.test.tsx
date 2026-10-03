@@ -128,7 +128,7 @@ async function activate(tab: FakeTab): Promise<void> {
   await fakeBrowser.tabs.onActivated.trigger({ tabId: tab.id, windowId: tab.windowId });
 }
 
-const heading = (n: number) => screen.findByRole('button', { name: `Session tabs (${String(n)})` });
+const heading = (n: number) => screen.findByRole('button', { name: `Session tabs ${String(n)}` });
 const rows = () =>
   within(screen.getByRole('list', { name: 'Session tabs' })).getAllByRole('listitem');
 const currentRow = () => document.querySelector<HTMLElement>('.tab-row[data-current]');
@@ -346,7 +346,9 @@ describe('pinned rows', () => {
     expect(list[1]?.textContent).toContain('YouTube');
     expect(list[1]?.textContent).toContain('Failed');
     expect(list[1]?.textContent).toContain('No access to this site. Allow access and try again.');
-    expect(list[1]?.querySelector('.favicon-placeholder')).toBeTruthy();
+    expect(list[1]?.querySelector('.tab-tile-fallback')?.getAttribute('data-fallback')).toBe(
+      'youtube',
+    );
     expect(list[2]?.dataset.current).toBe('');
     expect(list[2]?.textContent).toContain('Night trains return');
   });
@@ -550,5 +552,168 @@ describe('German', () => {
     expect(await screen.findByRole('button', { name: 'An Sitzung anheften' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Aus Fragen ausschließen' })).toBeTruthy();
     expect(screen.getByRole('list', { name: 'Sitzungs-Tabs' })).toBeTruthy();
+  });
+});
+
+describe('rows (redesign spec 5.2)', () => {
+  const meta = (row: HTMLElement) => row.querySelector('.tab-row-meta')?.textContent;
+  const number = (row: HTMLElement) => row.querySelector('.citation-number')?.textContent ?? null;
+
+  /** Pins of each type and status, in this order. */
+  async function withAllStates(): Promise<Repository> {
+    const r = await open();
+    const id = await activeSessionId();
+    const a = await r.addPin(id, { url: 'https://a.example/x', title: 'Alpha', kind: 'page' });
+    await r.updatePin(a.id, { status: 'ready', text: 'a', truncated: true });
+    await r.addPin(id, {
+      url: 'https://www.youtube.com/watch?v=1',
+      title: 'Video',
+      kind: 'youtube',
+    });
+    const c = await r.addPin(id, { url: 'https://c.example/doc.pdf', title: 'Doc', kind: 'pdf' });
+    await r.updatePin(c.id, { status: 'failed', failureReason: 'empty' });
+    await fromBackground({ type: 'pins-changed', sessionId: id });
+    await heading(4);
+    return r;
+  }
+
+  it('names the toggle with the label and the count, shown in a pill', async () => {
+    await withAllStates();
+    const toggle = await heading(4);
+    expect(toggle.querySelector('.session-tabs-label')?.textContent).toBe('Session tabs');
+    expect(toggle.querySelector('.count-pill')?.textContent).toBe('4');
+  });
+
+  it('show the citation number, host, type and status of each pin', async () => {
+    await withAllStates();
+    const [alpha, video, doc, current] = rows() as [
+      HTMLElement,
+      HTMLElement,
+      HTMLElement,
+      HTMLElement,
+    ];
+    expect(number(alpha)).toBe('1');
+    expect(meta(alpha)).toBe('1a.example·Page·Truncated');
+    expect(alpha.querySelector('.pin-truncated')?.textContent).toBe('Truncated');
+    // Ready: a dot with a hidden "Ready".
+    expect(alpha.querySelector('.status-dot')?.getAttribute('aria-hidden')).toBe('true');
+    expect(alpha.querySelector('.pin-status .visually-hidden')?.textContent).toBe('Ready');
+
+    expect(meta(video)).toBe('2www.youtube.com·YouTube');
+    expect(video.querySelector('.pin-status-extracting')?.textContent).toBe('Extracting…');
+    expect(video.querySelector('.spinner svg')).toBeTruthy();
+
+    expect(meta(doc)).toBe('3c.example·PDF');
+    expect(doc.querySelector('.pin-status-failed')?.textContent).toBe('Failed');
+    expect(doc.querySelector('.tab-row-error')?.textContent).toBe(
+      readMessages('en').extractFailedEmpty?.message,
+    );
+
+    // The unpinned current tab is cited after every pin, ready or not.
+    expect(number(current)).toBe('4');
+    expect(meta(current)).toBe('4Current tab·news.example');
+    expect(current.querySelector('.tab-row-current')?.textContent).toBe('Current tab');
+    // Separators are decoration.
+    for (const sep of document.querySelectorAll('.meta-separator')) {
+      expect(sep.getAttribute('aria-hidden')).toBe('true');
+    }
+  });
+
+  it('use a fallback icon by type when there is no favicon', async () => {
+    await withAllStates();
+    const kinds = rows().map((row) =>
+      row.querySelector('.tab-tile-fallback')?.getAttribute('data-fallback'),
+    );
+    expect(kinds).toEqual(['page', 'youtube', 'pdf', 'page']);
+  });
+
+  it('keep every action of a pin row in the DOM and in the tab order beside the status', async () => {
+    await withAllStates();
+    const [alpha] = rows() as [HTMLElement];
+    const actions = alpha.querySelector('.tab-row-actions') as HTMLElement;
+    const buttons = within(actions).getAllByRole('button');
+    expect(buttons.map((b) => b.getAttribute('aria-label'))).toEqual([
+      'Open “Alpha”',
+      'Unpin “Alpha”',
+    ]);
+    for (const button of buttons) {
+      expect(button.tabIndex).toBe(0);
+      expect(button.hidden).toBe(false);
+    }
+    expect(alpha.querySelector('.pin-status')).toBeTruthy();
+    // The unpin needle is the filled one.
+    expect(within(actions).getByRole('button', { name: 'Unpin “Alpha”' }).className).toContain(
+      'unpin-button',
+    );
+  });
+
+  it('give the current-tab row a Pin text button named “Pin to session”', async () => {
+    await open();
+    await heading(1);
+    const row = currentRow() as HTMLElement;
+    expect(row.className).toContain('current-row');
+    const pinButton = within(row).getByRole('button', { name: 'Pin to session' });
+    expect(pinButton.textContent).toBe('Pin');
+    expect(pinButton.querySelector('svg')).toBeTruthy();
+    expect(number(row)).toBe('1');
+  });
+
+  it('show no number on an excluded current tab', async () => {
+    await open();
+    await heading(1);
+    fireEvent.click(await screen.findByRole('button', { name: 'Exclude from questions' }));
+    await screen.findByRole('button', { name: 'Include in questions' });
+    const row = currentRow() as HTMLElement;
+    expect(number(row)).toBeNull();
+    expect(meta(row)).toBe('Current tab·news.example·Not included in questions');
+  });
+
+  it('number a pinned current tab as its pin, with no separate current-tab row', async () => {
+    const r = await open();
+    const id = await activeSessionId();
+    await r.addPin(id, { url: DASHBOARD.url, title: 'Dashboard', kind: 'page' });
+    await r.addPin(id, { url: ARTICLE.url, title: 'Night trains return', kind: 'page' });
+    await fromBackground({ type: 'pins-changed', sessionId: id });
+    await heading(2);
+    const list = rows();
+    expect(list.map(number)).toEqual(['1', '2']);
+    expect(meta(list[1] as HTMLElement)).toBe('2news.example·Page·Current tab');
+    expect(document.querySelector('.current-row')).toBeNull();
+  });
+
+  it.each([
+    ['not accessible', [...NATIVE_HOSTS], 'noAccess'],
+    ['restricted', [...NATIVE_HOSTS, '<all_urls>'], 'restricted'],
+  ])(
+    'show an unreadable tab (%s) with the globe tile and no number',
+    async (_name, granted, state) => {
+      if (state === 'restricted') tabs = [{ ...ARTICLE, url: 'chrome://settings/' }];
+      await open(granted);
+      await waitFor(() => {
+        expect(currentRow()?.dataset.state).toBe(state);
+      });
+      const row = currentRow() as HTMLElement;
+      expect(row.className).toContain('tab-row-unavailable');
+      expect(row.querySelector('.tab-tile-fallback')?.getAttribute('data-fallback')).toBe('page');
+      expect(number(row)).toBeNull();
+      if (state === 'noAccess') {
+        expect(within(row).getByRole('button', { name: 'Allow on all sites' })).toBeTruthy();
+      } else {
+        // The browser hides the title of a page the extension can't read.
+        expect(meta(row)).toBe('Current tab');
+      }
+    },
+  );
+});
+
+describe('German labels', () => {
+  it('show the section label and the Pin text in German', async () => {
+    repo = await freshRepository('de');
+    perms = fakePermissions([...NATIVE_HOSTS, '<all_urls>']);
+    fakeBrowserModel();
+    render(<App repository={Promise.resolve(repo)} />);
+    const pin = await screen.findByRole('button', { name: 'An Sitzung anheften' });
+    expect(pin.textContent).toBe('Anheften');
+    expect(screen.getByRole('button', { name: 'Sitzungs-Tabs 1' })).toBeTruthy();
   });
 });
