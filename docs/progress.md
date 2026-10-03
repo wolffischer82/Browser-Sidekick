@@ -589,7 +589,7 @@ Status: done (2026-10-03; gate-checker PASS-WITH-NOTES, follow-up PASS, orchestr
 
 ## T19 Session tabs and banners
 
-Status: done (2026-10-03; awaiting gate-checker and the orchestrator's UI check)
+Status: done (2026-10-03; gate-checker PASS, orchestrator UI check in Chromium and Firefox 140)
 
 ### Plan
 
@@ -605,7 +605,7 @@ Status: done (2026-10-03; awaiting gate-checker and the orchestrator's UI check)
 - [x] Every bullet of spec 5.2 and 5.5 holds (component tests in `tests/sidepanel-session-tabs.test.tsx` and `tests/sidepanel-access.test.tsx`; e2e `tests/e2e/session-tabs.spec.ts`; decisions.md Redesign T19).
 - [x] The number on each pin row and on the current-tab row equals the citation number the model receives, with a failed pin, an extracting pin, and the current tab unpinned, excluded and pinned (`tests/chat-citation.test.ts`; e2e compares the rows with the `<<<PAGE n>>>` lines of each request and a cited answer).
 - [x] Row actions are reachable and usable by keyboard alone (e2e: Tab from the toggle reaches Open, the actions show with the focus ring, Enter opens the page; decisions.md Redesign T19-4).
-- [ ] UI check in both browsers (orchestrator).
+- [x] UI check in both browsers (orchestrator): the Chromium screens `test-results/screens/T19-*.png` (light and dark) compared with `Main.dc.html` and `Welcome.dc.html`; `dist/firefox-ext` rendered headless in Firefox 140 ESR, light and dark: access banner card, section label with count, restricted current-tab row, Geist and Geist Mono loaded.
 
 ### Tests
 
