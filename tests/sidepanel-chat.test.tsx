@@ -834,7 +834,7 @@ describe('reasoning', () => {
     expect(block?.textContent).toContain('Plan the answer. Check it.');
     expect(document.body.textContent).not.toContain('Title thoughts');
     expect(answers()[0]?.querySelector('.answer-body:not(.reasoning-body)')?.textContent).toBe(
-      'Trains are back [1].\n',
+      'Trains are back 1.\n',
     );
     fireEvent.click(toggle);
     expect(document.body.textContent).not.toMatch(/Plan the answer|Check it/);

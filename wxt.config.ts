@@ -80,6 +80,11 @@ export default defineConfig({
         ),
         relativeDest: 'pdf.worker.js',
       });
+      // Redesign T17: the Geist fonts' licence, next to the woff2 files Vite emits.
+      files.push({
+        absoluteSrc: resolve(import.meta.dirname, 'src/entrypoints/sidepanel/fonts/OFL.txt'),
+        relativeDest: 'assets/OFL.txt',
+      });
     },
     // WXT fills `sidebar_action` from the sidepanel HTML; localise its title
     // and give it the toolbar icon.

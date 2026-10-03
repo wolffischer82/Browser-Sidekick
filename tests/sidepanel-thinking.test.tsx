@@ -15,7 +15,7 @@ import { controlledResponse, jsonResponse } from './helpers/llm-fetch';
 import { NATIVE_HOSTS, fakePermissions } from './helpers/permissions';
 import { freshRepository, renderSidebar, titleButton } from './helpers/sidebar';
 
-// The thinking-level control in the session header and what it sends
+// The thinking-level control in the composer and what it sends
 // (specs/thinking-levels.md 4.1, 4.3, 4.6, T15), with the real adapters
 // behind a stubbed `fetch`: nothing reaches the network.
 
@@ -166,7 +166,7 @@ async function choose(name: string): Promise<void> {
   fireEvent.click(control() as HTMLElement);
   fireEvent.click(within(listbox()).getByRole('option', { name }));
   await waitFor(() => {
-    expect(controlText()).toBe(`Thinking: ${name}`);
+    expect(controlText()).toBe(name);
   });
 }
 
@@ -222,28 +222,33 @@ afterAll(() => {
 });
 
 describe('the thinking-level control', () => {
-  it('reads "Thinking: Default" for a session without a level, next to the model menu', async () => {
+  it('reads "Default" for a session without a level, next to the model menu', async () => {
     await open();
     const button = control() as HTMLElement;
-    expect(button.textContent).toBe('Thinking: Default');
+    expect(button.textContent).toBe('Default');
     expect(button.getAttribute('aria-label')).toBe('Thinking level: Default');
     expect(screen.getByRole('button', { name: 'Thinking level: Default' })).toBe(button);
     expect(button.getAttribute('aria-haspopup')).toBe('listbox');
     expect(button.getAttribute('aria-expanded')).toBe('false');
     expect(button.hasAttribute('disabled')).toBe(false);
-    // In the header, straight after the model menu.
-    const menus = button.closest('.header-menus');
-    expect(menus?.closest('header')).not.toBeNull();
-    expect([...(menus?.querySelectorAll('button') ?? [])].map((b) => b.id)).toEqual([
+    // The level's name only, after a lightbulb; the name keeps the label (redesign spec 5.4).
+    expect(button.querySelector('svg')?.getAttribute('aria-hidden')).toBe('true');
+    expect(button.getAttribute('title')).toBe('Thinking level: Default');
+    // In the composer's toolbar, straight after the model menu, before Summarize and Send.
+    const toolbar = button.closest('.composer-toolbar');
+    expect(toolbar?.closest('header')).toBeNull();
+    expect([...(toolbar?.querySelectorAll('button') ?? [])].map((b) => b.id)).toEqual([
       'model-button',
       'thinking-button',
+      'summarize-button',
+      'send-button',
     ]);
     expect(screen.queryByRole('listbox')).toBeNull();
   });
 
   it('lists Default, Low, Medium and High and marks the current one', async () => {
     await open({ level: 'medium' });
-    expect(controlText()).toBe('Thinking: Medium');
+    expect(controlText()).toBe('Medium');
     fireEvent.click(control() as HTMLElement);
     expect(control()?.getAttribute('aria-expanded')).toBe('true');
     expect(optionTexts()).toEqual(['Default', 'Low', 'Medium', 'High']);
@@ -260,7 +265,7 @@ describe('the thinking-level control', () => {
     expect(selected()).toEqual(['Default']);
     fireEvent.click(within(listbox()).getByRole('option', { name: 'High' }));
     await waitFor(() => {
-      expect(controlText()).toBe('Thinking: High');
+      expect(controlText()).toBe('High');
     });
     expect(screen.queryByRole('listbox')).toBeNull();
     expect(document.activeElement).toBe(control());
@@ -301,7 +306,7 @@ describe('the thinking-level control', () => {
     await choose('High');
     cleanup();
     await show();
-    expect(controlText()).toBe('Thinking: High');
+    expect(controlText()).toBe('High');
     expect(await storedLevel(id)).toBe('high');
   });
 
@@ -312,7 +317,7 @@ describe('the thinking-level control', () => {
     await waitFor(() => {
       expect(titleButton().textContent).toBe('New session');
     });
-    expect(controlText()).toBe('Thinking: Default');
+    expect(controlText()).toBe('Default');
     const fresh = (await getSettings()).activeSessionId ?? '';
     expect(fresh).not.toBe(id);
     expect(await storedLevel(fresh)).toBeUndefined();
@@ -321,7 +326,7 @@ describe('the thinking-level control', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Sessions' }));
     fireEvent.click(await screen.findByRole('button', { name: /^Trains/ }));
     await waitFor(() => {
-      expect(controlText()).toBe('Thinking: High');
+      expect(controlText()).toBe('High');
     });
     expect(await storedLevel(id)).toBe('high');
     expect(await storedLevel(fresh)).toBe('low');
@@ -362,7 +367,7 @@ describe('the thinking-level control', () => {
     fireEvent.keyDown(focused(), { key: 'ArrowDown' });
     fireEvent.keyDown(focused(), { key: 'Enter' });
     await waitFor(() => {
-      expect(controlText()).toBe('Thinking: Medium');
+      expect(controlText()).toBe('Medium');
     });
     expect(document.activeElement).toBe(button);
     expect(await storedLevel(id)).toBe('medium');
@@ -375,7 +380,7 @@ describe('the thinking-level control', () => {
     fireEvent.keyDown(focused(), { key: 'ArrowDown' });
     fireEvent.keyDown(focused(), { key: ' ' });
     await waitFor(() => {
-      expect(controlText()).toBe('Thinking: High');
+      expect(controlText()).toBe('High');
     });
 
     // Tab closes without a change.
@@ -405,7 +410,7 @@ describe('the thinking-level control', () => {
   it('has its label, accessible name and options in German', async () => {
     const id = await open({ locale: 'de' });
     const button = control() as HTMLElement;
-    expect(button.textContent).toBe('Denken: Standard');
+    expect(button.textContent).toBe('Standard');
     expect(button.getAttribute('aria-label')).toBe('Denkstufe: Standard');
     fireEvent.click(button);
     const list = screen.getByRole('listbox', { name: 'Denkstufe' });
@@ -416,7 +421,7 @@ describe('the thinking-level control', () => {
     ).toEqual(['Standard', 'Niedrig', 'Mittel', 'Hoch']);
     fireEvent.click(within(list).getByRole('option', { name: 'Hoch' }));
     await waitFor(() => {
-      expect(controlText()).toBe('Denken: Hoch');
+      expect(controlText()).toBe('Hoch');
     });
     expect(screen.getByRole('button', { name: 'Denkstufe: Hoch' })).toBe(control());
     expect(await storedLevel(id)).toBe('high');
@@ -430,7 +435,7 @@ describe('the thinking-level control', () => {
     expect((await screen.findByRole('alert')).textContent).toBe(
       "The change couldn't be saved. Try again.",
     );
-    expect(controlText()).toBe('Thinking: Default');
+    expect(controlText()).toBe('Default');
   });
 });
 
@@ -439,7 +444,7 @@ describe('when the control shows (spec 4.1, 4.2)', () => {
     await open({ providers: [] });
     expect(control()).toBeNull();
     expect(document.getElementById('model-button')).toBeNull();
-    expect(document.querySelector('.header-menus')).toBeNull();
+    expect(document.querySelector('.model-menu, .thinking-menu')).toBeNull();
   });
 
   it.each([
@@ -449,19 +454,20 @@ describe('when the control shows (spec 4.1, 4.2)', () => {
     ['a model id named like an inherited member', 'constructor'],
   ])('shows for %s', async (_case, model) => {
     await open({ model });
-    expect(controlText()).toBe('Thinking: Default');
+    expect(controlText()).toBe('Default');
   });
 
   it('shows for every model of a provider cached before the feature', async () => {
     await open({ providers: [provider({ modelInfo: undefined })], model: 'cannot' });
-    expect(controlText()).toBe('Thinking: Default');
+    expect(controlText()).toBe('Default');
   });
 
   it('is hidden for a model known not to support thinking, while the model menu stays', async () => {
     await open({ model: 'cannot' });
     expect(control()).toBeNull();
     expect(document.getElementById('model-button')?.textContent).toBe('cannot');
-    expect(document.querySelector('.header-menus')?.getAttribute('data-menus')).toBe('1');
+    expect(document.querySelectorAll('.composer-toolbar .model-menu')).toHaveLength(1);
+    expect(document.querySelector('.thinking-menu')).toBeNull();
   });
 
   it('keeps the stored level while hidden and applies it again on a model that shows it', async () => {
@@ -481,7 +487,7 @@ describe('when the control shows (spec 4.1, 4.2)', () => {
 
     await chooseModel('plain');
     await waitFor(() => {
-      expect(controlText()).toBe('Thinking: High');
+      expect(controlText()).toBe('High');
     });
     ask('Shown again?');
     await finished(2);
@@ -491,7 +497,7 @@ describe('when the control shows (spec 4.1, 4.2)', () => {
   it('shows, like the model menu, for a provider without host access', async () => {
     await open({ providers: [provider({ hasAccess: false, baseUrl: 'https://x.example/v1' })] });
     expect(document.getElementById('model-button')).not.toBeNull();
-    expect(controlText()).toBe('Thinking: Default');
+    expect(controlText()).toBe('Default');
   });
 });
 

@@ -19,3 +19,14 @@ None open.
 Spec: `specs/thinking-levels.md`. Each entry names the task it blocks.
 
 None open.
+
+# Redesign
+
+Spec: `specs/redesign.md`. Each entry names the task it blocks.
+
+None open.
+
+## Closed
+
+1. **T20: the new e2e spec for §5.6/§5.7** was declined by the permission prompt. Answered 2026-10-03: the owner allowed it; `tests/e2e/drawer-settings.spec.ts` is written.
+2. **T20: the final report `docs/redesign-report.md`** was declined by the permission prompt. Answered 2026-10-03: the owner allowed it; the report is written.

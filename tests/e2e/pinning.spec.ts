@@ -83,7 +83,7 @@ async function menuClickOpens(
 const currentRow = (page: Page) => page.locator('.tab-row[data-current]');
 const pinRow = (page: Page, title: string) => page.locator('li.pin-row', { hasText: title });
 const tabsHeading = (page: Page, n: number) =>
-  page.getByRole('button', { name: `Session tabs (${String(n)})` });
+  page.getByRole('button', { name: `Session tabs ${String(n)}` });
 
 /** Fires the real "Pin to Sidekick" listener in the background for the tab at `url`. */
 async function menuClick(context: BrowserContext, url: string): Promise<boolean> {
@@ -214,7 +214,8 @@ test.describe('pinning', () => {
     release();
     await expect(pinRow(sidebar, SLOW)).toHaveAttribute('data-status', 'ready');
 
-    // Refresh re-reads the open tab.
+    // Refresh re-reads the open tab. The row's actions show on hover (redesign spec 5.2).
+    await pinRow(sidebar, DASHBOARD).hover();
     await sidebar.getByRole('button', { name: `Refresh “${DASHBOARD}”` }).click();
     await expect(pinRow(sidebar, DASHBOARD)).toHaveAttribute('data-status', 'ready');
 
@@ -223,6 +224,7 @@ test.describe('pinning', () => {
     await expect(sidebar.getByRole('button', { name: `Refresh “${DASHBOARD}”` })).toHaveCount(0);
 
     // Unpin.
+    await pinRow(sidebar, ARTICLE).hover();
     await sidebar.getByRole('button', { name: `Unpin “${ARTICLE}”` }).click();
     await expect(pinRow(sidebar, ARTICLE)).toHaveCount(0);
     await expect(sidebar.locator('li.pin-row')).toHaveCount(3);

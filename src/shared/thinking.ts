@@ -2,7 +2,7 @@ import type { LlmRequest } from './llm';
 import type { ModelInfo, ProviderConfig, Session, ThinkingLevel } from './model';
 
 /**
- * The rules behind the header's thinking control (specs/thinking-levels.md
+ * The rules behind the composer's thinking control (specs/thinking-levels.md
  * 4.1, 4.2, 5). Pure functions: the control and the ask flow both use them,
  * so what is shown and what is sent can't drift apart.
  */

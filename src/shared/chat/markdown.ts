@@ -78,28 +78,27 @@ export type CitationLabel = (index: number, title: string) => string;
 
 const CITATION = /\[(\d{1,3}(?:\s*,\s*\d{1,3})*)\]/g;
 
-/** Parts of the group text: numbers and the separators between them. */
-function splitGroup(group: string): string[] {
-  return group.split(/(\d+)/).filter((part) => part !== '');
-}
-
 /** Class of the genuine citation buttons; model output can't carry classes. */
 export const CITATION_CLASS = 'citation';
 /** Class put on every link that came from the model. */
 export const EXTERNAL_LINK_CLASS = 'external-link';
 
-function citationButton(doc: Document, source: MessageSource, label: CitationLabel, text: string) {
+/** A citation button showing its number only, without brackets (redesign spec 5.3). */
+function citationButton(doc: Document, source: MessageSource, label: CitationLabel) {
   const button = doc.createElement('button');
   button.type = 'button';
   button.className = CITATION_CLASS;
   button.dataset.citation = String(source.index);
   button.title = source.title;
   button.setAttribute('aria-label', label(source.index, source.title));
-  button.textContent = text;
+  button.textContent = String(source.index);
   return button;
 }
 
-/** Replaces `[n]` in one text node with citation buttons; numbers without a source stay text. */
+/**
+ * Replaces `[n]` and `[n, m]` in one text node with citation buttons, side
+ * by side; a number without a source stays text as `[n]`.
+ */
 function linkCitations(
   node: Text,
   sources: ReadonlyMap<number, MessageSource>,
@@ -119,16 +118,9 @@ function linkCitations(
     if (!numbers.some((n) => sources.has(n))) continue;
     changed = true;
     out.push(text.slice(last, match.index));
-    const single = numbers.length === 1 ? sources.get(numbers[0] ?? -1) : undefined;
-    if (single) {
-      out.push(citationButton(doc, single, label, match[0]));
-    } else {
-      out.push('[');
-      for (const part of splitGroup(group)) {
-        const source = /^\d+$/.test(part) ? sources.get(Number(part)) : undefined;
-        out.push(source ? citationButton(doc, source, label, part) : part);
-      }
-      out.push(']');
+    for (const n of numbers) {
+      const source = sources.get(n);
+      out.push(source ? citationButton(doc, source, label) : `[${String(n)}]`);
     }
     last = match.index + match[0].length;
   }

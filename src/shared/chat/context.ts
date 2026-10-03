@@ -3,6 +3,7 @@ import { capText } from '../extract/cap';
 import type { ChatTurn } from '../llm/types';
 import type { Message, MessageSource, Pin } from '../model';
 import { findPinByUrl } from '../pins';
+import { citationNumber, currentTabCitationNumber } from './citation';
 
 /**
  * Context assembly and budget (spec 5.6). Pure: builds the request the
@@ -118,14 +119,19 @@ export function assembleContext(input: ContextInput): AssembledContext {
   input.pins.forEach((pin, i) => {
     if (pin.status !== 'ready') return;
     pages.push({
-      source: { index: i + 1, title: pin.title, url: pin.url, origin: 'pin' },
+      source: { index: citationNumber(i), title: pin.title, url: pin.url, origin: 'pin' },
       text: pin.text,
     });
   });
   if (input.currentTab) {
     const { title, url, text } = input.currentTab;
     pages.push({
-      source: { index: input.pins.length + 1, title, url, origin: 'currentTab' },
+      source: {
+        index: currentTabCitationNumber(input.pins.length),
+        title,
+        url,
+        origin: 'currentTab',
+      },
       text,
     });
   }

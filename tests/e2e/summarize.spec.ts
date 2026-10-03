@@ -158,14 +158,18 @@ test.describe('summarize', () => {
     await summarize(sidebar).click({ force: true });
     await sidebar.mouse.move(200, 100);
     await expect(tooltip(sidebar)).toBeHidden();
-    // The keyboard reaches the button and shows the same tooltip.
+    // The keyboard reaches the button in the composer's toolbar, after the
+    // model and thinking menus, and shows the same tooltip.
     await input(sidebar).focus();
-    await sidebar.keyboard.press('Shift+Tab');
+    for (let i = 0; i < 4; i++) {
+      if (await summarize(sidebar).evaluate((el) => el === document.activeElement)) break;
+      await sidebar.keyboard.press('Tab');
+    }
     await expect(summarize(sidebar)).toBeFocused();
     await expect(tooltip(sidebar)).toBeVisible();
     await sidebar.keyboard.press('Enter');
-    await sidebar.keyboard.press('Tab');
-    await expect(input(sidebar)).toBeFocused();
+    await sidebar.keyboard.press('Shift+Tab');
+    await expect(summarize(sidebar)).not.toBeFocused();
     await expect(tooltip(sidebar)).toBeHidden();
     await expect(questions(sidebar)).toHaveCount(0);
     expect(chats(mock)).toHaveLength(0);
@@ -205,14 +209,7 @@ test.describe('summarize', () => {
     const first = answers(sidebar).first();
     await expect(first.locator('h3')).toHaveCount(3);
     await expect(first.locator('li')).toHaveCount(2);
-    await expect(first.locator('button.citation')).toHaveText([
-      '[1]',
-      '[1]',
-      '[2]',
-      '[2]',
-      '[1]',
-      '[2]',
-    ]);
+    await expect(first.locator('button.citation')).toHaveText(['1', '1', '2', '2', '1', '2']);
     await expect(
       first.getByRole('button', { name: `Source 2: ${DASHBOARD}` }).first(),
     ).toBeVisible();
@@ -255,7 +252,7 @@ test.describe('summarize', () => {
     await screens(sidebar, 'T11-04-first-action-title');
 
     // A citation of the summary leads to its page.
-    await first.locator('button.citation', { hasText: '[1]' }).first().click();
+    await first.locator('button.citation[data-citation="1"]').first().click();
     await expect(pinRow(sidebar, ARTICLE)).toHaveAttribute('data-current', '');
 
     // 4. With the eye, the current tab is left out of the next summary.

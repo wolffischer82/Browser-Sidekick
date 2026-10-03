@@ -47,20 +47,33 @@ export function PageAccess({ focusOnMount = false }: Props) {
 
   return (
     <section id="page-access" class="settings-section" aria-labelledby="page-access-heading">
-      <h3 id="page-access-heading" class="settings-subheading" ref={headingRef} tabIndex={-1}>
+      <h3
+        id="page-access-heading"
+        class="section-label settings-label"
+        ref={headingRef}
+        tabIndex={-1}
+      >
         {t('pageAccessHeading')}
       </h3>
-      <p class="muted">{t('pageAccessText')}</p>
-      {allowed !== null && (
-        <p class="page-access-state" role="status">
-          {t(allowed ? 'pageAccessAllowed' : 'pageAccessNotAllowed')}
-        </p>
-      )}
-      {allowed === false && (
-        <button type="button" class="button button-primary" onClick={allow}>
-          {t('accessBannerAllow')}
-        </button>
-      )}
+      <div class="settings-card settings-card-body">
+        <p class="settings-text">{t('pageAccessText')}</p>
+        <div class="page-access-row">
+          {allowed !== null && (
+            <p class="page-access-state" role="status">
+              <span
+                class={`state-dot ${allowed ? 'state-dot-ok' : 'state-dot-warning'}`}
+                aria-hidden="true"
+              />
+              {t(allowed ? 'pageAccessAllowed' : 'pageAccessNotAllowed')}
+            </p>
+          )}
+          {allowed === false && (
+            <button type="button" class="button button-primary" onClick={allow}>
+              {t('accessBannerAllow')}
+            </button>
+          )}
+        </div>
+      </div>
     </section>
   );
 }

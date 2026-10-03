@@ -93,7 +93,9 @@ describe('citations', () => {
   it('turns [n] into a button for the source with that number, without an address', () => {
     const box = html('Trains are back [1]. The dashboard agrees [3].');
     const buttons = chips(box);
-    expect(buttons.map((b) => b.textContent)).toEqual(['[1]', '[3]']);
+    // The number only, no brackets (redesign spec 5.3).
+    expect(buttons.map((b) => b.textContent)).toEqual(['1', '3']);
+    expect(box.textContent.trim()).toBe('Trains are back 1. The dashboard agrees 3.');
     const first = buttons[0];
     expect(first?.type).toBe('button');
     expect(first?.dataset.citation).toBe('1');
@@ -106,6 +108,15 @@ describe('citations', () => {
     for (const b of buttons) expect(b.hasAttribute('href')).toBe(false);
   });
 
+  it('renders "text [1]." with one space before the chip and the full stop right after it', () => {
+    const box = html('text [1].');
+    const chip = chips(box)[0];
+    expect(chip?.previousSibling?.textContent).toBe('text ');
+    expect(chip?.nextSibling?.nodeType).toBe(Node.TEXT_NODE);
+    expect(chip?.nextSibling?.textContent).toBe('.');
+    expect(box.querySelector('p')?.innerHTML).toMatch(/^text <button [^>]*>1<\/button>\.$/);
+  });
+
   it('keeps numbers without a source as plain text', () => {
     const box = html('Unknown [2] and [99].');
     expect(box.querySelector('a, button')).toBeNull();
@@ -115,7 +126,9 @@ describe('citations', () => {
   it('makes a button for each number of a group', () => {
     const box = html('Both say so [1, 3] and [1][3], not [1, 2].');
     expect(chips(box).map((b) => b.dataset.citation)).toEqual(['1', '3', '1', '3', '1']);
-    expect(box.textContent.trim()).toBe('Both say so [1, 3] and [1][3], not [1, 2].');
+    expect(chips(box).map((b) => b.textContent)).toEqual(['1', '3', '1', '3', '1']);
+    // Chips stand side by side; a number without a source keeps its brackets.
+    expect(box.textContent.trim()).toBe('Both say so 13 and 13, not 1[2].');
   });
 
   it('leaves code and links alone', () => {

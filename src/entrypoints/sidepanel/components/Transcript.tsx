@@ -6,7 +6,7 @@ import { LlmError } from '@/shared/llm';
 import { llmErrorText } from '@/shared/llm-messages';
 import type { Message, MessageSource } from '@/shared/model';
 import type { LiveAnswer } from '../chat/useChat';
-import { ChevronIcon } from './icons';
+import { ChevronIcon, PinIcon } from './icons';
 
 interface Props {
   messages: Message[];
@@ -202,6 +202,23 @@ function Live({ answer, onStop }: { answer: LiveAnswer; onStop: () => void }) {
   );
 }
 
+/** Stacked pages with a pin, above the empty transcript's text (redesign spec 5.3); decorative. */
+function EmptyIllustration() {
+  return (
+    <div class="empty-pages" aria-hidden="true">
+      <span class="empty-page empty-page-back" />
+      <span class="empty-page empty-page-front">
+        <span class="empty-line" />
+        <span class="empty-line" />
+        <span class="empty-line" />
+      </span>
+      <span class="empty-pin">
+        <PinIcon />
+      </span>
+    </div>
+  );
+}
+
 /** Whether the list is scrolled to (near) its end. */
 function atEnd(el: HTMLElement): boolean {
   return el.scrollHeight - el.scrollTop - el.clientHeight < 48;
@@ -270,7 +287,10 @@ export function Transcript({ messages, live, errorOf, onStop, onRetry, onOpenSou
       }}
     >
       {empty ? (
-        <p class="muted transcript-empty">{t('transcriptEmpty')}</p>
+        <div class="transcript-empty">
+          <EmptyIllustration />
+          <p class="muted">{t('transcriptEmpty')}</p>
+        </div>
       ) : (
         <OpenSource.Provider value={onOpenSource}>
           <Reasoning.Provider value={reasoning}>

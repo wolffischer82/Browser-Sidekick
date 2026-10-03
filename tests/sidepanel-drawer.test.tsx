@@ -73,7 +73,7 @@ describe('sessions drawer', () => {
       expect(titleButton().textContent).toBe('Alpha');
     });
     expect(screen.queryByRole('dialog')).toBeNull();
-    expect(screen.getByRole('button', { name: 'Session tabs (0)' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Session tabs 0' })).toBeTruthy();
     expect((await getSettings()).activeSessionId).toBe(alpha.id);
   });
 
@@ -132,7 +132,7 @@ describe('sessions drawer', () => {
     expect(within(drawer).getByRole('button', { current: true }).textContent).toContain(
       'New session',
     );
-    expect(screen.getByRole('button', { name: 'Session tabs (2)' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Session tabs 2' })).toBeTruthy();
     expect((await getSettings()).activeSessionId).toBe(gamma.id);
     expect(await repo.listPins(beta.id)).toEqual([]);
     expect(await repo.listMessages(beta.id)).toEqual([]);
@@ -167,5 +167,25 @@ describe('sessions drawer', () => {
     });
     const drawer = await openDrawer();
     expect(rowTitles(drawer)).toEqual(['New session', 'Renamed', 'Alpha']);
+  });
+
+  it('New session in the drawer starts and shows a new session and closes the drawer', async () => {
+    const { beta } = await seed();
+    const drawer = await openDrawer();
+    fireEvent.click(within(drawer).getByRole('button', { name: 'New session' }));
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).toBeNull();
+    });
+    expect(titleButton().textContent).toBe('New session');
+    const sessions = await repo.listSessions();
+    expect(sessions).toHaveLength(4);
+    const active = (await getSettings()).activeSessionId;
+    expect(active).not.toBe(beta.id);
+    expect(sessions.some((s) => s.id === active && s.title === '')).toBe(true);
+    await waitFor(() => {
+      expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Sessions' }));
+    });
+    const reopened = await openDrawer();
+    expect(rowTitles(reopened)).toEqual(['New session', 'New session', 'Beta', 'Alpha']);
   });
 });

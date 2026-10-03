@@ -18,7 +18,7 @@ import {
 } from './extension';
 
 // T15 (specs/thinking-levels.md): the thinking-level control in the session
-// header against the mock LLM. The provider is added through the settings
+// composer against the mock LLM. The provider is added through the settings
 // form, so the model list's `supported_parameters` decide where the control
 // shows. Set High and ask: the mock received `reasoning_effort: "high"`; a
 // new session starts at Default; the level survives a session switch and a
@@ -51,7 +51,7 @@ async function ask(page: Page, question: string): Promise<void> {
 async function chooseLevel(page: Page, name: string): Promise<void> {
   await control(page).click();
   await levels(page).getByRole('option', { name, exact: true }).click();
-  await expect(control(page)).toHaveText(`Thinking: ${name}`);
+  await expect(control(page)).toHaveText(name);
 }
 
 async function chooseModel(page: Page, name: string): Promise<void> {
@@ -75,7 +75,7 @@ test('thinking level: set, send, keep per session, reject and retry, hide', asyn
     context = await launchWithGrantedOrigins(profile.dir, [MOCK_ORIGIN]);
     const page = await openSidebar(context, await extensionId(context));
 
-    // No provider yet: neither menu is in the header.
+    // No provider yet: neither menu is in the composer.
     await expect(title(page)).toHaveText('New session');
     await expect(modelButton(page)).toHaveCount(0);
     await expect(control(page)).toHaveCount(0);
@@ -101,7 +101,7 @@ test('thinking level: set, send, keep per session, reject and retry, hide', asyn
 
     // The control: closed, at Default for a new session, next to the model menu.
     await expect(modelButton(page)).toHaveText('mock-large');
-    await expect(control(page)).toHaveText('Thinking: Default');
+    await expect(control(page)).toHaveText('Default');
     await expect(control(page)).toHaveAccessibleName('Thinking level: Default');
     await expect(control(page)).toBeEnabled();
     await screens(page, 'T15-02-control-closed');
@@ -123,7 +123,7 @@ test('thinking level: set, send, keep per session, reject and retry, hide', asyn
     await page.keyboard.press('Enter');
     await expect(levels(page)).toBeHidden();
     await expect(control(page)).toBeFocused();
-    await expect(control(page)).toHaveText('Thinking: High');
+    await expect(control(page)).toHaveText('High');
     await expect(control(page)).toHaveAccessibleName('Thinking level: High');
     // Choosing a level sends nothing.
     expect(efforts).toHaveLength(1);
@@ -142,7 +142,7 @@ test('thinking level: set, send, keep per session, reject and retry, hide', asyn
     // A new session starts at Default and sends no level.
     await page.getByRole('button', { name: 'New session' }).click();
     await expect(title(page)).toHaveText('New session');
-    await expect(control(page)).toHaveText('Thinking: Default');
+    await expect(control(page)).toHaveText('Default');
     mock.script(
       { kind: 'stream', chunks: ['A plain answer.'] },
       { kind: 'stream', chunks: ['Second session'] },
@@ -156,20 +156,20 @@ test('thinking level: set, send, keep per session, reject and retry, hide', asyn
     await page.getByRole('button', { name: 'Sessions' }).click();
     await page.getByRole('button', { name: /^Thinking levels/ }).click();
     await expect(title(page)).toHaveText('Thinking levels');
-    await expect(control(page)).toHaveText('Thinking: High');
+    await expect(control(page)).toHaveText('High');
     await page.reload();
     await expect(title(page)).toHaveText('Thinking levels');
-    await expect(control(page)).toHaveText('Thinking: High');
+    await expect(control(page)).toHaveText('High');
     await page.getByRole('button', { name: 'Sessions' }).click();
     await page.getByRole('button', { name: /^Second session/ }).click();
-    await expect(control(page)).toHaveText('Thinking: Default');
+    await expect(control(page)).toHaveText('Default');
     await page.getByRole('button', { name: 'Sessions' }).click();
     await page.getByRole('button', { name: /^Thinking levels/ }).click();
-    await expect(control(page)).toHaveText('Thinking: High');
+    await expect(control(page)).toHaveText('High');
 
     // A model that rejects the level: the error with Retry, without the provider's text.
     await chooseModel(page, MOCK_REJECTING_MODEL);
-    await expect(control(page)).toHaveText('Thinking: High');
+    await expect(control(page)).toHaveText('High');
     await ask(page, 'Does this model take a level?');
     const alert = page.getByRole('alert');
     await expect(alert).toContainText(REJECTED);
@@ -203,7 +203,7 @@ test('thinking level: set, send, keep per session, reject and retry, hide', asyn
 
     // Shown again for a model the list calls supported, with the stored level.
     await chooseModel(page, MOCK_THINKING_MODEL);
-    await expect(control(page)).toHaveText('Thinking: Medium');
+    await expect(control(page)).toHaveText('Medium');
     await ask(page, 'Shown again?');
     await expect(answers(page).nth(3)).toContainText(MOCK_REPLY);
     await expect(stopButton(page)).toHaveCount(0);
@@ -220,7 +220,7 @@ test('thinking level: set, send, keep per session, reject and retry, hide', asyn
   }
 });
 
-test('thinking level: the header fits a narrow sidebar with a long model name', async () => {
+test('thinking level: the composer toolbar fits a narrow sidebar with a long model name', async () => {
   const profile = await newProfile();
   let mock: MockLlm | undefined;
   let context: BrowserContext | undefined;
@@ -256,7 +256,7 @@ test('thinking level: the header fits a narrow sidebar with a long model name', 
     );
     await page.reload();
     await expect(modelButton(page)).toHaveText(LONG_MODEL);
-    await expect(control(page)).toHaveText('Thinking: Default');
+    await expect(control(page)).toHaveText('Default');
     await title(page).click();
     await page.getByRole('textbox', { name: 'Session title' }).fill('Quarterly pricing research');
     await page.keyboard.press('Enter');
@@ -267,54 +267,59 @@ test('thinking level: the header fits a narrow sidebar with a long model name', 
       if (!rect) throw new Error(`${selector} has no box`);
       return rect;
     };
-    /** The header's controls all lie inside the sidebar, and the page doesn't scroll sideways. */
+    const toolbar = ['#model-button', '#thinking-button', '#summarize-button', '#send-button'];
+    /**
+     * The composer's toolbar lies inside the sidebar on one line, the page
+     * doesn't scroll sideways, and the header title keeps room (redesign spec 5.4).
+     */
     const fits = async (width: number) => {
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
         width,
       );
-      for (const selector of ['#model-button', '#thinking-button', '#settings-button']) {
+      const first = await box(toolbar[0] ?? '');
+      for (const selector of [...toolbar, '#settings-button']) {
         const rect = await box(selector);
         expect(rect.x, selector).toBeGreaterThanOrEqual(0);
         expect(rect.x + rect.width, selector).toBeLessThanOrEqual(width);
+        if (selector !== '#settings-button') {
+          // One line: every control's middle on the model button's.
+          expect(
+            Math.abs(rect.y + rect.height / 2 - (first.y + first.height / 2)),
+            selector,
+          ).toBeLessThan(2);
+        }
       }
       const titleBox = await box('.header-title');
       expect(titleBox.width, 'title').toBeGreaterThanOrEqual(48);
     };
 
-    // Narrow: the level sits below the model menu and its value is not cut off.
+    // Narrow: the level's value is not cut off; the long model name gives way.
     for (const width of [320, 400]) {
       await page.setViewportSize({ width, height: 720 });
       await fits(width);
-      const model = await box('#model-button');
-      const thinking = await box('#thinking-button');
-      expect(thinking.y, `below the model menu at ${String(width)}`).toBeGreaterThanOrEqual(
-        model.y + model.height,
-      );
       expect(await cutOff(page, '#thinking-button .model-button-text')).toBe(false);
-      // The long model name gives way instead.
       expect(await cutOff(page, '#model-button .model-button-text')).toBe(true);
       await screen(page, `T15-08-narrow-${String(width)}`);
     }
 
-    // The longest value still fits at the narrowest width, and the list stays inside.
+    // The longest value still fits at the narrowest width, and the list stays inside, above the composer.
     await page.setViewportSize({ width: 320, height: 720 });
     await chooseLevel(page, 'Medium');
     expect(await cutOff(page, '#thinking-button .model-button-text')).toBe(false);
     await control(page).click();
     const list = await box('.thinking-list');
+    const button = await box('#thinking-button');
     expect(list.x).toBeGreaterThanOrEqual(0);
     expect(list.x + list.width).toBeLessThanOrEqual(320);
+    expect(list.y).toBeGreaterThanOrEqual(0);
+    expect(list.y + list.height).toBeLessThanOrEqual(button.y);
     await screens(page, 'T15-09-narrow-320-open');
     await page.keyboard.press('Escape');
     await fits(320);
 
-    // Wide: both menus on one line.
+    // Wide: the model name has room.
     await page.setViewportSize({ width: 640, height: 720 });
     await fits(640);
-    const model = await box('#model-button');
-    const thinking = await box('#thinking-button');
-    expect(Math.abs(thinking.y - model.y)).toBeLessThan(2);
-    expect(thinking.x).toBeGreaterThanOrEqual(model.x + model.width);
     expect(await cutOff(page, '#thinking-button .model-button-text')).toBe(false);
     await screen(page, 'T15-10-wide-640');
   } finally {

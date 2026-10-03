@@ -27,7 +27,7 @@ describe('sidebar root', () => {
       m.fallbackTitle?.message,
     );
     expect(
-      screen.getByRole('button', { name: m.sessionTabsHeading?.message.replace('$COUNT$', '0') }),
+      screen.getByRole('button', { name: `${m.sessionTabsLabel?.message ?? ''} 0` }),
     ).toBeTruthy();
     expect(screen.getByText(m.transcriptEmpty?.message ?? '')).toBeTruthy();
     expect(screen.getByRole('button', { name: m.summarize?.message })).toBeTruthy();
@@ -64,7 +64,7 @@ describe('session tabs frame', () => {
   it('collapses and remembers the state', async () => {
     repo = await freshRepository();
     await renderSidebar(repo);
-    const toggle = screen.getByRole('button', { name: 'Session tabs (0)' });
+    const toggle = screen.getByRole('button', { name: 'Session tabs 0' });
     expect(toggle.getAttribute('aria-expanded')).toBe('true');
     fireEvent.click(toggle);
     expect(toggle.getAttribute('aria-expanded')).toBe('false');
@@ -74,7 +74,7 @@ describe('session tabs frame', () => {
     cleanup();
     await renderSidebar(repo);
     expect(
-      screen.getByRole('button', { name: 'Session tabs (0)' }).getAttribute('aria-expanded'),
+      screen.getByRole('button', { name: 'Session tabs 0' }).getAttribute('aria-expanded'),
     ).toBe('false');
   });
 
@@ -84,7 +84,7 @@ describe('session tabs frame', () => {
     await repo.addPin(s.id, { url: 'https://example.com/', title: 'Example', kind: 'page' });
     await updateSettings({ activeSessionId: s.id });
     await renderSidebar(repo);
-    expect(screen.getByRole('button', { name: 'Session tabs (1)' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Session tabs 1' })).toBeTruthy();
   });
 });
 

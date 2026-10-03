@@ -120,13 +120,13 @@ test.describe('PDF', () => {
     const pinCurrent = () =>
       currentRow(sidebar).getByRole('button', { name: 'Pin to session' }).click();
 
-    // A text PDF in the viewer: Ready, with the PDF badge and its text.
+    // A text PDF in the viewer: Ready, with the PDF type and its text.
     await tab.goto(server.url('pdf/text.pdf'));
     await expect(currentRow(sidebar)).toContainText(TEXT_TITLE);
     await pinCurrent();
     const text = pinRows(sidebar).nth(0);
     await expect(text).toHaveAttribute('data-status', 'ready');
-    await expect(text.locator('.badge-muted')).toHaveText('PDF');
+    await expect(text.locator('.tab-row-kind')).toHaveText('PDF');
     await expect(text).toContainText(TEXT_TITLE);
 
     // A password-protected PDF.
@@ -135,7 +135,7 @@ test.describe('PDF', () => {
     await pinCurrent();
     const encrypted = pinRows(sidebar).nth(1);
     await expect(encrypted).toHaveAttribute('data-status', 'failed');
-    await expect(encrypted.locator('.badge-muted')).toHaveText('PDF');
+    await expect(encrypted.locator('.tab-row-kind')).toHaveText('PDF');
     await expect(encrypted.locator('.tab-row-error')).toHaveText(
       "Can't read this PDF: it's protected by a password. Pin a copy without a password instead.",
     );
@@ -156,7 +156,7 @@ test.describe('PDF', () => {
     await pinCurrent();
     const viewed = pinRows(sidebar).nth(3);
     await expect(viewed).toHaveAttribute('data-status', 'ready');
-    await expect(viewed.locator('.badge-muted')).toHaveText('PDF');
+    await expect(viewed.locator('.tab-row-kind')).toHaveText('PDF');
 
     // Over 30 MB, refused from the Content-Length before the body is read.
     await tab.goto(server.url('non-article.html'));

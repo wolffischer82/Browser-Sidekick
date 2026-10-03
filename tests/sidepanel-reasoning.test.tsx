@@ -194,7 +194,7 @@ describe('a stored answer', () => {
     expect(article.querySelectorAll('button.citation')).toHaveLength(1);
     // The answer text is unchanged by the block.
     expect(article.querySelector('.answer-body:not(.reasoning-body)')?.textContent.trim()).toBe(
-      'Trains are back [1].',
+      'Trains are back 1.',
     );
 
     fireEvent.click(toggle);

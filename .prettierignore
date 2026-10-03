@@ -12,3 +12,5 @@ specs/
 CLAUDE.md
 # Recorded-structure YouTube payloads keep YouTube's single-line layout (decisions.md T08).
 tests/fixtures/youtube/
+# Design canvas mockups are reference files, kept as drawn (decisions.md Redesign T17).
+design/redesign/

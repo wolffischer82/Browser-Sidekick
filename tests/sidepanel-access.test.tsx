@@ -65,6 +65,18 @@ describe('access banner', () => {
     expect(screen.getByRole('button', { name: 'Dismiss' })).toBeTruthy();
   });
 
+  it('is a card with the shield tile, a primary Allow and a plain Dismiss (redesign spec 5.5)', async () => {
+    await open();
+    const region = await screen.findByRole('region', { name: 'Page access' });
+    const tile = region.querySelector('.access-banner-tile');
+    expect(tile?.querySelector('svg')?.getAttribute('aria-hidden')).toBe('true');
+    expect(region.firstElementChild).toBe(tile);
+    expect((await bannerButton(ALLOW)).className).toContain('button-primary');
+    expect(within(region).getByRole('button', { name: 'Dismiss' }).className).toContain(
+      'button-plain',
+    );
+  });
+
   it('renders in German', async () => {
     await open('de');
     const de = readMessages('de');
@@ -156,7 +168,7 @@ describe('access banner', () => {
 });
 
 describe('current-tab row', () => {
-  const heading = (n: number) => msg('sessionTabsHeading').replace('$COUNT$', String(n));
+  const heading = (n: number) => `${msg('sessionTabsLabel')} ${String(n)}`;
 
   it('says the current tab is not accessible without access', async () => {
     await open();

@@ -3,8 +3,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { Repository } from '@/shared/db/repository';
 import { DEFAULT_CONTEXT_BUDGET, type ProviderConfig, type ProviderKind } from '@/shared/model';
 import { getSettings, updateSettings } from '@/shared/settings';
-import { fakePermissions, type FakePermissions } from './helpers/permissions';
-import { freshRepository, renderSidebar } from './helpers/sidebar';
+import { NATIVE_HOSTS, fakePermissions, type FakePermissions } from './helpers/permissions';
+import { TEST_VERSION, freshRepository, renderSidebar } from './helpers/sidebar';
 
 let repo: Repository;
 
@@ -252,7 +252,7 @@ describe('host access for a custom origin', () => {
     expect(screen.queryByText('No access')).toBeNull();
   });
 
-  it('saves as "no access" when declined: not default, not in the header, input stays disabled', async () => {
+  it('saves as "no access" when declined: not default, not in the model menu, input stays disabled', async () => {
     const perms = await setup();
     perms.answer = 'decline';
     await addCustom();
@@ -817,5 +817,121 @@ describe('input', () => {
           .disabled,
       ).toBe(false);
     });
+  });
+});
+
+describe('settings layout (redesign spec 5.7)', () => {
+  const sectionLabel = (name: string) => screen.getByRole('heading', { name });
+
+  it('shows Back and the heading, and a section label above a card for each section', async () => {
+    await setup([provider()]);
+    openSettings();
+    expect(screen.getByRole('heading', { name: 'Settings' }).className).toContain(
+      'settings-heading',
+    );
+    for (const name of ['Providers', 'Page access', 'Delete all data']) {
+      const label = sectionLabel(name);
+      expect(label.className).toContain('section-label');
+      expect(label.closest('section')?.querySelector('.settings-card')).toBeTruthy();
+    }
+  });
+
+  it('offers Add provider as a text button with the plus icon', async () => {
+    await setup([provider()]);
+    openSettings();
+    const add = screen.getByRole('button', { name: 'Add provider' });
+    expect(add.className).toContain('button-text');
+    expect(add.querySelector('svg')?.getAttribute('aria-hidden')).toBe('true');
+  });
+
+  it('gives each provider row a letter tile, its badges and the model in mono', async () => {
+    await setup(
+      [
+        provider({
+          id: 'p1',
+          label: 'anthropic work',
+          kind: 'anthropic',
+          defaultModel: 'claude-x',
+        }),
+        provider({
+          id: 'p2',
+          label: 'Ollama',
+          baseUrl: 'http://localhost:11434/v1',
+          hasAccess: false,
+        }),
+      ],
+      'p1',
+    );
+    openSettings();
+    const rows = [...document.querySelectorAll<HTMLElement>('.provider-row')];
+    expect(rows).toHaveLength(2);
+    const [first, second] = rows as [HTMLElement, HTMLElement];
+
+    const tile = first.querySelector('.provider-tile');
+    expect(tile?.textContent).toBe('A');
+    expect(tile?.getAttribute('aria-hidden')).toBe('true');
+    expect(within(first).getByText('Default').className).toBe('badge');
+    expect(within(first).getByText('claude-x').className).toBe('provider-model');
+    expect(first.querySelector('.provider-meta')?.textContent).toBe('Anthropic · claude-x');
+    expect(
+      within(first).queryByRole('button', { name: 'Make “anthropic work” the default' }),
+    ).toBeNull();
+    expect(within(first).getByRole('button', { name: 'Edit “anthropic work”' })).toBeTruthy();
+    expect(within(first).getByRole('button', { name: 'Delete “anthropic work”' })).toBeTruthy();
+
+    expect(second.querySelector('.provider-tile')?.textContent).toBe('O');
+    expect(within(second).getByText('No access').className).toBe('badge badge-warning');
+    const notice = second.querySelector('.provider-notice');
+    expect(notice).toBeTruthy();
+    expect(
+      within(notice as HTMLElement).getByRole('button', { name: 'Grant access' }),
+    ).toBeTruthy();
+  });
+
+  it('shows the delete confirm as a card in place of the row', async () => {
+    await setup([provider()]);
+    openSettings();
+    fireEvent.click(screen.getByRole('button', { name: 'Delete “Local”' }));
+    const card = screen.getByRole('group', { name: 'Local' });
+    expect(card.className).toBe('confirm');
+    expect(card.closest('.provider-row')?.querySelector('.provider-tile')).toBeNull();
+  });
+
+  it('shows the page access state with an ok or warning dot', async () => {
+    await setup([provider()], 'p1', [...NATIVE_HOSTS, '<all_urls>']);
+    openSettings();
+    const region = screen.getByRole('region', { name: 'Page access' });
+    const allowed = await within(region).findByText('Allowed on all sites');
+    expect(allowed.querySelector('.state-dot')?.className).toBe('state-dot state-dot-ok');
+    cleanup();
+    repo.close();
+
+    await setup([provider()]);
+    openSettings();
+    const notAllowed = await within(screen.getByRole('region', { name: 'Page access' })).findByText(
+      'Not allowed',
+    );
+    const dot = notAllowed.querySelector('.state-dot');
+    expect(dot?.className).toBe('state-dot state-dot-warning');
+    expect(dot?.getAttribute('aria-hidden')).toBe('true');
+  });
+
+  it('ends with the name and the version from the manifest', async () => {
+    await setup([provider()]);
+    openSettings();
+    const footer = document.querySelector('.settings-footer');
+    expect(footer?.textContent).toBe(`Browser Sidekick ${TEST_VERSION}`);
+    expect(footer?.parentElement?.lastElementChild).toBe(footer);
+  });
+
+  it('puts the provider form under its section label in a card', async () => {
+    await setup([provider()]);
+    openSettings();
+    fireEvent.click(screen.getByRole('button', { name: 'Edit “Local”' }));
+    const form = screen.getByRole('form', { name: 'Edit provider' });
+    expect(within(form).getByRole('heading', { name: 'Edit provider' }).className).toContain(
+      'section-label',
+    );
+    expect(form.querySelector('.settings-card')?.contains(field('Name'))).toBe(true);
   });
 });

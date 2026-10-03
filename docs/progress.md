@@ -517,3 +517,131 @@ Status: done (gate-checker PASS-WITH-NOTES, 2026-10-01)
 - `tests/sidepanel-chat.test.tsx`: the former "reasoning is not in the page" assertion now checks the collapsed block, opens it and closes it.
 - `tests/mock-llm.test.ts`: a stream held at given chunks until released, and a held stream whose client goes away.
 - `tests/e2e/reasoning.spec.ts`: the flow of the plan; screens `T16-01-thinking-collapsed`, `T16-02-thinking-open`, `T16-04-answered-open`, `T16-05-answered-collapsed`, `T16-06-reopened-expanded`, `T16-07-narrow-320-expanded`, `T16-08-stopped-reasoning-only` (each also `-dark`) and `T16-03-thinking-open-growing`.
+
+# Redesign
+
+Spec: `specs/redesign.md`. Branch `feature/redesign`. Status values as above.
+
+## T17 Visual foundation
+
+Status: done (2026-10-03; gate-checker PASS-WITH-NOTES, orchestrator UI check in Chromium and Firefox 140)
+
+### Plan
+
+- Fonts: `npm pack @fontsource-variable/geist` and `@fontsource-variable/geist-mono` (not added to `package.json`); copy the latin and latin-ext variable woff2 files and the licence as `OFL.txt` into `src/entrypoints/sidepanel/fonts/`; `@font-face` rules in `style.css` with `url()` so Vite bundles them, `font-display: swap`, unicode ranges as in the packages. The licence ships in both builds (copied as a public asset).
+- `style.css`: the §4.1 tokens in a light `:root` block and a dark `prefers-color-scheme` block; old token names (`--bg-raised`, `--bg-hover`, `--fg`, `--fg-muted`, `--border`, `--focus`, `--accent-fg`, `--danger-fg`, `--warning-bg`, `--warning-fg`, `--backdrop`) replaced, not aliased; tints via `color-mix()`.
+- Type scale (§4.2), radii and 4 px spacing (§4.3), focus ring 2 px accent, 2 px offset on every interactive element, motion off under reduced motion; shared controls (§4.4): primary, secondary, danger buttons, inputs and selects, badges, notices. No layout change.
+- `icons.tsx`: stroke 1.8; Settings becomes the sliders icon, Sessions the menu icon with the shorter third line.
+- Tests: `tests/style-tokens.test.ts` (no colour literal outside the token blocks; every §4.1 token in both blocks; no old token names), `tests/style-contrast.test.ts` (4.5:1 for the §4.1 text/background pairs in both themes); e2e `tests/e2e/visual.spec.ts` (font requests stay on the extension origin, `document.fonts` reports Geist and Geist Mono loaded, screens `T17-01-main` light and dark at 400 px).
+- Open questions: none so far.
+
+### Acceptance
+
+- [x] Every colour in `style.css` comes from spec 4.1; no hex or rgb outside the token blocks (`tests/style-tokens.test.ts`; one extra token, `--backdrop`, decisions.md Redesign T17-6).
+- [x] The panel renders in Geist and Geist Mono with no network request for fonts (e2e in Chromium: requests stay on the extension origin, `document.fonts` reports both loaded); the licence ships in both builds as `assets/OFL.txt` (`tests/manifest.test.ts`). Firefox: the same files and CSS are in `dist/firefox-ext`; rendering there is the orchestrator's UI check.
+- [x] Every interactive element shows the focus ring on keyboard focus (global `:focus-visible` rule; e2e tabs through the main view and checks every element reached).
+- [x] Contrast of each text token on its background meets 4.5:1 in both themes (`tests/style-contrast.test.ts`; filled Delete uses `--on-accent`, decisions.md Redesign T17-7).
+- [x] No behaviour change: the existing unit and e2e suites pass unchanged (no selector changes were needed); header buttons stay 30 px until T18 so the thinking-levels narrow-header e2e keeps passing (decisions.md Redesign T17-10).
+- [x] UI check in both browsers (orchestrator): the Chromium screens `test-results/screens/T17-*.png`, and `dist/firefox-ext` installed headless in Firefox 140 ESR over WebDriver BiDi with the side panel page rendered in a tab, light and dark: body font Geist, `document.fonts` reports Geist loaded.
+
+### Tests
+
+- `tests/style-tokens.test.ts`: every spec 4.1 token in both blocks with its value, the same names in both blocks, no colour literal outside them, no undefined `var()`, a parser self-check.
+- `tests/style-contrast.test.ts`: the text/background pairs in both themes, plus the WCAG reference values.
+- `tests/manifest.test.ts`: the four woff2 files and `assets/OFL.txt` in both builds.
+- `tests/e2e/visual.spec.ts`: fonts from the extension origin and loaded; focus rings; screens `T17-01-first-run`, `T17-02-answer`, `T17-03-focus-citation` (each also `-dark`), 400 px wide.
+
+## T18 Header, composer and transcript
+
+Status: done (2026-10-03; gate-checker PASS-WITH-NOTES, follow-up PASS, orchestrator UI check in Chromium and Firefox 140)
+
+### Plan
+
+- Header (`Header.tsx`, `SessionTitle.tsx`): menus leave the header; 36 px icon buttons (decisions.md Redesign T17-10); title block with a subtitle `<p>` beside the rename button (not in its name): pin count and "active <relative time>" from `session.updatedAt` via `relative-time.ts`, or "No pins yet"; re-rendered every 30 s. App keeps the shown session's `updatedAt` fresh after pin and message changes.
+- Composer (`Composer.tsx`): one card with the textarea and a toolbar (Model menu, Thinking menu, spacer, Summarize, Send); keyboard hint under it, or the existing unavailable hints with the card at 70 % opacity. Send runs the same `canSend` check as Enter. `ActionBar.tsx` removed; Summarize becomes `SummarizeButton.tsx` (same unavailable tooltip, opening above, right-aligned); icon only below 360 px.
+- Menus (`ModelMenu.tsx`, `ThinkingMenu.tsx`): pill with accent dot / transparent lightbulb with the level name; lists open upward, left-aligned, max height the space above, shifted to stay inside the panel (shared hook).
+- Transcript: 14/18 px padding, empty-state illustration (inline, `aria-hidden`), citations show the number only (`markdown.ts`).
+- Strings: header activity, no pins, Send, keyboard hint (en, de); `thinkingButton` removed. Session-tabs strings stay for T19.
+- Tests: Header component tests (subtitle, refresh with fake timers), composer (Send states, hints, Enter/Send parity), Thinking text and name, citation text and name, narrow Summarize; update header, thinking, summarize, chat, markdown tests; e2e `tests/e2e/composer.spec.ts` (Send, both menus, Summarize, Stop, screens T18-* at 400 and 320 light and dark); `thinking.spec.ts` narrow-header test becomes a composer-toolbar fit test.
+- Open questions: none so far.
+
+### Acceptance
+
+- [x] Every bullet of spec 5.1, 5.3 and 5.4 holds (component tests in `tests/sidepanel-header.test.tsx`, `tests/sidepanel-composer.test.tsx`, `tests/sidepanel-thinking.test.tsx`; e2e `tests/e2e/composer.spec.ts`). Deviation: the model menu stays hidden without any provider, as today (decisions.md Redesign T18-6).
+- [x] Model and Thinking menus work from the composer with mouse and keyboard, open upward and stay inside the panel at 320 and 600+ px (`composer.spec.ts` at 320 and 400 px; `thinking.spec.ts` at 320, 400 and 640 px).
+- [x] Send and Enter behave identically in every state: empty or blank input, streaming, no provider, no access (`sidepanel-composer.test.tsx`; e2e: Send disabled and Enter not sending while streaming).
+- [x] Summarize keeps its unavailable tooltip, now above the button and right-aligned (`sidepanel-composer.test.tsx`, `summarize.spec.ts`).
+- [x] Citations show numbers only and keep their accessible names and click behaviour (`chat-markdown.test.ts`, `sidepanel-composer.test.tsx`, `chat.spec.ts`, `composer.spec.ts`).
+- [x] UI check in both browsers (orchestrator): the Chromium screens `test-results/screens/T18-*-400.png` and `-320.png` (each also `-dark`) compared with `Main.dc.html` and `Welcome.dc.html`; two polish fixes followed (T18-12, T18-13). `dist/firefox-ext` rendered headless in Firefox 140 ESR at 320 px, light and dark: header subtitle, composer card, empty state.
+
+### Tests
+
+- `tests/sidepanel-header.test.tsx`: subtitle without pins, with pins, singular, refresh every 30 s (fake timers), German, following a stored question; the rename button's name excludes the subtitle.
+- `tests/sidepanel-composer.test.tsx`: Send placement, disabled states and parity with Enter, Shift+Enter, focus after Send; keyboard hint versus the no-provider and no-access hints and the faded card; German; Summarize name, icon, tooltip and the narrow rule; model button dot and "No model"; citation text, name and click; the empty-state illustration.
+- Updated: `tests/sidepanel-thinking.test.tsx` (level name only, toolbar order), `tests/chat-markdown.test.ts`, `tests/sidepanel-chat.test.tsx`, `tests/sidepanel-reasoning.test.tsx` (citation text), `tests/e2e/thinking.spec.ts` (toolbar fit replaces the narrow header), `tests/e2e/summarize.spec.ts` (keyboard path to Summarize, citation text), `tests/e2e/chat.spec.ts` (citation selectors).
+- e2e `tests/e2e/composer.spec.ts`: screens `T18-01-no-provider`, `T18-02-idle`, `T18-03-model-menu-open`, `T18-04-thinking-menu-open`, `T18-05-streaming`, `T18-06-answer-citations`, each at `-400` and `-320`, light and `-dark`.
+
+### Follow-up after the gate (orchestrator's screenshot review)
+
+- [x] Composer focus shows on the card (2 px accent outline, 2 px offset) while the input has focus; the input draws none; toolbar buttons keep their own ring (decisions.md Redesign T18-12; `composer.spec.ts`, `visual.spec.ts`).
+- [x] A citation chip is flush with the punctuation after it: no chip margin (decisions.md Redesign T18-13; unit test for "text [1].", CSS check, e2e gap under 0.5 px).
+- Gate passed again after the follow-up.
+
+## T19 Session tabs and banners
+
+Status: done (2026-10-03; gate-checker PASS, orchestrator UI check in Chromium and Firefox 140)
+
+### Plan
+
+- Citation numbers: `src/shared/chat/citation.ts` (orchestrator decision), `citationNumber(position)` for the position in pins-then-current-tab order; `assembleContext` and `SessionTabs` both call it. Unit tests first (`tests/chat-citation.test.ts`), including a mocked helper to show `assembleContext` uses it.
+- `SessionTabs.tsx`: toggle with chevron, section label "Session tabs" and a Geist Mono count pill (name "Session tabs N"); pins in one card; 24 px tile with favicon or a fallback icon by type (globe, play, file); meta line number · host · type, "Current tab", "Truncated"; status on the right (dot with hidden "Ready", spinner and "Extracting…", "Failed"), replaced by the actions on hover and `:focus-within` (actions stay in the tab order while hidden); current-tab card (dashed accent border, accent-soft, number pins+1, eye, "Pin" text button named "Pin to session"); unreadable rows dashed `--line` with the globe tile.
+- `AccessBanner.tsx`: surface card with shadow, shield tile, primary Allow, plain Dismiss. Provider notice and error banners as spec 4.4 notices (cards with margins).
+- Icons: play, file, shield, spinner. Strings: `sessionTabsLabel`, `pinButton` (en, de); `sessionTabsHeading` removed.
+- Tests: update `sidepanel-session-tabs`, `sidepanel-access`, `sidepanel-app`, `sidepanel-drawer` and the e2e toggle names; new component tests for row states, fallback icons, numbering, current row included/excluded, toggle name; e2e `tests/e2e/session-tabs.spec.ts` (page, YouTube and PDF pins, numbers against a cited answer, excluded current tab, keyboard open; screens T19-*).
+- Open questions: none so far.
+
+### Acceptance
+
+- [x] Every bullet of spec 5.2 and 5.5 holds (component tests in `tests/sidepanel-session-tabs.test.tsx` and `tests/sidepanel-access.test.tsx`; e2e `tests/e2e/session-tabs.spec.ts`; decisions.md Redesign T19).
+- [x] The number on each pin row and on the current-tab row equals the citation number the model receives, with a failed pin, an extracting pin, and the current tab unpinned, excluded and pinned (`tests/chat-citation.test.ts`; e2e compares the rows with the `<<<PAGE n>>>` lines of each request and a cited answer).
+- [x] Row actions are reachable and usable by keyboard alone (e2e: Tab from the toggle reaches Open, the actions show with the focus ring, Enter opens the page; decisions.md Redesign T19-4).
+- [x] UI check in both browsers (orchestrator): the Chromium screens `test-results/screens/T19-*.png` (light and dark) compared with `Main.dc.html` and `Welcome.dc.html`; `dist/firefox-ext` rendered headless in Firefox 140 ESR, light and dark: access banner card, section label with count, restricted current-tab row, Geist and Geist Mono loaded.
+
+### Tests
+
+- `tests/chat-citation.test.ts`: the helper, and `assembleContext` taking its numbers from it; non-ready pins keep their numbers; no current-tab number when the tab isn't sent.
+- `tests/sidepanel-session-tabs.test.tsx`: toggle name and count pill; meta lines with numbers, host, type, "Current tab", "Truncated"; ready dot with hidden "Ready", spinner with "Extracting…", "Failed" with the reason; fallback icons by type; actions in the DOM and tab order; current-tab row with the Pin text button, included and excluded; pinned current tab; not-accessible and restricted rows; German. Updated names in `sidepanel-app`, `sidepanel-access` (plus the banner card), `sidepanel-drawer`.
+- e2e `tests/e2e/session-tabs.spec.ts`: screens `T19-01-first-run`, `T19-02-all-states`, `T19-03-row-hovered`, `T19-04-collapsed`, `T19-05-provider-notice` (each also `-dark`). Updated `pinning.spec.ts` (hover before row actions; toggle name), `page-access.spec.ts`, `sessions.spec.ts` (toggle name), `youtube.spec.ts`, `pdf.spec.ts` (type selector).
+
+## T20 Drawer, settings, README, final report
+
+Status: done (2026-10-03; gate-checker PASS, orchestrator UI check in Chromium and Firefox 140)
+
+### Plan
+
+- Date grouping (orchestrator decision): pure module `src/entrypoints/sidepanel/date-groups.ts` next to `relative-time.ts`, `groupByDate(items, at, now)` returning the non-empty groups "today", "thisWeek", "earlier" in that order (local time, weeks start on Monday). Unit tests first (`tests/date-groups.test.ts`): today, this week, earlier, empty groups, local midnight, Monday, Sunday, future times.
+- `SessionsDrawer.tsx` (spec 5.6): width min(88 %, 320 px) with right border and shadow; header 17 px/600 with Close; full-width "New session" button (accent-soft, plus icon) that does what the header's does and closes the drawer; one list per group under a section label; row title 600 active / 500 otherwise, active row accent-soft with a 7 px accent dot; delete shown on row hover and `:focus-within` (stays in the tab order, as T19-4); the delete confirm a danger-tinted card. App passes `onNewSession`.
+- Settings (spec 5.7): header Back + "Settings" 16 px/600; body 16 px 12 px, sections 20 px apart, each a section label above a 12 px card; "Add provider" accent text button with plus icon; provider rows with a 32 px letter tile, name and badges, type · model (Geist Mono), no-access notice as a warning notice with its link, Make default / Edit links, trash; page access state with an ok/warning dot; footer "Browser Sidekick <version>" from `browser.runtime.getManifest().version`.
+- Strings: `drawerGroupToday`, `drawerGroupThisWeek`, `drawerGroupEarlier` (en, de).
+- Tests: component tests for drawer groups, active row, delete on hover/focus, New session in the drawer; provider tile and badges, page access dot, version footer; update drawer, settings and access tests; e2e `tests/e2e/drawer-settings.spec.ts` (sessions with set activity times, delete, new from drawer; add and edit a provider against the mock LLM; screens T20-* light and dark); update `sessions.spec.ts` keyboard path.
+- README: drawer grouping line if needed; final report `docs/redesign-report.md`.
+- Open questions: none so far.
+
+### Acceptance
+
+- [x] Every bullet of spec 5.6 and 5.7 holds (component tests in `tests/sidepanel-drawer-layout.test.tsx`, `tests/sidepanel-drawer.test.tsx`, `tests/sidepanel-settings.test.tsx`; decisions.md Redesign T20). The drawer's keyboard path and hover delete are also covered by the updated `sessions.spec.ts`.
+- [x] Grouping is correct around midnight and on Mondays (`tests/date-groups.test.ts`, run in UTC, Europe/Berlin, America/Los_Angeles and Pacific/Kiritimati; `tests/sidepanel-drawer-layout.test.tsx` for Monday).
+- [x] The README matches the shipped UI (Features: date-grouped Sessions list; the model, thinking and Settings lines were updated in T17 and T18).
+- [x] The final report `docs/redesign-report.md` is written (allowed by the owner after the permission prompt first declined it; questions.md Redesign closed 2).
+- [x] e2e for spec 5.6 and 5.7 (`tests/e2e/drawer-settings.spec.ts`, screens T20-01 to T20-08, light and dark); allowed by the owner after the permission prompt first declined it (questions.md Redesign closed 1).
+- [x] UI check in both browsers (orchestrator): the T20 build loaded in Chromium with four sessions of different ages (drawer groups, hover delete, active dot, settings, provider form; light and dark; no overflow at 400 px), and `dist/firefox-ext` rendered headless in Firefox 140 ESR with the drawer and settings opened, light and dark.
+
+### Tests
+
+- `tests/date-groups.test.ts`: today, this week from Monday, earlier, local midnight, Monday and Sunday, future times, daylight-saving changes, month boundary; empty groups left out, order kept.
+- `tests/sidepanel-drawer-layout.test.tsx`: groups and their labels (en, de), empty groups, Monday, active row dot, meta line, delete button per row in the tab order, the hover/focus CSS rule, confirm card, New session button.
+- `tests/sidepanel-drawer.test.tsx`: New session from the drawer starts and shows a session, closes the drawer, returns focus.
+- `tests/sidepanel-settings.test.tsx`: section labels above cards, Add provider text button, provider tile, badges, model in mono, no-access notice, confirm card, page access dot (ok and warning), version footer from the manifest, provider form in a card.
+- e2e `tests/e2e/drawer-settings.spec.ts`: sessions with set activity times on a fixed clock, groups, active row, delete on hover and on keyboard focus, delete confirm, New session from the drawer, Monday after midnight; settings footer version, page access dot, add and edit a provider against the mock LLM, provider tile, badge and mono model, delete confirm. Screens `T20-01-drawer`, `T20-02-row-hovered`, `T20-03-delete-focused`, `T20-04-delete-confirm`, `T20-05-provider-form`, `T20-06-settings`, `T20-07-provider-form-edit`, `T20-08-provider-delete-confirm` (each also `-dark`).
+- Updated `tests/e2e/sessions.spec.ts` (Tab path with the drawer's New session; delete after hovering the row). `tests/helpers/sidebar.tsx` fakes `runtime.getManifest`.
+- Gate (2026-10-03): lint, typecheck, 1324 unit tests in 55 files, build, check:dist, lint:firefox (0 errors, 18 warnings), 23 e2e tests passed.

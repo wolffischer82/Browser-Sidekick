@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
+import { browser } from 'wxt/browser';
 import { t } from '@/shared/i18n';
 import type { ProviderConfig } from '@/shared/model';
 import { BackIcon } from './icons';
@@ -58,7 +59,7 @@ export function SettingsView({
         if (event.key === 'Escape') back();
       }}
     >
-      <header class="header">
+      <header class="header settings-header">
         <button
           ref={backRef}
           type="button"
@@ -101,6 +102,9 @@ export function SettingsView({
             <DeleteAllData onDeleteAll={onDeleteAll} />
           </>
         )}
+        <p class="settings-footer">
+          {t('extName')} {browser.runtime.getManifest().version}
+        </p>
       </div>
     </div>
   );

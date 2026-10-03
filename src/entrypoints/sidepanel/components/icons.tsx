@@ -1,6 +1,9 @@
 import type { ComponentChildren } from 'preact';
 
-/** Small stroke icons; decorative, so every button carries its own label. */
+/**
+ * Small stroke icons (redesign spec 4.3: 1.8 px stroke, round caps and joins);
+ * decorative, so every button carries its own label.
+ */
 function Icon({ children }: { children: ComponentChildren }) {
   return (
     <svg
@@ -10,7 +13,7 @@ function Icon({ children }: { children: ComponentChildren }) {
       height="18"
       fill="none"
       stroke="currentColor"
-      stroke-width="2"
+      stroke-width="1.8"
       stroke-linecap="round"
       stroke-linejoin="round"
       aria-hidden="true"
@@ -21,9 +24,10 @@ function Icon({ children }: { children: ComponentChildren }) {
   );
 }
 
+/** Sessions: three lines, the third one shorter. */
 export const MenuIcon = () => (
   <Icon>
-    <path d="M4 6h16M4 12h16M4 18h16" />
+    <path d="M4 6h16M4 12h16M4 18h10" />
   </Icon>
 );
 
@@ -33,10 +37,12 @@ export const PlusIcon = () => (
   </Icon>
 );
 
-export const GearIcon = () => (
+/** Settings: two sliders. */
+export const SlidersIcon = () => (
   <Icon>
-    <circle cx="12" cy="12" r="3" />
-    <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" />
+    <path d="M4 7h10M18 7h2M4 17h4M12 17h8" />
+    <circle cx="16" cy="7" r="2" />
+    <circle cx="10" cy="17" r="2" />
   </Icon>
 );
 
@@ -118,5 +124,55 @@ export const GlobeIcon = () => (
   <Icon>
     <circle cx="12" cy="12" r="9" />
     <path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" />
+  </Icon>
+);
+
+/** Thinking level. */
+export const LightbulbIcon = () => (
+  <Icon>
+    <path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z" />
+  </Icon>
+);
+
+/** Summarize: lines of falling length. */
+export const LinesIcon = () => (
+  <Icon>
+    <path d="M4 6h16M4 12h10M4 18h7" />
+  </Icon>
+);
+
+/** Send: arrow up. */
+export const ArrowUpIcon = () => (
+  <Icon>
+    <path d="M12 19V5M5 12l7-7 7 7" />
+  </Icon>
+);
+
+/** A pinned YouTube video without a favicon. */
+export const PlayIcon = () => (
+  <Icon>
+    <path d="M8 5v14l11-7z" fill="currentColor" />
+  </Icon>
+);
+
+/** A pinned PDF without a favicon. */
+export const FileIcon = () => (
+  <Icon>
+    <path d="M14 3H6v18h12V7z" />
+    <path d="M14 3v4h4" />
+  </Icon>
+);
+
+/** Page access. */
+export const ShieldIcon = () => (
+  <Icon>
+    <path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6l8-3z" />
+  </Icon>
+);
+
+/** A pin being extracted; turns in CSS unless motion is reduced. */
+export const SpinnerIcon = () => (
+  <Icon>
+    <path d="M12 3a9 9 0 1 0 9 9" />
   </Icon>
 );
