@@ -6,7 +6,7 @@ Status: MVP, version 0.1.0. It isn't in the Chrome Web Store or on addons.mozill
 
 ## Features
 
-- **Sessions of pinned pages.** Pin the current tab from the sidebar, or right-click a page and choose "Pin to Sidekick". Each pin stores a snapshot of the page's text, which you can refresh while the tab is open. Sessions are kept until you delete them, and you can switch between them and rename them.
+- **Sessions of pinned pages.** Pin the current tab from the sidebar, or right-click a page and choose "Pin to Sidekick". Each pin stores a snapshot of the page's text, which you can refresh while the tab is open. Sessions are kept until you delete them, and you can switch between them and rename them. The Sessions list groups them into Today, This week and Earlier.
 - **Web pages, YouTube and PDFs.** Articles are reduced to their readable text, YouTube videos to their transcript, and PDFs to their text layer.
 - **Ask and summarise.** Questions are answered from the pinned pages plus the tab you're on. Summarize gives a short summary per page and an overall one. Answers stream in and cite their sources by number, the number each page shows in the session list; clicking a number opens that page.
 - **Your own provider and key.** Works with Anthropic, Google Gemini and any OpenAI-compatible API (OpenAI, OpenRouter, Groq, or a local server such as Ollama or LM Studio). You can save several providers and choose the model per session, under the question box.
