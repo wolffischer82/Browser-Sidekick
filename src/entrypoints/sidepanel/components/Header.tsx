@@ -1,6 +1,6 @@
 import type { ComponentChildren, Ref } from 'preact';
 import { t } from '@/shared/i18n';
-import { GearIcon, MenuIcon, PlusIcon } from './icons';
+import { SlidersIcon, MenuIcon, PlusIcon } from './icons';
 import { SessionTitle } from './SessionTitle';
 
 interface Props {
@@ -65,7 +65,7 @@ export function Header(props: Props) {
         title={t('settings')}
         onClick={props.onOpenSettings}
       >
-        <GearIcon />
+        <SlidersIcon />
       </button>
     </header>
   );
