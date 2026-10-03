@@ -67,6 +67,18 @@
       }
     }
   },
+  "drawerGroupToday": {
+    "message": "Today",
+    "description": "Sessions drawer group: last activity today (local time)."
+  },
+  "drawerGroupThisWeek": {
+    "message": "This week",
+    "description": "Sessions drawer group: last activity earlier in the current calendar week (weeks start on Monday)."
+  },
+  "drawerGroupEarlier": {
+    "message": "Earlier",
+    "description": "Sessions drawer group: last activity before the current week."
+  },
   "deleteSessionConfirm": {
     "message": "Delete this session with its pins and messages?",
     "description": "Confirmation shown before a session is deleted."

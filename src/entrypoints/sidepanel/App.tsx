@@ -638,6 +638,12 @@ export function App({ repository }: Props) {
           activeId={active.id}
           now={Date.now()}
           onClose={closeDrawer}
+          onNewSession={() => {
+            run(async (r) => {
+              await show(r, await createActiveSession(r));
+              closeDrawer();
+            });
+          }}
           onSelect={(id) => {
             run(async (r) => {
               const session = await activateSession(r, id);

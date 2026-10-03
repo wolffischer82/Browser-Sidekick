@@ -904,7 +904,18 @@ textarea {
   }
 }
 
-/* Sessions drawer */
+/* Section labels (redesign spec 4.2): drawer groups and settings sections. */
+.section-label {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  line-height: 1.45;
+  text-transform: uppercase;
+}
+
+/* Sessions drawer (redesign spec 5.6) */
 
 .drawer-layer {
   position: absolute;
@@ -926,7 +937,8 @@ textarea {
   left: 0;
   display: flex;
   flex-direction: column;
-  width: min(88%, 360px);
+  width: min(88%, 320px);
+  border-right: 1px solid var(--line);
   background: var(--surface);
   box-shadow: var(--shadow);
   animation: slide-in 0.15s ease-out;
@@ -934,54 +946,112 @@ textarea {
 
 .drawer-header {
   display: flex;
+  flex: none;
   align-items: center;
-  justify-content: space-between;
-  padding: 4px 4px 4px 12px;
-  border-bottom: 1px solid var(--line);
+  gap: 8px;
+  padding: 14px 10px 10px 18px;
 }
 
 .drawer-heading {
+  flex: 1;
   margin: 0;
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.drawer-header .icon-button {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+}
+
+.drawer-new-session {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 38px;
+  margin: 0 12px 12px;
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--line));
+  border-radius: 10px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.drawer-new-session:hover {
+  border-color: color-mix(in srgb, var(--accent) 50%, var(--line));
+}
+
+.drawer-new-session .icon {
+  width: 16px;
+  height: 16px;
+}
+
+.session-groups {
+  flex: 1;
+  overflow-y: auto;
+  /* Room for the rows' focus rings at the edges. */
+  padding: 0 8px 12px;
+}
+
+.session-group-label {
+  padding: 14px 10px 4px;
+  font-size: 11.5px;
+}
+
+.session-group:first-child .session-group-label {
+  padding-top: 10px;
 }
 
 .session-list {
-  flex: 1;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
   margin: 0;
-  padding: 4px;
+  padding: 0;
   list-style: none;
 }
 
 .session-row {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 2px;
-  border-radius: 8px;
+  border-radius: 10px;
 }
 
-.session-row:hover {
+.session-row:is(:hover, :focus-within) {
   background: var(--sunken);
+}
+
+.session-row:has(.session-item[aria-current='true']) {
+  background: var(--accent-soft);
 }
 
 .session-item {
   display: flex;
   flex: 1;
-  flex-direction: column;
+  align-items: center;
+  gap: 10px;
   min-width: 0;
-  padding: 8px;
+  padding: 9px 10px;
   border: 0;
-  border-left: 3px solid transparent;
-  border-radius: 8px;
+  border-radius: 10px;
   background: none;
   text-align: left;
   cursor: pointer;
 }
 
-.session-item[aria-current='true'] {
-  border-left-color: var(--accent);
-  background: var(--accent-soft);
+.session-item-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
 }
 
 .session-item-title {
@@ -1001,24 +1071,63 @@ textarea {
   font-size: 12px;
 }
 
+.session-item-dot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.session-delete {
+  margin-right: 4px;
+}
+
+/*
+ * Delete shows on row hover and focus (redesign spec 5.6). Hidden, it stays
+ * in the tab order, clipped like .visually-hidden, so Tab reaches it and
+ * :focus-within then shows it.
+ */
+.session-row:not(:hover, :focus-within) .session-delete {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* The delete confirm: a danger-tinted card in place of the row. */
 .session-confirm {
+  display: flex;
   flex: 1;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  margin: 2px 0;
   padding: 12px;
-  border: 1px solid var(--line);
+  border: 1px solid color-mix(in srgb, var(--danger) 35%, var(--line));
   border-radius: 12px;
-  background: var(--sunken);
+  background: color-mix(in srgb, var(--danger) 6%, var(--surface));
+}
+
+.session-row:has(.session-confirm) {
+  background: none;
 }
 
 .session-confirm-title {
   overflow: hidden;
-  margin: 0 0 2px;
+  margin: 0;
+  font-size: 13.5px;
   font-weight: 600;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .session-confirm-text {
-  margin: 0 0 8px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 12.5px;
 }
 
 .session-confirm-actions {
