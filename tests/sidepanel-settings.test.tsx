@@ -252,7 +252,7 @@ describe('host access for a custom origin', () => {
     expect(screen.queryByText('No access')).toBeNull();
   });
 
-  it('saves as "no access" when declined: not default, not in the header, input stays disabled', async () => {
+  it('saves as "no access" when declined: not default, not in the model menu, input stays disabled', async () => {
     const perms = await setup();
     perms.answer = 'decline';
     await addCustom();

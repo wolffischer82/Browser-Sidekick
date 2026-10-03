@@ -452,7 +452,7 @@
   },
   "modelMenuLabel": {
     "message": "Model: $MODEL$",
-    "description": "Accessible name of the header model button.",
+    "description": "Accessible name of the composer model button.",
     "placeholders": {
       "model": {
         "content": "$1",
@@ -462,15 +462,15 @@
   },
   "noModel": {
     "message": "No model",
-    "description": "Header model button when the session has none."
+    "description": "Composer model button when the session has none."
   },
   "thinkingLevel": {
     "message": "Thinking level",
-    "description": "Label of the header's thinking-level list."
+    "description": "Label of the composer's thinking-level list."
   },
   "thinkingMenuLabel": {
     "message": "Thinking level: $LEVEL$",
-    "description": "Accessible name and tooltip of the header's thinking-level button.",
+    "description": "Accessible name and tooltip of the composer's thinking-level button.",
     "placeholders": {
       "level": {
         "content": "$1",

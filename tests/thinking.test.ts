@@ -8,7 +8,7 @@ import {
   THINKING_OPTIONS,
 } from '@/shared/thinking';
 
-// The rules behind the header's thinking control (specs/thinking-levels.md
+// The rules behind the composer's thinking control (specs/thinking-levels.md
 // 4.1, 4.2, 5): which level a session has, whether the control shows for the
 // session's model, and what a request carries.
 

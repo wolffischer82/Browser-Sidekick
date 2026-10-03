@@ -11,7 +11,7 @@ import {
 
 // T05: add a provider pointing at the local mock server, test the
 // connection with a wrong and a right key, save it, see the key masked,
-// pick a session model in the header, and delete all data.
+// pick a session model in the composer, and delete all data.
 // Screens: test-results/screens/T05-*.png (light and dark).
 
 const KEY = 'sk-mock-e2e-key-7f3a';
