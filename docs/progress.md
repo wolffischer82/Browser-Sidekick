@@ -517,3 +517,20 @@ Status: done (gate-checker PASS-WITH-NOTES, 2026-10-01)
 - `tests/sidepanel-chat.test.tsx`: the former "reasoning is not in the page" assertion now checks the collapsed block, opens it and closes it.
 - `tests/mock-llm.test.ts`: a stream held at given chunks until released, and a held stream whose client goes away.
 - `tests/e2e/reasoning.spec.ts`: the flow of the plan; screens `T16-01-thinking-collapsed`, `T16-02-thinking-open`, `T16-04-answered-open`, `T16-05-answered-collapsed`, `T16-06-reopened-expanded`, `T16-07-narrow-320-expanded`, `T16-08-stopped-reasoning-only` (each also `-dark`) and `T16-03-thinking-open-growing`.
+
+# Redesign
+
+Spec: `specs/redesign.md`. Branch `feature/redesign`. Status values as above.
+
+## T17 Visual foundation
+
+Status: in progress
+
+### Plan
+
+- Fonts: `npm pack @fontsource-variable/geist` and `@fontsource-variable/geist-mono` (not added to `package.json`); copy the latin and latin-ext variable woff2 files and the licence as `OFL.txt` into `src/entrypoints/sidepanel/fonts/`; `@font-face` rules in `style.css` with `url()` so Vite bundles them, `font-display: swap`, unicode ranges as in the packages. The licence ships in both builds (copied as a public asset).
+- `style.css`: the §4.1 tokens in a light `:root` block and a dark `prefers-color-scheme` block; old token names (`--bg-raised`, `--bg-hover`, `--fg`, `--fg-muted`, `--border`, `--focus`, `--accent-fg`, `--danger-fg`, `--warning-bg`, `--warning-fg`, `--backdrop`) replaced, not aliased; tints via `color-mix()`.
+- Type scale (§4.2), radii and 4 px spacing (§4.3), focus ring 2 px accent, 2 px offset on every interactive element, motion off under reduced motion; shared controls (§4.4): primary, secondary, danger buttons, inputs and selects, badges, notices. No layout change.
+- `icons.tsx`: stroke 1.8; Settings becomes the sliders icon, Sessions the menu icon with the shorter third line.
+- Tests: `tests/style-tokens.test.ts` (no colour literal outside the token blocks; every §4.1 token in both blocks; no old token names), `tests/style-contrast.test.ts` (4.5:1 for the §4.1 text/background pairs in both themes); e2e `tests/e2e/visual.spec.ts` (font requests stay on the extension origin, `document.fonts` reports Geist and Geist Mono loaded, screens `T17-01-main` light and dark at 400 px).
+- Open questions: none so far.
