@@ -38,7 +38,7 @@ The repository contains ready-to-load builds in `dist/`, so you don't need Node.
 - **Chrome:** open `chrome://extensions`, turn on "Developer mode", choose "Load unpacked" and select `dist/chrome-ext`.
 - **Firefox:** open `about:debugging#/runtime/this-firefox`, choose "Load Temporary Add-on…" and select `dist/firefox-ext/manifest.json`. Firefox removes a temporary add-on when it closes, so you load it again after a restart.
 
-Click the toolbar icon to open the sidebar, then add a provider under Settings (the gear icon).
+Click the toolbar icon to open the sidebar, then add a provider under Settings (the sliders icon at the top right).
 
 ### Build it yourself
 
