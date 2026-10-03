@@ -586,3 +586,16 @@ Status: done (2026-10-03; gate-checker PASS-WITH-NOTES, follow-up PASS, orchestr
 - [x] Composer focus shows on the card (2 px accent outline, 2 px offset) while the input has focus; the input draws none; toolbar buttons keep their own ring (decisions.md Redesign T18-12; `composer.spec.ts`, `visual.spec.ts`).
 - [x] A citation chip is flush with the punctuation after it: no chip margin (decisions.md Redesign T18-13; unit test for "text [1].", CSS check, e2e gap under 0.5 px).
 - Gate passed again after the follow-up.
+
+## T19 Session tabs and banners
+
+Status: in progress
+
+### Plan
+
+- Citation numbers: `src/shared/chat/citation.ts` (orchestrator decision), `citationNumber(position)` for the position in pins-then-current-tab order; `assembleContext` and `SessionTabs` both call it. Unit tests first (`tests/chat-citation.test.ts`), including a mocked helper to show `assembleContext` uses it.
+- `SessionTabs.tsx`: toggle with chevron, section label "Session tabs" and a Geist Mono count pill (name "Session tabs N"); pins in one card; 24 px tile with favicon or a fallback icon by type (globe, play, file); meta line number · host · type, "Current tab", "Truncated"; status on the right (dot with hidden "Ready", spinner and "Extracting…", "Failed"), replaced by the actions on hover and `:focus-within` (actions stay in the tab order while hidden); current-tab card (dashed accent border, accent-soft, number pins+1, eye, "Pin" text button named "Pin to session"); unreadable rows dashed `--line` with the globe tile.
+- `AccessBanner.tsx`: surface card with shadow, shield tile, primary Allow, plain Dismiss. Provider notice and error banners as spec 4.4 notices (cards with margins).
+- Icons: play, file, shield, spinner. Strings: `sessionTabsLabel`, `pinButton` (en, de); `sessionTabsHeading` removed.
+- Tests: update `sidepanel-session-tabs`, `sidepanel-access`, `sidepanel-app`, `sidepanel-drawer` and the e2e toggle names; new component tests for row states, fallback icons, numbering, current row included/excluded, toggle name; e2e `tests/e2e/session-tabs.spec.ts` (page, YouTube and PDF pins, numbers against a cited answer, excluded current tab, keyboard open; screens T19-*).
+- Open questions: none so far.
