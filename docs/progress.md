@@ -612,3 +612,17 @@ Status: done (2026-10-03; gate-checker PASS, orchestrator UI check in Chromium a
 - `tests/chat-citation.test.ts`: the helper, and `assembleContext` taking its numbers from it; non-ready pins keep their numbers; no current-tab number when the tab isn't sent.
 - `tests/sidepanel-session-tabs.test.tsx`: toggle name and count pill; meta lines with numbers, host, type, "Current tab", "Truncated"; ready dot with hidden "Ready", spinner with "Extracting…", "Failed" with the reason; fallback icons by type; actions in the DOM and tab order; current-tab row with the Pin text button, included and excluded; pinned current tab; not-accessible and restricted rows; German. Updated names in `sidepanel-app`, `sidepanel-access` (plus the banner card), `sidepanel-drawer`.
 - e2e `tests/e2e/session-tabs.spec.ts`: screens `T19-01-first-run`, `T19-02-all-states`, `T19-03-row-hovered`, `T19-04-collapsed`, `T19-05-provider-notice` (each also `-dark`). Updated `pinning.spec.ts` (hover before row actions; toggle name), `page-access.spec.ts`, `sessions.spec.ts` (toggle name), `youtube.spec.ts`, `pdf.spec.ts` (type selector).
+
+## T20 Drawer, settings, README, final report
+
+Status: in progress
+
+### Plan
+
+- Date grouping (orchestrator decision): pure module `src/entrypoints/sidepanel/date-groups.ts` next to `relative-time.ts`, `groupByDate(items, at, now)` returning the non-empty groups "today", "thisWeek", "earlier" in that order (local time, weeks start on Monday). Unit tests first (`tests/date-groups.test.ts`): today, this week, earlier, empty groups, local midnight, Monday, Sunday, future times.
+- `SessionsDrawer.tsx` (spec 5.6): width min(88 %, 320 px) with right border and shadow; header 17 px/600 with Close; full-width "New session" button (accent-soft, plus icon) that does what the header's does and closes the drawer; one list per group under a section label; row title 600 active / 500 otherwise, active row accent-soft with a 7 px accent dot; delete shown on row hover and `:focus-within` (stays in the tab order, as T19-4); the delete confirm a danger-tinted card. App passes `onNewSession`.
+- Settings (spec 5.7): header Back + "Settings" 16 px/600; body 16 px 12 px, sections 20 px apart, each a section label above a 12 px card; "Add provider" accent text button with plus icon; provider rows with a 32 px letter tile, name and badges, type · model (Geist Mono), no-access notice as a warning notice with its link, Make default / Edit links, trash; page access state with an ok/warning dot; footer "Browser Sidekick <version>" from `browser.runtime.getManifest().version`.
+- Strings: `drawerGroupToday`, `drawerGroupThisWeek`, `drawerGroupEarlier` (en, de).
+- Tests: component tests for drawer groups, active row, delete on hover/focus, New session in the drawer; provider tile and badges, page access dot, version footer; update drawer, settings and access tests; e2e `tests/e2e/drawer-settings.spec.ts` (sessions with set activity times, delete, new from drawer; add and edit a provider against the mock LLM; screens T20-* light and dark); update `sessions.spec.ts` keyboard path.
+- README: drawer grouping line if needed; final report `docs/redesign-report.md`.
+- Open questions: none so far.
