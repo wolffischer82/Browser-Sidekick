@@ -524,7 +524,7 @@ Spec: `specs/redesign.md`. Branch `feature/redesign`. Status values as above.
 
 ## T17 Visual foundation
 
-Status: in progress
+Status: in progress (implementer's gate passed; awaiting the gate-checker and the orchestrator's UI check)
 
 ### Plan
 
@@ -534,3 +534,19 @@ Status: in progress
 - `icons.tsx`: stroke 1.8; Settings becomes the sliders icon, Sessions the menu icon with the shorter third line.
 - Tests: `tests/style-tokens.test.ts` (no colour literal outside the token blocks; every §4.1 token in both blocks; no old token names), `tests/style-contrast.test.ts` (4.5:1 for the §4.1 text/background pairs in both themes); e2e `tests/e2e/visual.spec.ts` (font requests stay on the extension origin, `document.fonts` reports Geist and Geist Mono loaded, screens `T17-01-main` light and dark at 400 px).
 - Open questions: none so far.
+
+### Acceptance
+
+- [x] Every colour in `style.css` comes from spec 4.1; no hex or rgb outside the token blocks (`tests/style-tokens.test.ts`; one extra token, `--backdrop`, decisions.md Redesign T17-6).
+- [x] The panel renders in Geist and Geist Mono with no network request for fonts (e2e in Chromium: requests stay on the extension origin, `document.fonts` reports both loaded); the licence ships in both builds as `assets/OFL.txt` (`tests/manifest.test.ts`). Firefox: the same files and CSS are in `dist/firefox-ext`; rendering there is the orchestrator's UI check.
+- [x] Every interactive element shows the focus ring on keyboard focus (global `:focus-visible` rule; e2e tabs through the main view and checks every element reached).
+- [x] Contrast of each text token on its background meets 4.5:1 in both themes (`tests/style-contrast.test.ts`; filled Delete uses `--on-accent`, decisions.md Redesign T17-7).
+- [x] No behaviour change: the existing unit and e2e suites pass unchanged (no selector changes were needed); header buttons stay 30 px until T18 so the thinking-levels narrow-header e2e keeps passing (decisions.md Redesign T17-10).
+- [ ] UI check in both browsers (orchestrator).
+
+### Tests
+
+- `tests/style-tokens.test.ts`: every spec 4.1 token in both blocks with its value, the same names in both blocks, no colour literal outside them, no undefined `var()`, a parser self-check.
+- `tests/style-contrast.test.ts`: the text/background pairs in both themes, plus the WCAG reference values.
+- `tests/manifest.test.ts`: the four woff2 files and `assets/OFL.txt` in both builds.
+- `tests/e2e/visual.spec.ts`: fonts from the extension origin and loaded; focus rings; screens `T17-01-first-run`, `T17-02-answer`, `T17-03-focus-citation` (each also `-dark`), 400 px wide.

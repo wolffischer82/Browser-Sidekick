@@ -19,3 +19,9 @@ None open.
 Spec: `specs/thinking-levels.md`. Each entry names the task it blocks.
 
 None open.
+
+# Redesign
+
+Spec: `specs/redesign.md`. Each entry names the task it blocks.
+
+None open.
