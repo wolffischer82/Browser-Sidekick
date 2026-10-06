@@ -21,6 +21,7 @@ The side panel looks cleaner and is easier to scan: a warm neutral ground with w
 - **O1 Design.** The canvas is approved as drawn, including the layout changes in §5: Model and Thinking move into the composer, a Send button is added, the header shows a subtitle, pins are numbered with their actions on hover and focus, and the drawer groups sessions by date.
 - **O2 Fonts.** Geist and Geist Mono are bundled with the extension as woff2 files with their OFL licence. Nothing is loaded from the network at runtime.
 - **O3 Process.** The owner asked for this spec to be drafted and driven without a separate review.
+- **O4 New session in the composer (2026-10-06).** New session moves from the header to the composer toolbar, directly left of Summarize, so "new session, then summarize this page" is two clicks side by side. The header keeps Sessions, title block and Settings. Follow-up task T21.
 
 ## 3. Out of scope
 
@@ -81,7 +82,7 @@ Everything not listed here works as today, with the new look.
 
 ### 5.1 Header (`Main.dc.html`)
 
-- Order: Sessions, title block, New session, Settings. Header background `--surface` with a bottom `--line`.
+- Order: Sessions, title block, Settings (New session moved to the composer, O4). Header background `--surface` with a bottom `--line`.
 - The title block shows the title (15 px/600, one line, ellipsis) and below it a subtitle: the pin count and the last activity, e.g. "4 pins · active 2 minutes ago", or "No pins yet" without pins. The relative time comes from the existing `relative-time.ts` and refreshes at least once a minute while shown. The subtitle is not part of the rename button's accessible name. Rename works as today.
 - The Model and Thinking menus leave the header (§5.4); the header's narrow-width layout rules go with them.
 
@@ -107,11 +108,12 @@ Everything not listed here works as today, with the new look.
 
 ### 5.4 Composer (`Main.dc.html`, `Welcome.dc.html`)
 
-- One `--surface` card (radius 16, `--line` border, `--shadow`) at the bottom, holding the textarea (same placeholder, Enter and Shift+Enter as today) and a toolbar row: Model menu, Thinking menu, flexible space, Summarize, Send.
+- One `--surface` card (radius 16, `--line` border, `--shadow`) at the bottom, holding the textarea (same placeholder, Enter and Shift+Enter as today) and a toolbar row: Model menu, Thinking menu, flexible space, New session, Summarize, Send.
 - Model menu button: `--sunken` pill, 30 px, a 7 px `--accent` dot when a model is set, the model name (ellipsis), chevron. "No model" without a model, muted and without the dot. Its accessible name and tooltip stay.
 - Thinking menu button: transparent, lightbulb icon, the level name only (e.g. "Medium"), chevron. Its accessible name and tooltip stay "Thinking level: Medium". Hidden in the same cases as today.
 - Both lists open upward from the composer, aligned to their button's left edge, and fit within the panel (max height the space above, scrolling inside). Keyboard behaviour stays as today.
 - Summarize: secondary button with the lines icon. It replaces the action bar, which is removed. The unavailable state and its explanatory tooltip stay; the tooltip opens above the button.
+- New session (O4): icon button with the plus icon, same height as Summarize, accessible name and tooltip "New session". It does what the header button did and stays enabled whenever the old one was, including when asking is unavailable (it is not faded with the card).
 - Send: 32 px icon button, arrow-up icon, `--accent` fill, accessible name "Send". It does exactly what Enter does and is disabled whenever Enter would not send (shown with `--sunken` fill and `--muted` icon).
 - Under the card: the hint "Enter to send · Shift+Enter for a new line", 11 px `--muted`, centred. When asking is unavailable, the existing hint with its link ("Add a provider in settings…", "No access to…") replaces it, and the card is shown at 70 % opacity.
 - Narrow panels: at widths below 360 px the Summarize button shows its icon only (accessible name kept) and the model name truncates first. Nothing in the toolbar wraps or overflows at 320 px.
@@ -161,6 +163,7 @@ The subtitle joins the existing pin-count string and the activity string with " 
 | T18 | Header, composer and transcript | T17 |
 | T19 | Session tabs and banners | T17 |
 | T20 | Drawer, settings, README, final report | T18, T19 |
+| T21 | New session next to Summarize | T20 |
 
 ### T17 Visual foundation
 **Scope**: the tokens (§4.1), the vendored fonts and type scale (§4.2), radii, spacing, icons and focus rings (§4.3), and the shared control styles (§4.4), applied across the existing views without layout changes. Old token names are replaced, not aliased.
@@ -226,6 +229,21 @@ The subtitle joins the existing pin-count string and the activity string with " 
 - Component tests: drawer groups, active row, delete on hover and focus, New session in the drawer; provider row tile and badges, page access dot, version footer.
 - Update the existing drawer and settings tests.
 - e2e: create sessions with set activity times, open the drawer, delete one, start one from the drawer; open settings, add and edit a provider against the mock LLM. Screenshots light and dark of the drawer, the delete confirm, settings, and the provider form.
+
+**UI check** in both browsers.
+
+### T21 New session next to Summarize
+**Scope**: O4: the §5.1 order and the New session bullet of §5.4. README lines that say where New session is. A short addendum to `docs/redesign-report.md`.
+
+**Acceptance**:
+- The header has no New session button; the composer toolbar shows Model, Thinking, space, New session, Summarize, Send.
+- New session from the composer behaves exactly as the header button did (same handler, same focus afterwards).
+- Nothing in the toolbar wraps or overflows at 320 px; the model name still truncates first.
+- New session stays usable with no provider and with no page access.
+
+**Tests**:
+- Update the header and composer component tests (button gone from the header, present in the toolbar with its accessible name, click calls the handler, enabled when asking is unavailable).
+- Update e2e that start a session from the header to use the composer button. Screenshots at 400 px and 320 px, light and dark: idle and no provider.
 
 **UI check** in both browsers.
 
