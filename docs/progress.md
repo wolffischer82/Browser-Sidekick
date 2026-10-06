@@ -648,7 +648,7 @@ Status: done (2026-10-03; gate-checker PASS, orchestrator UI check in Chromium a
 
 ## T21 New session next to Summarize
 
-Status: done (2026-10-06; gate passed; Firefox UI check left to the orchestrator)
+Status: done (2026-10-06; gate-checker PASS-WITH-NOTES, orchestrator UI check in Chromium and Firefox 140)
 
 ### Plan
 
@@ -666,7 +666,7 @@ Status: done (2026-10-06; gate passed; Firefox UI check left to the orchestrator
 - [x] Nothing in the toolbar wraps or overflows at 320 px; the long model name is cut off while New session, Summarize and Send keep their size (e2e `new-session.spec.ts`, `composer.spec.ts`).
 - [x] New session stays enabled and unfaded with no provider and with no access (component tests and e2e).
 - [x] README and `docs/redesign-report.md` addendum updated.
-- [ ] UI check in Firefox: not done by the implementer; Chromium screens `T21-*` compared with the `Main.dc.html` composer.
+- [x] UI check in both browsers (orchestrator): Chromium screens `T21-*` (400 and 320 px, light and dark) compared with the `Main.dc.html` composer; `dist/firefox-ext` rendered headless in Firefox 140.17.0esr, no provider and idle, 400 and 320 px, light and dark: toolbar fits, New session unfaded on the faded card, no console errors. The transcript's vertical scrollbar at 320 × 720 is ordinary scrolling of the empty state, not a T21 change. Gate notes accepted: the card shadow no longer fades.
 
 ### Tests
 
