@@ -645,3 +645,32 @@ Status: done (2026-10-03; gate-checker PASS, orchestrator UI check in Chromium a
 - e2e `tests/e2e/drawer-settings.spec.ts`: sessions with set activity times on a fixed clock, groups, active row, delete on hover and on keyboard focus, delete confirm, New session from the drawer, Monday after midnight; settings footer version, page access dot, add and edit a provider against the mock LLM, provider tile, badge and mono model, delete confirm. Screens `T20-01-drawer`, `T20-02-row-hovered`, `T20-03-delete-focused`, `T20-04-delete-confirm`, `T20-05-provider-form`, `T20-06-settings`, `T20-07-provider-form-edit`, `T20-08-provider-delete-confirm` (each also `-dark`).
 - Updated `tests/e2e/sessions.spec.ts` (Tab path with the drawer's New session; delete after hovering the row). `tests/helpers/sidebar.tsx` fakes `runtime.getManifest`.
 - Gate (2026-10-03): lint, typecheck, 1324 unit tests in 55 files, build, check:dist, lint:firefox (0 errors, 18 warnings), 23 e2e tests passed.
+
+## T21 New session next to Summarize
+
+Status: done (2026-10-06; gate passed; Firefox UI check left to the orchestrator)
+
+### Plan
+
+- Orchestrator decision: `Composer` gets an `onNewSession` prop and renders New session (existing `PlusIcon`, `newSession` string as name and tooltip) in the toolbar between the spacer and Summarize; `Header` loses the button and its `onNewSession` prop. `App.tsx` passes the same handler as before.
+- CSS: the button is 30 px high like Summarize and stays unfaded when asking is unavailable, so the 70 % fade moves from the card to its contents other than New session.
+- Tests: header (no New session, order Sessions, title, Settings), composer (toolbar order, name and tooltip, click calls the handler, enabled with no provider and no access, unfaded), app-level New session still works with focus on the button afterwards; 320 px no-overflow e2e check.
+- e2e: role-based selectors keep working; new `tests/e2e/new-session.spec.ts` with screens T21 at 400 px and 320 px, light and dark: idle and no provider.
+- README lines that say where New session is; addendum to `docs/redesign-report.md`.
+- Open questions: none.
+
+### Acceptance
+
+- [x] The header has no New session button; the toolbar shows Model, Thinking, space, New session, Summarize, Send (`tests/sidepanel-header.test.tsx`, `tests/sidepanel-composer.test.tsx`, `tests/sidepanel-thinking.test.tsx`, e2e `new-session.spec.ts`).
+- [x] New session from the composer behaves as the header button did: same handler from `App.tsx`, focus stays on the button (component test and e2e).
+- [x] Nothing in the toolbar wraps or overflows at 320 px; the long model name is cut off while New session, Summarize and Send keep their size (e2e `new-session.spec.ts`, `composer.spec.ts`).
+- [x] New session stays enabled and unfaded with no provider and with no access (component tests and e2e).
+- [x] README and `docs/redesign-report.md` addendum updated.
+- [ ] UI check in Firefox: not done by the implementer; Chromium screens `T21-*` compared with the `Main.dc.html` composer.
+
+### Tests
+
+- `tests/sidepanel-composer.test.tsx`: toolbar order by id, New session name, tooltip, icon, position after the spacer, click calls the handler, enabled with no provider and no access, the fade rule leaves it out, German name.
+- `tests/sidepanel-header.test.tsx`: header buttons are Sessions, rename, Settings; New session in the composer creates and shows a session and keeps focus. `tests/sidepanel-thinking.test.tsx`: toolbar order.
+- e2e `tests/e2e/new-session.spec.ts`: screens `T21-01-no-provider-400`, `-320`, `T21-02-idle-400`, `-320` (each also `-dark`); no provider, no access, long model at 320 px. `composer.spec.ts`: toolbar line includes New session; fade read from the textarea.
+- Gate (2026-10-06): lint, typecheck, 1330 unit tests in 55 files, build, check:dist, lint:firefox (0 errors, 18 warnings), 24 e2e tests passed.
