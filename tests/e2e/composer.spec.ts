@@ -23,7 +23,13 @@ const KEY = 'sk-mock-composer-e2e-71af';
 const ARTICLE = 'Night trains return to Europe | The Fixture Times';
 const HINT = 'Enter to send · Shift+Enter for a new line';
 const NO_PROVIDER = 'Add a provider in settings to ask questions.';
-const TOOLBAR = ['#model-button', '#thinking-button', '#summarize-button', '#send-button'];
+const TOOLBAR = [
+  '#model-button',
+  '#thinking-button',
+  '#new-session-button',
+  '#summarize-button',
+  '#send-button',
+];
 
 interface ChromeApi {
   storage: { local: { set(o: object): Promise<void> } };
@@ -170,7 +176,9 @@ test.describe('composer', () => {
     await expect(send(sidebar)).toBeDisabled();
     await expect(sidebar.locator('#composer-hint')).toContainText(NO_PROVIDER);
     await expect(sidebar.getByText(HINT)).toHaveCount(0);
-    await expect(sidebar.locator('.composer-card')).toHaveCSS('opacity', '0.7');
+    // The card's contents are faded; New session isn't (O4, T21).
+    await expect(input(sidebar)).toHaveCSS('opacity', '0.7');
+    await expect(sidebar.locator('#new-session-button')).toHaveCSS('opacity', '1');
     await expect(modelButton(sidebar)).toHaveCount(0);
     await bothWidths(sidebar, 'T18-01-no-provider');
 
