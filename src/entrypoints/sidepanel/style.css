@@ -782,7 +782,19 @@ textarea {
   outline: none;
 }
 
+/*
+ * Asking unavailable: the card shows at 70 %, except New session, which
+ * stays usable and unfaded (redesign spec O4). Opacity on the card would
+ * fade every child, so the frame is mixed towards transparent and the
+ * contents are faded one by one (decisions.md Redesign T21).
+ */
 .composer-card[data-unavailable] {
+  border-color: color-mix(in srgb, var(--line) 70%, transparent);
+  background: color-mix(in srgb, var(--surface) 70%, transparent);
+}
+
+.composer-card[data-unavailable] > .composer-input,
+.composer-card[data-unavailable] .composer-toolbar > :not(.new-session-button) {
   opacity: 0.7;
 }
 
@@ -836,6 +848,20 @@ textarea {
   padding: 0 10px;
   border-radius: 8px;
   font-size: 12.5px;
+}
+
+.new-session-button {
+  flex: none;
+  width: 30px;
+  min-height: 30px;
+  height: 30px;
+  padding: 0;
+  border-radius: 8px;
+}
+
+.new-session-button .icon {
+  width: 16px;
+  height: 16px;
 }
 
 .summarize-button .icon,

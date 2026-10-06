@@ -27,24 +27,35 @@ function titleInput(): HTMLInputElement {
 }
 
 describe('header', () => {
-  it('has labelled controls for the drawer, New session and settings', async () => {
+  it('has Sessions, the title and Settings, and no New session (redesign spec O4)', async () => {
     repo = await freshRepository();
     await renderSidebar(repo);
-    for (const name of ['Sessions', 'New session', 'Settings']) {
-      expect(screen.getByRole('button', { name })).toBeTruthy();
-    }
+    const header = document.querySelector('header');
+    expect([...(header?.querySelectorAll('button') ?? [])].map((b) => b.title)).toEqual([
+      'Sessions',
+      'Rename session',
+      'Settings',
+    ]);
+    // The one New session button outside the drawer is in the composer.
+    const newSession = screen.getByRole('button', { name: 'New session' });
+    expect(header?.contains(newSession)).toBe(false);
+    expect(newSession.closest('.composer-toolbar')).not.toBeNull();
   });
 
-  it('New session creates an empty session, shows it and makes it active', async () => {
+  it('New session in the composer creates an empty session, shows it and keeps focus', async () => {
     repo = await freshRepository();
     const old = await repo.createSession({ providerId: null, model: null, title: 'Old' });
     await updateSettings({ activeSessionId: old.id });
     await renderSidebar(repo);
     expect(titleButton().textContent).toBe('Old');
-    fireEvent.click(screen.getByRole('button', { name: 'New session' }));
+    const button = screen.getByRole('button', { name: 'New session' });
+    button.focus();
+    fireEvent.click(button);
     await waitFor(() => {
       expect(titleButton().textContent).toBe('New session');
     });
+    // Focus stays on the button, as it did on the header's.
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'New session' }));
     const active = await activeSession();
     expect(active?.id).not.toBe(old.id);
     expect(active).toMatchObject({ title: '', titleSource: 'fallback' });
@@ -182,7 +193,6 @@ function renderHeader(pinCount: number, ago: number, locale: Locale = 'en') {
       drawerButtonRef={createRef()}
       onOpenDrawer={() => undefined}
       onRename={() => undefined}
-      onNewSession={() => undefined}
       onOpenSettings={() => undefined}
     />,
   );

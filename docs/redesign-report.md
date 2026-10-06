@@ -65,6 +65,14 @@ All screenshots are in `test-results/screens/` (gitignored). Each has a `-dark` 
 | `Settings.dc.html`                 | `T20-06-settings`, `T20-05-provider-form`, `T20-07-provider-form-edit`, `T20-08-provider-delete-confirm`; also `T05-01-settings-empty` and `T05-10-delete-all-confirmation`                                                                                            |
 | `Tokens.dc.html`                   | No screenshot; checked by `tests/style-tokens.test.ts` and `tests/style-contrast.test.ts`                                                                                                                                                                              |
 
+## Addendum: New session next to Summarize (T21, 2026-10-06)
+
+- **What changed** (owner decision O4). New session moved from the header to the composer toolbar, between the flexible space and Summarize: a 30 px plus button with the name and tooltip "New session". The header now holds Sessions, the title block and Settings. The button runs the same handler as before and keeps focus afterwards.
+- **Unavailable asking.** The button stays enabled and unfaded with no provider and with no access. To allow that, the 70 % fade moved from the whole card to its contents; the card's border and fill are mixed towards transparent instead, and its shadow isn't faded (decisions.md Redesign T21-3).
+- **Narrow panels.** At 320 px the toolbar stays on one line inside the panel; the model name is cut off first, and New session, Summarize (icon only) and Send keep their size.
+- **Tests.** Header and composer component tests updated; `tests/e2e/new-session.spec.ts` added, and `composer.spec.ts` checks the new toolbar order. Screens `T21-01-no-provider-400`, `T21-01-no-provider-320`, `T21-02-idle-400` and `T21-02-idle-320`, each also `-dark`, are the `Main.dc.html` composer counterparts with the button moved.
+- **README**: the Sessions line says where New session is.
+
 ## Open questions
 
 None. The T20 e2e spec and this report were first declined by the permission prompt; the owner allowed both on 2026-10-03.
