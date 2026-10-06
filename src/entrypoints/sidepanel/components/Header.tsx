@@ -2,7 +2,7 @@ import type { Ref } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
 import { t, uiLanguage } from '@/shared/i18n';
 import { formatRelativeTime } from '../relative-time';
-import { SlidersIcon, MenuIcon, PlusIcon } from './icons';
+import { SlidersIcon, MenuIcon } from './icons';
 import { SessionTitle } from './SessionTitle';
 
 interface Props {
@@ -15,7 +15,6 @@ interface Props {
   drawerButtonRef: Ref<HTMLButtonElement>;
   onOpenDrawer: () => void;
   onRename: (title: string) => void;
-  onNewSession: () => void;
   onOpenSettings: () => void;
 }
 
@@ -35,8 +34,8 @@ export function headerSubtitle(pinCount: number, updatedAt: number, now: number)
 
 /**
  * Sidebar header (spec 5.2 item 1, redesign spec 5.1): sessions drawer,
- * title with inline rename and the subtitle below it, New session and
- * settings. The subtitle sits outside the rename button, so it is not part
+ * title with inline rename and the subtitle below it, and settings. New
+ * session lives in the composer (redesign spec O4). The subtitle sits outside the rename button, so it is not part
  * of its name, and is re-rendered twice a minute while shown.
  */
 export function Header(props: Props) {
@@ -67,15 +66,6 @@ export function Header(props: Props) {
         <SessionTitle title={props.title} onRename={props.onRename} />
         <p class="header-subtitle">{headerSubtitle(props.pinCount, props.updatedAt, Date.now())}</p>
       </div>
-      <button
-        type="button"
-        class="icon-button header-button"
-        aria-label={t('newSession')}
-        title={t('newSession')}
-        onClick={props.onNewSession}
-      >
-        <PlusIcon />
-      </button>
       <button
         id="settings-button"
         type="button"

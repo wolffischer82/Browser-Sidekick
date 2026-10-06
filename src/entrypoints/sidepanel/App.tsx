@@ -498,11 +498,6 @@ export function App({ repository }: Props) {
               await broadcast({ type: 'title-changed', sessionId: active.id });
             });
           }}
-          onNewSession={() => {
-            run(async (r) => {
-              await show(r, await createActiveSession(r));
-            });
-          }}
           onOpenSettings={() => {
             settingsOpener.current = '#settings-button';
             setFocusPageAccess(false);
@@ -588,6 +583,11 @@ export function App({ repository }: Props) {
           summarize={summarize}
           onSummarize={() => {
             chat.summarize(tabContext());
+          }}
+          onNewSession={() => {
+            run(async (r) => {
+              await show(r, await createActiveSession(r));
+            });
           }}
           modelMenu={
             (groups.length > 0 || active.providerId !== null) && (

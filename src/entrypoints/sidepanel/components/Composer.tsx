@@ -2,7 +2,7 @@ import type { ComponentChildren } from 'preact';
 import { useRef, useState } from 'preact/hooks';
 import type { SummarizeState } from '@/shared/chat/summarize';
 import { t } from '@/shared/i18n';
-import { ArrowUpIcon } from './icons';
+import { ArrowUpIcon, PlusIcon } from './icons';
 import { SummarizeButton } from './SummarizeButton';
 
 /** Why the input can or can't send (spec 5.2 item 6, 5.7). */
@@ -23,6 +23,11 @@ interface Props {
   /** Whether Summarize can be used, or why not. */
   summarize: SummarizeState;
   onSummarize: () => void;
+  /**
+   * Starts a new session (redesign spec O4, 5.4). Usable whenever the header
+   * button it replaces was, including while asking is unavailable.
+   */
+  onNewSession: () => void;
   /** The session model dropdown (D15), first in the toolbar. */
   modelMenu?: ComponentChildren;
   /** The session's thinking level (specs/thinking-levels.md 4.1), next to the model. */
@@ -31,8 +36,8 @@ interface Props {
 
 /**
  * The composer (spec 5.2 item 6, redesign spec 5.4): one card holding the
- * question input and a toolbar with the model and thinking menus, Summarize
- * and Send. Enter and Send send, Shift+Enter adds a newline; Send is
+ * question input and a toolbar with the model and thinking menus, New
+ * session, Summarize and Send. Enter and Send send, Shift+Enter adds a newline; Send is
  * disabled whenever Enter wouldn't send. Under the card, the keyboard hint,
  * or why asking is unavailable: no provider (with a link to settings) or no
  * host access for the session's provider (with Grant access).
@@ -79,6 +84,16 @@ export function Composer(props: Props) {
           {props.modelMenu}
           {props.thinkingMenu}
           <span class="composer-spacer" />
+          <button
+            id="new-session-button"
+            type="button"
+            class="button new-session-button"
+            aria-label={t('newSession')}
+            title={t('newSession')}
+            onClick={props.onNewSession}
+          >
+            <PlusIcon />
+          </button>
           <SummarizeButton state={props.summarize} onSummarize={props.onSummarize} />
           <button
             id="send-button"

@@ -234,12 +234,13 @@ describe('the thinking-level control', () => {
     // The level's name only, after a lightbulb; the name keeps the label (redesign spec 5.4).
     expect(button.querySelector('svg')?.getAttribute('aria-hidden')).toBe('true');
     expect(button.getAttribute('title')).toBe('Thinking level: Default');
-    // In the composer's toolbar, straight after the model menu, before Summarize and Send.
+    // In the composer's toolbar, straight after the model menu, before New session, Summarize and Send.
     const toolbar = button.closest('.composer-toolbar');
     expect(toolbar?.closest('header')).toBeNull();
     expect([...(toolbar?.querySelectorAll('button') ?? [])].map((b) => b.id)).toEqual([
       'model-button',
       'thinking-button',
+      'new-session-button',
       'summarize-button',
       'send-button',
     ]);

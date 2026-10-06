@@ -34,6 +34,7 @@ interface Options {
 function renderComposer({ state = { kind: 'ready' }, busy = false, summarize }: Options = {}) {
   const onSend = vi.fn<(question: string) => void>();
   const onSummarize = vi.fn<() => void>();
+  const onNewSession = vi.fn<() => void>();
   const result = render(
     <Composer
       state={state}
@@ -43,9 +44,10 @@ function renderComposer({ state = { kind: 'ready' }, busy = false, summarize }: 
       onGrantAccess={() => undefined}
       summarize={summarize ?? { kind: 'ready' }}
       onSummarize={onSummarize}
+      onNewSession={onNewSession}
     />,
   );
-  return { onSend, onSummarize, rerender: result.rerender };
+  return { onSend, onSummarize, onNewSession, rerender: result.rerender };
 }
 
 const input = () =>
@@ -71,6 +73,7 @@ describe('Send (redesign spec 5.4)', () => {
     const toolbar = button.closest('.composer-toolbar');
     expect(toolbar?.closest('.composer-card')?.contains(input())).toBe(true);
     expect([...(toolbar?.querySelectorAll('button') ?? [])].map((b) => b.id)).toEqual([
+      'new-session-button',
       'summarize-button',
       'send-button',
     ]);
@@ -126,6 +129,7 @@ describe('Send (redesign spec 5.4)', () => {
         onGrantAccess={() => undefined}
         summarize={{ kind: 'ready' }}
         onSummarize={() => undefined}
+        onNewSession={() => undefined}
       />,
     );
     expect(send().disabled).toBe(false);
@@ -180,6 +184,54 @@ describe('hints under the card', () => {
     renderComposer();
     expect(screen.getByText('Enter zum Senden · Umschalt+Enter für eine neue Zeile')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Senden' })).toBeTruthy();
+  });
+});
+
+const newSession = () => screen.getByRole<HTMLButtonElement>('button', { name: 'New session' });
+
+describe('New session in the toolbar (redesign spec O4)', () => {
+  it('is a labelled plus icon button after the spacer, before Summarize', () => {
+    renderComposer();
+    const button = newSession();
+    expect(button.getAttribute('title')).toBe('New session');
+    expect(button.textContent).toBe('');
+    expect(button.querySelector('svg')?.getAttribute('aria-hidden')).toBe('true');
+    expect(button.previousElementSibling?.classList.contains('composer-spacer')).toBe(true);
+    expect(button.nextElementSibling?.querySelector('#summarize-button')).not.toBeNull();
+  });
+
+  it('calls its handler on click', () => {
+    const { onNewSession } = renderComposer();
+    fireEvent.click(newSession());
+    expect(onNewSession).toHaveBeenCalledTimes(1);
+  });
+
+  it.each<ComposerState>([{ kind: 'noProvider' }, { kind: 'noAccess', providerLabel: 'Local' }])(
+    'stays enabled when asking is unavailable ($kind)',
+    (state) => {
+      const { onNewSession } = renderComposer({ state, summarize: { kind: 'noProvider' } });
+      const button = newSession();
+      expect(button.disabled).toBe(false);
+      expect(button.hasAttribute('aria-disabled')).toBe(false);
+      fireEvent.click(button);
+      expect(onNewSession).toHaveBeenCalledTimes(1);
+    },
+  );
+
+  it('is not faded with the card', () => {
+    const css = readFileSync(STYLE_PATH, 'utf8');
+    // No opacity on the card itself, which would fade every child.
+    const card = /\.composer-card\[data-unavailable\] \{([^}]*)\}/.exec(css)?.[1] ?? '';
+    expect(card).not.toContain('opacity');
+    expect(css).toMatch(
+      /\.composer-card\[data-unavailable\] \.composer-toolbar > :not\(\.new-session-button\) \{\s*opacity: 0\.7;/,
+    );
+  });
+
+  it('reads in German', () => {
+    useLocale('de');
+    renderComposer();
+    expect(screen.getByRole('button', { name: 'Neue Sitzung' })).toBeTruthy();
   });
 });
 
