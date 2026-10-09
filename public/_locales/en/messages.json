@@ -143,7 +143,7 @@
     "description": "Tooltip of the disabled Summarize button while an answer is on its way."
   },
   "summarizePrompt": {
-    "message": "Summarize the pages provided. First give a short summary of each page under its title, citing the page with its number. Then give an overall summary that covers the themes the pages share and the points on which they disagree. Answer in English.",
+    "message": "Summarize the pages provided. Start with a TL;DR: two or three sentences on what the content is about and its gist, the core message or takeaway. Then give a detailed summary of the content itself: the main points, arguments, explanations, examples, facts and figures, and conclusions, in the order they come up. Report what is actually said, not just how the content is structured; for a video, summarize what is said in it. If there is more than one page, give the detailed summary of each page under its title, then an overall summary that covers the themes the pages share and the points on which they disagree. Cite pages with their number. Answer in English.",
     "description": "The fixed request sent to the model by Summarize (spec 5.6), in the UI language. Not shown in the UI: the transcript shows \"Summarize\" instead."
   },
   "inputPlaceholder": {

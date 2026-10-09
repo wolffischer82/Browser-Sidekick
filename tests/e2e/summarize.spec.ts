@@ -234,6 +234,8 @@ test.describe('summarize', () => {
     ).toBe(true);
     const prompt = asked(firstBody);
     expect(prompt.startsWith('Summarize the pages provided.'), 'fixed prompt').toBe(true);
+    expect(prompt.includes('TL;DR'), 'tl;dr first').toBe(true);
+    expect(prompt.includes('detailed summary'), 'detailed summary').toBe(true);
     expect(prompt.includes('each page'), 'per-page summary').toBe(true);
     expect(prompt.includes('overall summary'), 'overall summary').toBe(true);
     expect(prompt.includes('Answer in English.'), 'UI language').toBe(true);
