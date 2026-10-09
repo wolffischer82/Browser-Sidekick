@@ -453,6 +453,9 @@ describe('summarising', () => {
     // The request: the session's model, and the fixed prompt as the question.
     expect(bodies[0]?.model).toBe('gpt-a');
     expect(bodies[0]?.messages.at(-1)).toEqual({ role: 'user', content: PROMPT });
+    expect(PROMPT).toMatch(/^## TL;DR$/m);
+    expect(PROMPT).toMatch(/^## Detailed summary$/m);
+    expect(PROMPT).toMatch(/detailed summary/);
     expect(PROMPT).toMatch(/each page/);
     expect(PROMPT).toMatch(/overall summary/);
     expect(PROMPT).toMatch(/themes/);
@@ -606,6 +609,9 @@ describe('summarising', () => {
     });
     const prompt = readMessages('de').summarizePrompt?.message ?? '';
     expect(prompt).toMatch(/Antworte auf Deutsch/);
+    expect(prompt).toMatch(/^## TL;DR$/m);
+    expect(prompt).toMatch(/^## Ausführliche Zusammenfassung$/m);
+    expect(prompt).toMatch(/ausführliche Zusammenfassung/);
     expect(prompt).toMatch(/jede Seite/);
     expect(prompt).toMatch(/Gesamtzusammenfassung/);
     expect(prompt).toMatch(/Themen/);
