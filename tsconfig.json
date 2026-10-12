@@ -7,5 +7,5 @@
     "jsx": "react-jsx",
     "jsxImportSource": "preact"
   },
-  "include": ["./.wxt/wxt.d.ts", "src", "tests", "*.config.ts"]
+  "include": ["./.wxt/wxt.d.ts", "src", "tests", "store", "*.config.ts"]
 }
