@@ -57,4 +57,8 @@ This rewrites `dist/chrome-ext` and `dist/firefox-ext` from source. Load them as
 
 The builds in `dist/` are tracked in git. CI fails if they differ from a fresh build (`npm run check:dist`), so rebuild and commit them with every source change, and don't edit them by hand.
 
-Specs live in `specs/`, decision and progress logs in `docs/`. Builds and CI run on the self-hosted runner `lenovo-ai-server`; see `CLAUDE.md` for how work is driven.
+Store releases (zips, listing texts, automatic submission on a version tag) are described in `docs/store-release.md`; store screenshots are rendered with `npm run store:screens`. Specs live in `specs/`, decision and progress logs in `docs/`. Builds and CI run on the self-hosted runner `lenovo-ai-server`; see `CLAUDE.md` for how work is driven.
+
+## Licence and privacy
+
+MIT, see `LICENSE`. What the extension does with your data: `PRIVACY.md`.
