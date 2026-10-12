@@ -1,0 +1,72 @@
+name: Release
+
+# Pushing a tag `v<version>` (matching package.json) checks, zips and submits
+# the extension to the Chrome Web Store and addons.mozilla.org for review.
+# The first version must have been uploaded by hand in both stores
+# (docs/store-release.md). Credentials are repository secrets; nothing is
+# uploaded to GitHub.
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Only check the store credentials, upload nothing'
+        type: boolean
+        default: true
+
+jobs:
+  release:
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 30
+    concurrency:
+      group: release
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Tag matches package.json
+        if: github.ref_type == 'tag'
+        run: |
+          version="$(node -p "require('./package.json').version")"
+          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
+            echo "Tag $GITHUB_REF_NAME does not match package.json version $version."
+            exit 1
+          fi
+
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+
+      # Zipping rebuilds dist/; the committed builds must match it.
+      - name: zip
+        run: |
+          rm -f dist/*.zip
+          npm run zip
+      - run: npm run check:dist
+      - run: npm run lint:firefox
+
+      - name: submit
+        env:
+          CHROME_EXTENSION_ID: ${{ secrets.CHROME_EXTENSION_ID }}
+          CHROME_CLIENT_ID: ${{ secrets.CHROME_CLIENT_ID }}
+          CHROME_CLIENT_SECRET: ${{ secrets.CHROME_CLIENT_SECRET }}
+          CHROME_REFRESH_TOKEN: ${{ secrets.CHROME_REFRESH_TOKEN }}
+          FIREFOX_EXTENSION_ID: ${{ secrets.FIREFOX_EXTENSION_ID }}
+          FIREFOX_JWT_ISSUER: ${{ secrets.FIREFOX_JWT_ISSUER }}
+          FIREFOX_JWT_SECRET: ${{ secrets.FIREFOX_JWT_SECRET }}
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
+        run: |
+          if [ "$DRY_RUN" = "true" ]; then
+            npm run submit:dry
+          else
+            npm run submit
+          fi
+
+      # The zips stay on the runner only until the next release.
+      - name: clean up
+        if: always()
+        run: rm -f dist/*.zip
