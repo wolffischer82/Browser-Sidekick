@@ -2,6 +2,7 @@
   "name": "browser-sidekick",
   "description": "Sidebar extension for Chrome and Firefox to ask an LLM about pinned pages.",
   "version": "0.1.0",
+  "license": "MIT",
   "private": true,
   "type": "module",
   "engines": {
@@ -19,6 +20,10 @@
     "build:chrome": "wxt build -b chrome",
     "build:firefox": "wxt build -b firefox",
     "lint:firefox": "web-ext lint --source-dir dist/firefox-ext",
+    "zip": "wxt zip -b chrome && wxt zip -b firefox",
+    "submit": "wxt submit --chrome-zip dist/*-chrome.zip --firefox-zip dist/*-firefox.zip --firefox-sources-zip dist/*-sources.zip",
+    "submit:dry": "npm run submit -- --dry-run",
+    "store:screens": "playwright test -c store/playwright.config.ts",
     "check:dist": "git status --porcelain -- dist | (! grep .)",
     "icons": "node scripts/export-icons.mjs",
     "e2e": "playwright test"

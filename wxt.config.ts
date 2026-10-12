@@ -26,6 +26,21 @@ export default defineConfig({
   outDir: 'dist',
   outDirTemplate: '{{browser}}-ext{{modeSuffix}}',
   manifestVersion: 3,
+  // `npm run zip`: store zips land in dist/ (gitignored). The sources zip is
+  // what AMO reviewers rebuild from, so it carries only what the build needs.
+  zip: {
+    excludeSources: [
+      'test-results/**',
+      'tests/**',
+      'docs/**',
+      'specs/**',
+      'design/**',
+      'store/**',
+      'CLAUDE.md',
+      '.claude/**',
+      '.github/**',
+    ],
+  },
   manifest: ({ browser }) => ({
     name: '__MSG_extName__',
     description: '__MSG_extDescription__',
@@ -59,7 +74,9 @@ export default defineConfig({
       ? {
           browser_specific_settings: {
             gecko: {
-              id: 'browser-sidekick@wolffischer82.github.io',
+              // Owner decision 2026-10-12: a neutral ID, fixed for good with
+              // the first AMO upload (docs/store-release.md).
+              id: 'browser-sidekick@browser-sidekick.github.io',
               // Owner decision 2026-09-30 (spec section 1).
               strict_min_version: '140.0',
               data_collection_permissions: { required: ['websiteContent', 'browsingActivity'] },

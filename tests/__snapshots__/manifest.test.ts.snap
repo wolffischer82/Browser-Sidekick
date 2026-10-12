@@ -69,7 +69,7 @@ exports[`manifest > firefox: exact permissions and snapshot 1`] = `
           "browsingActivity",
         ],
       },
-      "id": "browser-sidekick@wolffischer82.github.io",
+      "id": "browser-sidekick@browser-sidekick.github.io",
       "strict_min_version": "140.0",
     },
   },
