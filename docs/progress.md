@@ -674,3 +674,21 @@ Status: done (2026-10-06; gate-checker PASS-WITH-NOTES, orchestrator UI check in
 - `tests/sidepanel-header.test.tsx`: header buttons are Sessions, rename, Settings; New session in the composer creates and shows a session and keeps focus. `tests/sidepanel-thinking.test.tsx`: toolbar order.
 - e2e `tests/e2e/new-session.spec.ts`: screens `T21-01-no-provider-400`, `-320`, `T21-02-idle-400`, `-320` (each also `-dark`); no provider, no access, long model at 320 px. `composer.spec.ts`: toolbar line includes New session; fade read from the textarea.
 - Gate (2026-10-06): lint, typecheck, 1330 unit tests in 55 files, build, check:dist, lint:firefox (0 errors, 18 warnings), 24 e2e tests passed.
+
+# Store publishing
+
+Spec: `specs/store-publishing.md`. Branch `claude/nifty-euler-7zmzi7`. Status values as above.
+
+## T22 Licence and privacy policy
+
+Status: in progress
+
+### Plan
+
+- `LICENSE`: MIT text, `Copyright (c) 2026 wolffischer82` (O5); `"license": "MIT"` in `package.json`.
+- `PRIVACY.md` and `PRIVACY.de.md` at the root, derived from the source only: what is stored where (`src/shared/model.ts`, `db/`, `settings.ts`), what leaves the device and to which hosts (`src/shared/llm/`, `chat/`, `ProviderForm.tsx`, extractors), what the developer receives (nothing), each permission (`wxt.config.ts`, both built manifests), deletion, contact (O1), effective date 2026-10-31.
+- Decision log: per statement group, the source files it was checked against.
+- README: a Privacy line linking `PRIVACY.md` and a License line.
+- Rebuild `dist/` and check whether the `license` field changes it.
+- Tests: none beyond the gate (documentation only).
+- Open questions: none so far.
