@@ -51,6 +51,8 @@ npm run build
 
 This rewrites `dist/chrome-ext` and `dist/firefox-ext` from source. Load them as described above. `npm run build:chrome` and `npm run build:firefox` build one target only.
 
+`npm run zip` rebuilds both targets and writes the store zips to `dist/` (not tracked): one per browser, plus the sources zip addons.mozilla.org asks for. `npm run verify:zips` checks them against the committed builds.
+
 ## Development
 
 `npm run dev` (Chrome) and `npm run dev:firefox` start a browser with the extension and reload it on changes. `npm run lint`, `npm run typecheck`, `npm test` and `npm run e2e` run the checks.
