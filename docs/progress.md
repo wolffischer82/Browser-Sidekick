@@ -681,7 +681,7 @@ Spec: `specs/store-publishing.md`. Branch `claude/nifty-euler-7zmzi7`. Status va
 
 ## T22 Licence and privacy policy
 
-Status: in progress
+Status: done (2026-10-31, awaiting gate-checker)
 
 ### Plan
 
@@ -692,3 +692,16 @@ Status: in progress
 - Rebuild `dist/` and check whether the `license` field changes it.
 - Tests: none beyond the gate (documentation only).
 - Open questions: none so far.
+
+### Acceptance
+
+- [x] Every statement in the policy matches the code; decisions.md Store publishing T22-1 lists the source files per statement group.
+- [x] The English and German texts say the same thing (same sections, same statements, UI labels from each locale).
+- [x] No email address or other personal data in either file; contact is the GitHub issue tracker (O1).
+- [x] `LICENSE` (MIT, `wolffischer82`) and `"license": "MIT"` in `package.json`; README has Privacy and License sections.
+- [x] `dist/` rebuilt: unchanged by the `license` field, so no build commit.
+
+### Tests
+
+- None owed (documentation only).
+- Gate (2026-10-31): lint, typecheck, 1330 unit tests in 55 files, build, check:dist, lint:firefox (0 errors, 18 warnings), 24 e2e tests passed.
