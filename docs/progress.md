@@ -681,7 +681,7 @@ Spec: `specs/store-publishing.md`. Branch `claude/nifty-euler-7zmzi7`. Status va
 
 ## T22 Licence and privacy policy
 
-Status: done (2026-10-31, awaiting gate-checker)
+Status: done (2026-10-31). Gate-checker: PASS-WITH-NOTES, accepted (minor stored metadata fields not listed individually; uninstall deletion relies on browser behaviour).
 
 ### Plan
 

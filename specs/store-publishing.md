@@ -16,6 +16,7 @@ One command produces the files each store accepts. The repository holds a privac
 - **O4 Languages.** Listings and the privacy policy exist in English and German.
 - **O5 Licence.** MIT. Copyright holder: `wolffischer82`.
 - **O6 Policy hosting.** The repository is public. The privacy policy is a Markdown file in it, linked by its GitHub URL on `main`. No GitHub Pages site.
+- **O7 Spec removal (2026-10-31).** This spec file is deleted from the repository at the end of T25, after the final report is written; the logs keep the decisions.
 
 ## 3. Out of scope
 
@@ -102,7 +103,7 @@ An owner checklist, in order, for each store: account creation (Chrome: one-time
 **UI check**: the orchestrator looks at every asset.
 
 ### T25 Publishing guide, README, final report
-**Scope**: §4.5. README: the Install section notes that store releases are being prepared and points to `docs/publishing.md` for maintainers (one line); the status line stays until the listings are live. Final report `docs/store-publishing-report.md`: what shipped, deviations, what the owner still has to do, open questions.
+**Scope**: §4.5. README: the Install section notes that store releases are being prepared and points to `docs/publishing.md` for maintainers (one line); the status line stays until the listings are live. Final report `docs/store-publishing-report.md`: what shipped, deviations, what the owner still has to do, open questions. Last commit of T25: delete `specs/store-publishing.md` (O7).
 
 **Acceptance**:
 - Each step in the guide names the exact file or section to use.
