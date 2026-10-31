@@ -114,7 +114,7 @@ If the dashboard has a field for test instructions (check the current form), pas
 2. Where AMO asks how to distribute, choose **On this site** (listed on addons.mozilla.org). Don't choose "On your own": self-distributed builds aren't covered by this guide.
 3. Upload `dist/browser-sidekick-<version>-firefox.zip`.
 4. Compatibility: tick Firefox only, leave Firefox for Android unticked (`docs/store/amo.md`, "Listing", Compatibility).
-5. AMO validates the package. Errors stop the upload; warnings don't. `npm run lint:firefox` shows the same warnings locally (18 at the time of writing, none of them errors).
+5. AMO validates the package. Errors stop the upload; warnings don't. `npm run lint:firefox` shows the same warnings locally; only errors need fixing.
 
 ### 3. Source code
 

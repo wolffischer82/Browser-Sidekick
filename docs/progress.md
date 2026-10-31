@@ -763,7 +763,7 @@ Status: done (2026-10-31), including the O8 follow-up. Gate-checker: passed.
 
 ## T25 Publishing guide, README, final report
 
-Status: implemented (2026-10-31), awaiting gate-checker.
+Status: done (2026-10-31). Gate-checker: PASS-WITH-NOTES, accepted (warning count removed from the guide).
 
 ### Plan
 
