@@ -53,9 +53,13 @@ This rewrites `dist/chrome-ext` and `dist/firefox-ext` from source. Load them as
 
 `npm run zip` rebuilds both targets and writes the store zips to `dist/` (not tracked): one per browser, plus the sources zip addons.mozilla.org asks for. `npm run verify:zips` checks them against the committed builds.
 
+Store releases for the Chrome Web Store and addons.mozilla.org are being prepared; maintainers follow [docs/publishing.md](docs/publishing.md).
+
 ## Development
 
 `npm run dev` (Chrome) and `npm run dev:firefox` start a browser with the extension and reload it on changes. `npm run lint`, `npm run typecheck`, `npm test` and `npm run e2e` run the checks.
+
+`npm run store:assets` regenerates the store screenshots and promo tiles in `docs/store/assets/` against the mock LLM.
 
 The builds in `dist/` are tracked in git. CI fails if they differ from a fresh build (`npm run check:dist`), so rebuild and commit them with every source change, and don't edit them by hand.
 
