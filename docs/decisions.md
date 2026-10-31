@@ -367,6 +367,7 @@ Spec: `specs/store-publishing.md`. Numbering continues per task.
    - _Firefox `data_collection_permissions`_ (`websiteContent`, `browsingActivity`): `wxt.config.ts`.
 2. **Wording choices.** The policy quotes UI labels as the locales have them ("Summarize", "Load models", "Test connection", "Delete all data", "Pin to Sidekick", "Allow on all sites"; German from `public/_locales/de`) and uses the "du" form like the German UI. API keys are described as stored unencrypted, which is what `storage.local` holds. Affects: T24 disclosures should use the same statements.
 3. **Licence year and lock file.** `LICENSE` says `Copyright (c) 2026 wolffischer82`. `npm install --package-lock-only` copied `"license": "MIT"` into `package-lock.json`'s root package entry so the lock file matches `package.json`.
+4. **Contact email** (owner decision, O1 changed 2026-10-31, spec 32a31be). The "Changes and contact" section of `PRIVACY.md` and `PRIVACY.de.md` now gives `feedback@findach.de` first, with the GitHub issue tracker kept as the second way. It is the only email address in either file. Affects: T24 listings and T25 guide use the same address.
 
 ## T23
 

@@ -697,7 +697,7 @@ Status: done (2026-10-31). Gate-checker: PASS-WITH-NOTES, accepted (minor stored
 
 - [x] Every statement in the policy matches the code; decisions.md Store publishing T22-1 lists the source files per statement group.
 - [x] The English and German texts say the same thing (same sections, same statements, UI labels from each locale).
-- [x] No email address or other personal data in either file; contact is the GitHub issue tracker (O1).
+- [x] The only email address in either file is the contact address `feedback@findach.de` (O1, changed 2026-10-31); the GitHub issue tracker stays as a second way. No other personal data.
 - [x] `LICENSE` (MIT, `wolffischer82`) and `"license": "MIT"` in `package.json`; README has Privacy and License sections.
 - [x] `dist/` rebuilt: unchanged by the `license` field, so no build commit.
 

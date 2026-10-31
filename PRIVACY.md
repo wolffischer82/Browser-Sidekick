@@ -64,4 +64,4 @@ In Firefox, the extension declares that it handles website content and browsing 
 
 Changes to this policy are made in this file. Its full history is visible in the repository on GitHub.
 
-Questions or concerns: open an issue at <https://github.com/wolffischer82/Browser-Sidekick/issues>.
+Questions or concerns: write to <feedback@findach.de>, or open an issue at <https://github.com/wolffischer82/Browser-Sidekick/issues>.

@@ -64,4 +64,4 @@ In Firefox gibt die Erweiterung an, dass sie Website-Inhalte und Browsing-Aktivi
 
 Änderungen an dieser Erklärung werden in dieser Datei vorgenommen. Ihr vollständiger Verlauf ist im Repository auf GitHub einsehbar.
 
-Fragen oder Anliegen: Eröffne ein Issue unter <https://github.com/wolffischer82/Browser-Sidekick/issues>.
+Fragen oder Anliegen: Schreib an <feedback@findach.de> oder eröffne ein Issue unter <https://github.com/wolffischer82/Browser-Sidekick/issues>.
