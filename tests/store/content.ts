@@ -1,5 +1,5 @@
 /**
- * What the store screenshots show (spec store-publishing 4.4), per language.
+ * What the store screenshots show (docs/decisions.md, Store publishing T24), per language.
  * Everything is made up: the pages are fixtures on reserved `.example` hosts,
  * the providers and models are fictional names on the local mock LLM.
  */

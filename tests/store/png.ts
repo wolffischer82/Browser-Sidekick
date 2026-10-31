@@ -4,7 +4,7 @@ import { resolve } from 'node:path';
 /** Where the store assets live (committed). */
 export const ASSETS_DIR = resolve(import.meta.dirname, '../../docs/store/assets');
 
-/** Required sizes (spec store-publishing 4.4). */
+/** Required sizes (docs/decisions.md, Store publishing T24). */
 export const SCREENSHOT_SIZE = { width: 1280, height: 800 };
 export const PROMO_SIZE = { width: 440, height: 280 };
 

@@ -13,7 +13,7 @@ import { CONTENT, MODELS, type Lang, type StoreContent } from './content';
 import { listingField } from './listing';
 import { ASSETS_DIR, pngSize, PROMO_SIZE, SCREENSHOT_SIZE, sizeProblems } from './png';
 
-// Store screenshots and promo tiles (spec store-publishing 4.4), run by
+// Store screenshots and promo tiles (docs/decisions.md, Store publishing T24), run by
 // `npm run store:assets` (playwright.store.config.ts), never by `npm run e2e`.
 // The extension talks only to the local mock LLM; the pages are fixtures on
 // made-up `.example` hosts: Chromium sends every non-loopback request through

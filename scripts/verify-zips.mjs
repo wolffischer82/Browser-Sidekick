@@ -1,6 +1,6 @@
 // Store T23: checks the zips `npm run zip` writes to dist/.
 //   1. The unpacked Chrome and Firefox zips equal dist/chrome-ext and dist/firefox-ext.
-//   2. The sources zip contains none of the excluded paths (spec store-publishing 4.3).
+//   2. The sources zip contains none of the excluded paths (docs/decisions.md, Store publishing T23-2).
 //   3. The sources zip, unpacked into an empty directory, rebuilds dist/firefox-ext
 //      byte for byte with `npm ci && npm run build:firefox`.
 //   4. `web-ext lint` reports no errors on the unpacked Firefox zip.

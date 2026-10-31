@@ -78,8 +78,9 @@ export default defineConfig({
               id: 'browser-sidekick@wolffischer82.github.io',
               // Owner decision 2026-09-30 (spec section 1).
               strict_min_version: '140.0',
-              // Store O8 (specs/store-publishing.md): the API key goes to its provider
-              // (authenticationInfo), questions and answers too (personalCommunications).
+              // Owner decision O8 (docs/decisions.md, Store publishing T24-10): the
+              // API key goes to its provider (authenticationInfo), questions and
+              // answers too (personalCommunications).
               data_collection_permissions: {
                 required: [
                   'websiteContent',
