@@ -24,7 +24,8 @@
     "icons": "node scripts/export-icons.mjs",
     "e2e": "playwright test",
     "zip": "wxt zip -b chrome && wxt zip -b firefox",
-    "verify:zips": "node scripts/verify-zips.mjs"
+    "verify:zips": "node scripts/verify-zips.mjs",
+    "store:assets": "npm run build:chrome && playwright test -c playwright.store.config.ts"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
