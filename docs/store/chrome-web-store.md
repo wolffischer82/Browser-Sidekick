@@ -72,10 +72,12 @@ All JavaScript, including the PDF reader (pdf.js and its worker) and the fonts, 
 
 The extension handles the following. Tick these boxes and no others:
 
+- **Authentication information**: the API key the user enters for a provider. It is stored on the device and sent only to the provider it belongs to, with each request to that provider.
+- **Personal communications**: the user's questions and the model's answers. They are stored on the device, and the conversation so far is sent to the user's own LLM provider with each new question.
 - **Web history**: the address (URL) and title of each pinned page, and of the current tab when a question is asked about it. They are stored on the device and sent to the user's own LLM provider with the question.
 - **Website content**: the text read from pinned pages and the current tab (article text, YouTube transcripts, PDF text). It is stored on the device and sent to the user's own LLM provider when the user asks a question or presses Summarize.
 
-These are the same two categories the Firefox package declares in `data_collection_permissions` (`browsingActivity`, `websiteContent`). The API key and the user's questions and the answers are stored on the device and sent only to the provider the user set up; they are not ticked as "Authentication information" or "Personal communications" (see `docs/questions.md`, Store publishing).
+These are the same four categories the Firefox package declares in `data_collection_permissions` (`authenticationInfo`, `personalCommunications`, `browsingActivity`, `websiteContent`; owner decision O8).
 
 Not handled: personally identifiable information, health information, financial and payment information, location, user activity (clicks, mouse position, scrolling, keystroke logging).
 
@@ -87,7 +89,7 @@ Tick all three:
 - I do not use or transfer user data for purposes that are unrelated to my item's single purpose.
 - I do not use or transfer user data to determine creditworthiness or for lending purposes.
 
-The only transfer is the one the user starts: page text, page addresses and the question go to the LLM provider the user configured, to answer that question. The developer receives nothing; there is no telemetry, analytics or advertising.
+The only transfer is the one the user starts: page text, page addresses, the conversation and the API key go to the LLM provider the user configured, to answer the question. The developer receives nothing; there is no telemetry, analytics or advertising.
 
 ## Privacy policy URL
 

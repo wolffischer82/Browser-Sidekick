@@ -24,13 +24,17 @@ AMO takes the policy as text, not as a URL. Paste the whole of `PRIVACY.md` into
 The Firefox package declares in `browser_specific_settings.gecko.data_collection_permissions` (set in `wxt.config.ts`):
 
 ```json
-{ "required": ["websiteContent", "browsingActivity"] }
+{
+  "required": ["websiteContent", "browsingActivity", "authenticationInfo", "personalCommunications"]
+}
 ```
 
 - `websiteContent`: the text read from pinned pages and the current tab (article text, YouTube transcripts, PDF text). It is sent to the LLM provider the user set up, when they ask a question or press Summarize.
 - `browsingActivity`: the address (URL) and title of each pinned page, and of the current tab when a question is asked about it, sent with that text.
+- `authenticationInfo`: the API key the user enters for a provider, sent only to that provider with each request.
+- `personalCommunications`: the user's questions and the model's answers; the conversation so far is sent to the user's provider with each new question.
 
-Both are `required` because asking about pages is the add-on's only purpose; nothing works without them. Nothing goes to the developer: there is no telemetry, analytics or crash reporting, so `technicalAndInteraction` is not declared. Firefox shows both categories when the add-on is installed. These are the same two categories ticked in the Chrome Web Store form (`chrome-web-store.md`).
+All four are `required` because asking a provider about pages is the add-on's only purpose; nothing works without them (owner decision O8). Nothing goes to the developer: there is no telemetry, analytics or crash reporting, so `technicalAndInteraction` is not declared. Firefox shows the four categories when the add-on is installed. The Chrome Web Store form ticks the same four (`chrome-web-store.md`).
 
 ## Notes to reviewer
 
