@@ -10,7 +10,7 @@ One command produces the files each store accepts. The repository holds a privac
 
 ## 2. Owner decisions (2026-10-31)
 
-- **O1 Contact.** Public contact is the GitHub issue tracker, `https://github.com/wolffischer82/Browser-Sidekick/issues`. No email address appears in the policy, the listings or the repository.
+- **O1 Contact (changed 2026-10-31).** Public contact email is `feedback@findach.de`, used in the privacy policy, the listings, the store dashboards and the publishing guide. The GitHub issue tracker, `https://github.com/wolffischer82/Browser-Sidekick/issues`, stays as the support/homepage link. No other email address appears.
 - **O2 Icon.** The current icon (`design/icon.svg`, exported to `public/icon/`) is used on both stores as it is.
 - **O3 Version.** The first store release is 0.1.0, the current version.
 - **O4 Languages.** Listings and the privacy policy exist in English and German.
@@ -34,7 +34,7 @@ One command produces the files each store accepts. The repository holds a privac
 - What leaves the device: page text, the question and history, sent only to the provider the user configured, only when they ask or summarise; plus model-list requests. Which hosts these are (the three built-in ones and any custom OpenAI-compatible origin the user enters). That the provider's own privacy policy then applies.
 - That the developer receives nothing: no telemetry, analytics, ads, remote code, sale or transfer of data.
 - What each permission is used for, in plain words.
-- Contact (O1), effective date, and that changes are tracked in the repository's history.
+- Contact email and issue tracker (O1), effective date, and that changes are tracked in the repository's history.
 
 The stable URL for both stores is `https://github.com/wolffischer82/Browser-Sidekick/blob/main/PRIVACY.md`.
 
@@ -73,7 +73,7 @@ An owner checklist, in order, for each store: account creation (Chrome: one-time
 **Acceptance**:
 - Every statement in the policy matches the code; the decision log lists, per statement group, the source files it was checked against.
 - The English and German texts say the same thing.
-- No email address or other personal data in either file.
+- The only email address in either file is the contact address (O1); no other personal data.
 - `LICENSE` and `package.json` carry MIT.
 
 **Tests**: none beyond the verification gate (documentation only). The gate-checker cross-checks the policy against the code.
