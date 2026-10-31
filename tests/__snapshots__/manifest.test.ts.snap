@@ -67,6 +67,8 @@ exports[`manifest > firefox: exact permissions and snapshot 1`] = `
         "required": [
           "websiteContent",
           "browsingActivity",
+          "authenticationInfo",
+          "personalCommunications",
         ],
       },
       "id": "browser-sidekick@wolffischer82.github.io",

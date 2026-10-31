@@ -674,3 +674,116 @@ Status: done (2026-10-06; gate-checker PASS-WITH-NOTES, orchestrator UI check in
 - `tests/sidepanel-header.test.tsx`: header buttons are Sessions, rename, Settings; New session in the composer creates and shows a session and keeps focus. `tests/sidepanel-thinking.test.tsx`: toolbar order.
 - e2e `tests/e2e/new-session.spec.ts`: screens `T21-01-no-provider-400`, `-320`, `T21-02-idle-400`, `-320` (each also `-dark`); no provider, no access, long model at 320 px. `composer.spec.ts`: toolbar line includes New session; fade read from the textarea.
 - Gate (2026-10-06): lint, typecheck, 1330 unit tests in 55 files, build, check:dist, lint:firefox (0 errors, 18 warnings), 24 e2e tests passed.
+
+# Store publishing
+
+Spec: `specs/store-publishing.md` (deleted at the end of T25, owner decision O7; see decisions.md Store publishing T25-1). Branch `claude/nifty-euler-7zmzi7`. Status values as above.
+
+## T22 Licence and privacy policy
+
+Status: done (2026-10-31). Gate-checker: PASS-WITH-NOTES, accepted (minor stored metadata fields not listed individually; uninstall deletion relies on browser behaviour).
+
+### Plan
+
+- `LICENSE`: MIT text, `Copyright (c) 2026 wolffischer82` (O5); `"license": "MIT"` in `package.json`.
+- `PRIVACY.md` and `PRIVACY.de.md` at the root, derived from the source only: what is stored where (`src/shared/model.ts`, `db/`, `settings.ts`), what leaves the device and to which hosts (`src/shared/llm/`, `chat/`, `ProviderForm.tsx`, extractors), what the developer receives (nothing), each permission (`wxt.config.ts`, both built manifests), deletion, contact (O1), effective date 2026-10-31.
+- Decision log: per statement group, the source files it was checked against.
+- README: a Privacy line linking `PRIVACY.md` and a License line.
+- Rebuild `dist/` and check whether the `license` field changes it.
+- Tests: none beyond the gate (documentation only).
+- Open questions: none so far.
+
+### Acceptance
+
+- [x] Every statement in the policy matches the code; decisions.md Store publishing T22-1 lists the source files per statement group.
+- [x] The English and German texts say the same thing (same sections, same statements, UI labels from each locale).
+- [x] The only email address in either file is the contact address `feedback@findach.de` (O1, changed 2026-10-31); the GitHub issue tracker stays as a second way. No other personal data.
+- [x] `LICENSE` (MIT, `wolffischer82`) and `"license": "MIT"` in `package.json`; README has Privacy and License sections.
+- [x] `dist/` rebuilt: unchanged by the `license` field, so no build commit.
+
+### Tests
+
+- None owed (documentation only).
+- Gate (2026-10-31): lint, typecheck, 1330 unit tests in 55 files, build, check:dist, lint:firefox (0 errors, 18 warnings), 24 e2e tests passed.
+
+## T23 Store packages
+
+Status: done (2026-10-31). Gate-checker: passed.
+
+### Plan
+
+- `wxt.config.ts`: a `zip` block. Zips go to WXT's default location, `dist/` (ignored by `dist/*` and `*.zip`). The sources zip uses an allowlist (`src`, `public`, `package.json`, `package-lock.json`, `wxt.config.ts`, `tsconfig.json`, `LICENSE`, `README.md`) so untracked local files can never slip in.
+- `package.json`: `zip` (`wxt zip -b chrome && wxt zip -b firefox`) and `verify:zips`.
+- `scripts/verify-zips.mjs` (Node built-ins plus system `unzip`/`diff`): unpacked Chrome and Firefox zips equal `dist/*-ext`; the sources zip has no excluded path; the sources zip unpacked into an empty directory rebuilds `dist/firefox-ext` byte for byte with `npm ci && npm run build:firefox`; `web-ext lint` on the unpacked Firefox zip has no errors; `git status` clean.
+- Decision log: zip location and names, sources allowlist, how the verify script works.
+- Tests: the verify script (run by implementer and gate-checker; not in CI).
+- Open questions: none so far.
+
+### Acceptance
+
+- [x] `npm run zip` from a clean checkout (fresh `git clone`, `npm ci`) produces the Chrome, Firefox and sources zips in `dist/` and leaves `git status` clean.
+- [x] The unpacked Chrome and Firefox zips equal `dist/chrome-ext` and `dist/firefox-ext` (`diff -r`).
+- [x] The sources zip, unpacked into an empty directory, rebuilds `dist/firefox-ext` byte for byte with `npm ci && npm run build:firefox`.
+- [x] The sources zip contains none of the excluded paths (allowlist, 109 files; decisions.md Store publishing T23-2).
+- [x] `web-ext lint` on the unpacked Firefox zip: 0 errors, 18 warnings (the same as `lint:firefox`).
+- [x] `dist/` rebuilt: unchanged, so no build commit. README: one line on `npm run zip` and `npm run verify:zips` under "Build it yourself".
+
+### Tests
+
+- `npm run verify:zips` (`scripts/verify-zips.mjs`, decisions.md Store publishing T23-3): all five checks ok in the working tree and in a fresh clone; it fails (exit 1, with the diff) after a file in `dist/chrome-ext` is changed.
+- Gate (2026-10-31): lint, typecheck, 1330 unit tests in 55 files, build, check:dist, lint:firefox (0 errors, 18 warnings), e2e. First e2e run: 23 passed, 1 failed (`pinning.spec.ts` "pin from the needle…": the context menu was not yet registered when checked, `menuExists` false); the rerun passed 24 of 24. No extension code changed in T23, so this is a timing flake in the existing test.
+
+## T24 Store listing kit and assets
+
+Status: done (2026-10-31), including the O8 follow-up. Gate-checker: passed.
+
+### Plan
+
+- `docs/store/listing.en.md`, `listing.de.md`: name, Chrome short description (≤ 132), AMO summary (≤ 250), full description (plain text), categories, support and homepage URLs; wording from README Features and Limits only.
+- `docs/store/chrome-web-store.md`: single purpose, a justification per permission and host permission of `dist/chrome-ext/manifest.json` (incl. optional `<all_urls>`), remote code (none), data-usage categories and the three certifications, policy URL; statements taken from `PRIVACY.md`.
+- `docs/store/amo.md`: pointers to the listing files, licence, policy text to paste, reviewer notes with exact source build instructions, `data_collection_permissions` explained.
+- Assets: `tests/store/assets.store.ts` run by `playwright.store.config.ts` via `npm run store:assets` (not part of `npm run e2e`), Chromium only. Fictional fixture pages on `.example` hosts (routed to the local fixture server), fictional providers and models on the mock LLM, English and German browser locale. Each screenshot composes the fixture page and the sidebar to 1280×800 (finally 800 + 480 px, decisions.md T24-4); the promo tile is a local HTML template at 440×280 with the icon, name and the Chrome short description. Writes `docs/store/assets/screenshot-<n>-<topic>.<lang>.png` and `promo-small.<lang>.png`; fails if any image has the wrong size.
+- Tests: the asset script; `tests/store-assets.test.ts` reads the PNG headers and checks sizes and the file set; a test counting the listing character limits.
+- Open questions: none so far.
+
+### Acceptance
+
+- [x] Character limits hold: Chrome short description 55 (en) / 63 (de) of 132, equal to `extDescription`; AMO summary 249 / 250 of 250; full descriptions within 16,000 (`tests/store-listing.test.ts`).
+- [x] Every permission in both manifests has a justification: `chrome-web-store.md` (all six Chrome permissions, the three provider hosts, optional `<all_urls>`), `amo.md` "Permissions" (all Firefox permissions and hosts); checked by `tests/store-listing.test.ts`. Disclosures agree with `PRIVACY.md` and with the Firefox `data_collection_permissions`: four categories on both stores after owner decision O8 (Authentication information, Personal communications, Web history, Website content = `authenticationInfo`, `personalCommunications`, `browsingActivity`, `websiteContent`); decisions.md T24-10.
+- [x] Screenshots exactly 1280×800 and promo tiles exactly 440×280, English and German (four screenshots each: answer, summary, sessions, settings); fictional `.example` pages, fictional providers and models, no real URLs, keys or personal data; the script talks only to the mock LLM and the local fixture server. Regenerating gives byte-identical files.
+- [x] UI check: the orchestrator looked at all 10 assets (passed).
+- [x] `dist/` rebuilt: unchanged by the asset work; `dist/firefox-ext/manifest.json` changed by O8 and committed. README: no change (no user-facing feature, limit or install change; T25 adds the store line).
+
+### Tests
+
+- `npm run store:assets` (`tests/store/assets.store.ts`): 4 passed; fails on any image with the wrong size.
+- `tests/store-assets.test.ts`: PNG header sizes, file set per language, header parser. `tests/store-listing.test.ts`: limits, plain text, contact address, permission coverage, `data_collection_permissions`.
+- Gate (2026-10-31): lint, typecheck, 1345 unit tests in 57 files, build, check:dist, lint:firefox (0 errors, 18 warnings), 24 e2e tests passed. An earlier gate run failed once on the known `pinning.spec.ts` context-menu timing flake (T23); it fails about 1 in 4 runs of that test alone, independent of T24's changes.
+- O8 follow-up (2026-10-31): Firefox manifest declares the four categories, store docs and both policies updated, question closed. Gate: lint, typecheck, 1345 unit tests in 57 files, build, check:dist, lint:firefox (0 errors, 18 warnings), 24 e2e passed.
+
+## T25 Publishing guide, README, final report
+
+Status: done (2026-10-31). Gate-checker: PASS-WITH-NOTES, accepted (warning count removed from the guide).
+
+### Plan
+
+- `docs/publishing.md`: owner checklist per store in order (before you start, account, build and verify the zips, upload, listing, privacy, distribution or visibility, submit, review and reviewer questions), each step naming the exact file or section in `docs/store/`, `PRIVACY*.md`, `LICENSE` or `public/icon/`; a "Shipping an update" section. Where a dashboard may have changed: "check the current form".
+- README: one Install line pointing maintainers to `docs/publishing.md`; `npm run store:assets` under Development. Status line stays.
+- `docs/store-publishing-report.md`: what shipped, deviations, what the owner still has to do, open questions.
+- Before deleting the spec (O7): copy owner decisions O1–O8 into decisions.md, point code comments that name the spec file at the decision log, check no doc links to it.
+- Tests: none beyond the gate (documentation only). `dist/` should stay unchanged.
+- Open questions: none so far.
+
+### Acceptance
+
+- [x] Each step in `docs/publishing.md` names the exact file or section to use: zips by full name, listing fields by file and section heading (tables per form), privacy answers by section of `chrome-web-store.md` and `amo.md`, images by file name, icon `public/icon/128.png`, policy `PRIVACY.md` / `PRIVACY.de.md`, licence `LICENSE`.
+- [x] Following the guide needs nothing outside the repository apart from the owner's accounts, the Chrome fee and Node.js to build the zips (as the README's build section already requires). Dashboard wording that may have changed says "check the current form".
+- [x] README: one Install line pointing maintainers to `docs/publishing.md`; `npm run store:assets` under Development; status line unchanged.
+- [x] Final report `docs/store-publishing-report.md`: what shipped, deviations, what the owner still has to do (Chrome account marked done for this owner), open questions (none).
+- [x] Owner decisions O1–O8 copied to decisions.md Store publishing T25-1; comments naming the spec file now point at the decision log; no doc links to the spec file. The spec is deleted in the last commit of T25 (O7).
+- [x] `dist/` rebuilt: unchanged, so no build commit.
+
+### Tests
+
+- None owed (documentation only).
+- Gate (2026-10-31): lint, typecheck, 1345 unit tests in 57 files, build, check:dist, lint:firefox (0 errors, 18 warnings), 24 e2e passed. `npm run zip && npm run verify:zips`: all six checks ok.

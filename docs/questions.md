@@ -30,3 +30,13 @@ None open.
 
 1. **T20: the new e2e spec for §5.6/§5.7** was declined by the permission prompt. Answered 2026-10-03: the owner allowed it; `tests/e2e/drawer-settings.spec.ts` is written.
 2. **T20: the final report `docs/redesign-report.md`** was declined by the permission prompt. Answered 2026-10-03: the owner allowed it; the report is written.
+
+# Store publishing
+
+Spec: `specs/store-publishing.md` (deleted at the end of T25, owner decision O7; see decisions.md Store publishing T25-1). Each entry names the task it blocks.
+
+None open.
+
+## Closed
+
+1. **Chrome data-usage categories for the API key and the chat** (T24). Answered 2026-10-31: yes, on both stores (spec O8). Chrome ticks Authentication information, Personal communications, Web history and Website content; Firefox `data_collection_permissions.required` adds `authenticationInfo` and `personalCommunications`. decisions.md Store publishing T24-10.

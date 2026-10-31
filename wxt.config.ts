@@ -26,6 +26,22 @@ export default defineConfig({
   outDir: 'dist',
   outDirTemplate: '{{browser}}-ext{{modeSuffix}}',
   manifestVersion: 3,
+  // Store T23: `npm run zip` writes the store zips next to the builds in dist/
+  // (git-ignored). The Firefox sources zip for AMO is an allowlist of what
+  // `npm ci && npm run build:firefox` needs, so local files never slip in.
+  zip: {
+    excludeSources: ['**'],
+    includeSources: [
+      'src/**',
+      'public/**',
+      'package.json',
+      'package-lock.json',
+      'wxt.config.ts',
+      'tsconfig.json',
+      'LICENSE',
+      'README.md',
+    ],
+  },
   manifest: ({ browser }) => ({
     name: '__MSG_extName__',
     description: '__MSG_extDescription__',
@@ -62,7 +78,17 @@ export default defineConfig({
               id: 'browser-sidekick@wolffischer82.github.io',
               // Owner decision 2026-09-30 (spec section 1).
               strict_min_version: '140.0',
-              data_collection_permissions: { required: ['websiteContent', 'browsingActivity'] },
+              // Owner decision O8 (docs/decisions.md, Store publishing T24-10): the
+              // API key goes to its provider (authenticationInfo), questions and
+              // answers too (personalCommunications).
+              data_collection_permissions: {
+                required: [
+                  'websiteContent',
+                  'browsingActivity',
+                  'authenticationInfo',
+                  'personalCommunications',
+                ],
+              },
             },
           },
         }
