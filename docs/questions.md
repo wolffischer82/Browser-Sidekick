@@ -35,4 +35,8 @@ None open.
 
 Spec: `specs/store-publishing.md`. Each entry names the task it blocks.
 
-1. **Chrome data-usage categories for the API key and the chat** (T24; blocks nothing, the owner decides before submitting). `docs/store/chrome-web-store.md` ticks "Web history" and "Website content", the same two categories the Firefox package declares (`browsingActivity`, `websiteContent`, owner decision 2026-09-30). The API key ("Authentication information") and the user's questions and answers ("Personal communications") are stored on the device and sent only to the provider the user set up; they are not ticked. Should they be? If yes on Chrome, the Firefox `data_collection_permissions` would need `authenticationInfo` and `personalCommunications` too to stay consistent, which is a manifest change outside this spec.
+None open.
+
+## Closed
+
+1. **Chrome data-usage categories for the API key and the chat** (T24). Answered 2026-10-31: yes, on both stores (spec O8). Chrome ticks Authentication information, Personal communications, Web history and Website content; Firefox `data_collection_permissions.required` adds `authenticationInfo` and `personalCommunications`. decisions.md Store publishing T24-10.

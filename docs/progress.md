@@ -749,13 +749,14 @@ Status: implemented (2026-10-31), awaiting gate-checker and the orchestrator's l
 ### Acceptance
 
 - [x] Character limits hold: Chrome short description 55 (en) / 63 (de) of 132, equal to `extDescription`; AMO summary 249 / 250 of 250; full descriptions within 16,000 (`tests/store-listing.test.ts`).
-- [x] Every permission in both manifests has a justification: `chrome-web-store.md` (all six Chrome permissions, the three provider hosts, optional `<all_urls>`), `amo.md` "Permissions" (all Firefox permissions and hosts); checked by `tests/store-listing.test.ts`. Disclosures agree with `PRIVACY.md` and with the Firefox `data_collection_permissions` (Web history + Website content = `browsingActivity` + `websiteContent`). Open: questions.md Store publishing 1 (API key and chat categories).
+- [x] Every permission in both manifests has a justification: `chrome-web-store.md` (all six Chrome permissions, the three provider hosts, optional `<all_urls>`), `amo.md` "Permissions" (all Firefox permissions and hosts); checked by `tests/store-listing.test.ts`. Disclosures agree with `PRIVACY.md` and with the Firefox `data_collection_permissions`: four categories on both stores after owner decision O8 (Authentication information, Personal communications, Web history, Website content = `authenticationInfo`, `personalCommunications`, `browsingActivity`, `websiteContent`); decisions.md T24-10.
 - [x] Screenshots exactly 1280×800 and promo tiles exactly 440×280, English and German (four screenshots each: answer, summary, sessions, settings); fictional `.example` pages, fictional providers and models, no real URLs, keys or personal data; the script talks only to the mock LLM and the local fixture server. Regenerating gives byte-identical files.
-- [ ] UI check: the orchestrator looks at every asset.
-- [x] `dist/` rebuilt: unchanged (no source change). README: no change (no user-facing feature, limit or install change; T25 adds the store line).
+- [x] UI check: the orchestrator looked at all 10 assets (passed).
+- [x] `dist/` rebuilt: unchanged by the asset work; `dist/firefox-ext/manifest.json` changed by O8 and committed. README: no change (no user-facing feature, limit or install change; T25 adds the store line).
 
 ### Tests
 
 - `npm run store:assets` (`tests/store/assets.store.ts`): 4 passed; fails on any image with the wrong size.
 - `tests/store-assets.test.ts`: PNG header sizes, file set per language, header parser. `tests/store-listing.test.ts`: limits, plain text, contact address, permission coverage, `data_collection_permissions`.
 - Gate (2026-10-31): lint, typecheck, 1345 unit tests in 57 files, build, check:dist, lint:firefox (0 errors, 18 warnings), 24 e2e tests passed. An earlier gate run failed once on the known `pinning.spec.ts` context-menu timing flake (T23); it fails about 1 in 4 runs of that test alone, independent of T24's changes.
+- O8 follow-up (2026-10-31): Firefox manifest declares the four categories, store docs and both policies updated, question closed.
