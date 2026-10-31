@@ -708,7 +708,7 @@ Status: done (2026-10-31). Gate-checker: PASS-WITH-NOTES, accepted (minor stored
 
 ## T23 Store packages
 
-Status: in progress.
+Status: implemented (2026-10-31), awaiting gate-checker.
 
 ### Plan
 
@@ -718,3 +718,17 @@ Status: in progress.
 - Decision log: zip location and names, sources allowlist, how the verify script works.
 - Tests: the verify script (run by implementer and gate-checker; not in CI).
 - Open questions: none so far.
+
+### Acceptance
+
+- [x] `npm run zip` from a clean checkout (fresh `git clone`, `npm ci`) produces the Chrome, Firefox and sources zips in `dist/` and leaves `git status` clean.
+- [x] The unpacked Chrome and Firefox zips equal `dist/chrome-ext` and `dist/firefox-ext` (`diff -r`).
+- [x] The sources zip, unpacked into an empty directory, rebuilds `dist/firefox-ext` byte for byte with `npm ci && npm run build:firefox`.
+- [x] The sources zip contains none of the excluded paths (allowlist, 109 files; decisions.md Store publishing T23-2).
+- [x] `web-ext lint` on the unpacked Firefox zip: 0 errors, 18 warnings (the same as `lint:firefox`).
+- [x] `dist/` rebuilt: unchanged, so no build commit. README: one line on `npm run zip` and `npm run verify:zips` under "Build it yourself".
+
+### Tests
+
+- `npm run verify:zips` (`scripts/verify-zips.mjs`, decisions.md Store publishing T23-3): all five checks ok in the working tree and in a fresh clone; it fails (exit 1, with the diff) after a file in `dist/chrome-ext` is changed.
+- Gate (2026-10-31): lint, typecheck, 1330 unit tests in 55 files, build, check:dist, lint:firefox (0 errors, 18 warnings), e2e. First e2e run: 23 passed, 1 failed (`pinning.spec.ts` "pin from the needle…": the context menu was not yet registered when checked, `menuExists` false); the rerun passed 24 of 24. No extension code changed in T23, so this is a timing flake in the existing test.
