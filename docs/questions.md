@@ -30,3 +30,9 @@ None open.
 
 1. **T20: the new e2e spec for §5.6/§5.7** was declined by the permission prompt. Answered 2026-10-03: the owner allowed it; `tests/e2e/drawer-settings.spec.ts` is written.
 2. **T20: the final report `docs/redesign-report.md`** was declined by the permission prompt. Answered 2026-10-03: the owner allowed it; the report is written.
+
+# Store publishing
+
+Spec: `specs/store-publishing.md`. Each entry names the task it blocks.
+
+1. **Chrome data-usage categories for the API key and the chat** (T24; blocks nothing, the owner decides before submitting). `docs/store/chrome-web-store.md` ticks "Web history" and "Website content", the same two categories the Firefox package declares (`browsingActivity`, `websiteContent`, owner decision 2026-09-30). The API key ("Authentication information") and the user's questions and answers ("Personal communications") are stored on the device and sent only to the provider the user set up; they are not ticked. Should they be? If yes on Chrome, the Firefox `data_collection_permissions` would need `authenticationInfo` and `personalCommunications` too to stay consistent, which is a manifest change outside this spec.

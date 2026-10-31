@@ -43,3 +43,53 @@ describe.each(LANGS)('store listing (%s)', (lang) => {
     expect(listingField(lang, 'Name')).toBe('Browser Sidekick');
   });
 });
+
+describe('store permission justifications', () => {
+  const read = (path: string) => readFileSync(resolve(import.meta.dirname, '..', path), 'utf8');
+  interface Manifest {
+    permissions?: string[];
+    host_permissions?: string[];
+    optional_host_permissions?: string[];
+    browser_specific_settings?: { gecko?: { data_collection_permissions?: unknown } };
+  }
+  const manifest = (browser: string) =>
+    JSON.parse(read(`dist/${browser}-ext/manifest.json`)) as Manifest;
+  const hostOf = (pattern: string) =>
+    pattern === '<all_urls>' ? pattern : new URL(pattern.replace('*', 'x')).hostname;
+
+  it('chrome-web-store.md justifies every permission of the Chrome manifest', () => {
+    const doc = read('docs/store/chrome-web-store.md');
+    const chrome = manifest('chrome');
+    for (const permission of chrome.permissions ?? []) {
+      expect(doc, permission).toContain(`### ${permission}\n`);
+    }
+    const hosts = doc.slice(doc.indexOf('### Host permissions'), doc.indexOf('## Remote code'));
+    for (const pattern of [
+      ...(chrome.host_permissions ?? []),
+      ...(chrome.optional_host_permissions ?? []),
+    ]) {
+      expect(hosts, pattern).toContain(hostOf(pattern));
+    }
+  });
+
+  it('amo.md explains every permission of the Firefox manifest', () => {
+    const doc = read('docs/store/amo.md');
+    const firefox = manifest('firefox');
+    const section = doc.slice(doc.indexOf('## Permissions'));
+    for (const permission of [
+      ...(firefox.permissions ?? []),
+      ...(firefox.host_permissions ?? []),
+      ...(firefox.optional_host_permissions ?? []),
+    ]) {
+      expect(section, permission).toContain(`\`${permission}\``);
+    }
+  });
+
+  it('amo.md quotes the Firefox data_collection_permissions as declared', () => {
+    const doc = read('docs/store/amo.md');
+    const block = /## Data collection permissions[\s\S]*?```json\n([\s\S]*?)\n```/.exec(doc);
+    expect(JSON.parse(block?.[1] ?? 'null')).toEqual(
+      manifest('firefox').browser_specific_settings?.gecko?.data_collection_permissions,
+    );
+  });
+});
