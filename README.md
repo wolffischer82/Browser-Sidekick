@@ -58,3 +58,11 @@ This rewrites `dist/chrome-ext` and `dist/firefox-ext` from source. Load them as
 The builds in `dist/` are tracked in git. CI fails if they differ from a fresh build (`npm run check:dist`), so rebuild and commit them with every source change, and don't edit them by hand.
 
 Specs live in `specs/`, decision and progress logs in `docs/`. Builds and CI run on the self-hosted runner `lenovo-ai-server`; see `CLAUDE.md` for how work is driven.
+
+## Privacy
+
+The extension sends nothing to its developer. What it stores and what it sends to your provider is described in the [privacy policy](PRIVACY.md) ([Deutsch](PRIVACY.de.md)).
+
+## License
+
+[MIT](LICENSE)
