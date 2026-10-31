@@ -22,7 +22,9 @@
     "lint:firefox": "web-ext lint --source-dir dist/firefox-ext",
     "check:dist": "git status --porcelain -- dist | (! grep .)",
     "icons": "node scripts/export-icons.mjs",
-    "e2e": "playwright test"
+    "e2e": "playwright test",
+    "zip": "wxt zip -b chrome && wxt zip -b firefox",
+    "verify:zips": "node scripts/verify-zips.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
