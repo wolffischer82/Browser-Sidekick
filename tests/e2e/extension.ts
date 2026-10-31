@@ -19,11 +19,13 @@ export async function newProfile(): Promise<{ dir: string; remove: () => Promise
 /**
  * Launches Playwright's Chromium with the extension loaded. The `chromium`
  * channel uses the new headless mode, which supports extensions. The UI
- * language is English so assertions can use the `en` strings.
+ * language is English so assertions can use the `en` strings; the store
+ * assets (tests/store) also launch it in German.
  */
 export async function launchWithExtension(
   profileDir: string,
   extraArgs: string[] = [],
+  locale = 'en-US',
 ): Promise<BrowserContext> {
   if (!existsSync(join(EXTENSION_DIR, 'manifest.json'))) {
     throw new Error('dist/chrome-ext is missing. Run `npm run build:chrome` first.');
@@ -31,13 +33,16 @@ export async function launchWithExtension(
   return chromium.launchPersistentContext(profileDir, {
     channel: 'chromium',
     headless: true,
-    locale: 'en-US',
+    locale,
+    // Chromium on Linux takes its UI language, which `i18n.getMessage`
+    // follows, from LANGUAGE rather than from `--lang`.
+    env: { ...process.env, LANGUAGE: locale.replace('-', '_') },
     colorScheme: 'light',
     // Drawer and chevron animations off, for stable screenshots.
     reducedMotion: 'reduce',
     viewport: { width: 400, height: 720 },
     args: [
-      '--lang=en-US',
+      `--lang=${locale}`,
       `--disable-extensions-except=${EXTENSION_DIR}`,
       `--load-extension=${EXTENSION_DIR}`,
       // Allows CDP `Extensions.loadUnpacked`, used by `reloadExtension`.
@@ -104,8 +109,9 @@ export async function launchWithGrantedOrigins(
   profileDir: string,
   origins: string[],
   extraArgs: string[] = [],
+  locale = 'en-US',
 ): Promise<BrowserContext> {
-  const first = await launchWithExtension(profileDir, extraArgs);
+  const first = await launchWithExtension(profileDir, extraArgs, locale);
   await extensionId(first);
   await first.close();
 
@@ -126,7 +132,7 @@ export async function launchWithGrantedOrigins(
     set.explicit_host = [...new Set([...(set.explicit_host ?? []), ...origins])];
   }
   await writeFile(file, JSON.stringify(prefs));
-  return launchWithExtension(profileDir, extraArgs);
+  return launchWithExtension(profileDir, extraArgs, locale);
 }
 
 /** Checks from an extension page whether the extension holds `origin`. */
