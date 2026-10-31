@@ -58,7 +58,7 @@ Nichts. Die Erweiterung hat keinen Server, kein Konto, keine Telemetrie, keine A
 - **Optionaler Zugriff auf alle Websites oder auf eine Website:** Der Browser fragt dich vorher. Zugriff auf alle Websites wird angefragt, wenn du in der Seitenleiste oder den Einstellungen „Auf allen Websites erlauben“ wählst, Zugriff auf eine Website, wenn du eine Seite dieser Website aus der Seitenleiste anheftest. Er erlaubt der Erweiterung, die Adresse des aktuellen Tabs zu sehen und die Seiten zu lesen, die du anheftest, aktualisierst oder zu denen du fragst. Ohne ihn lassen sich Seiten weiterhin über das Rechtsklickmenü anheften. Du kannst ihn jederzeit in den Erweiterungseinstellungen des Browsers zurücknehmen.
 - **Optionaler Zugriff auf eine eigene Anbieteradresse:** wird angefragt, wenn du einen OpenAI-kompatiblen Anbieter mit einer anderen als den oben genannten Adressen speicherst, damit Anfragen an ihn gesendet werden können.
 
-In Firefox gibt die Erweiterung an, dass sie Website-Inhalte und Browsing-Aktivität verarbeitet. Gemeint sind der Seitentext und die Seitenadressen, die wie oben beschrieben an deinen eigenen Anbieter gehen.
+In Firefox gibt die Erweiterung an, dass sie Website-Inhalte, Browsing-Aktivität, Authentifizierungsdaten und persönliche Kommunikation verarbeitet. Gemeint sind der Seitentext und die Seitenadressen, dein API-Schlüssel sowie deine Fragen und die Antworten, die alle wie oben beschrieben nur an deinen eigenen Anbieter gehen. Die Store-Einträge geben dieselben vier Kategorien an.
 
 ## Änderungen und Kontakt
 

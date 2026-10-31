@@ -58,7 +58,7 @@ Nothing. The extension has no server, no account, no telemetry, no analytics, no
 - **Optional access to all sites or to one site:** the browser asks you first. Access to all sites is requested when you choose "Allow on all sites" in the sidebar or the settings; access to one site when you pin a page of that site from the sidebar. It lets the extension see the address of the tab you're on and read the pages you pin, refresh or ask about. Without it, pages can still be pinned from the right-click menu. You can withdraw it at any time in the browser's extension settings.
 - **Optional access to a custom provider address:** asked for when you save an OpenAI-compatible provider with an address other than the ones above, so that requests can be sent to it.
 
-In Firefox, the extension declares that it handles website content and browsing activity. This refers to the page text and page addresses sent to your own provider as described above.
+In Firefox, the extension declares that it handles website content, browsing activity, authentication information and personal communications. This refers to the page text and page addresses, your API key, and your questions and the answers, all sent only to your own provider as described above. The store listings declare the same four categories.
 
 ## Changes and contact
 
