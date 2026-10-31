@@ -705,3 +705,16 @@ Status: done (2026-10-31). Gate-checker: PASS-WITH-NOTES, accepted (minor stored
 
 - None owed (documentation only).
 - Gate (2026-10-31): lint, typecheck, 1330 unit tests in 55 files, build, check:dist, lint:firefox (0 errors, 18 warnings), 24 e2e tests passed.
+
+## T23 Store packages
+
+Status: in progress.
+
+### Plan
+
+- `wxt.config.ts`: a `zip` block. Zips go to WXT's default location, `dist/` (ignored by `dist/*` and `*.zip`). The sources zip uses an allowlist (`src`, `public`, `package.json`, `package-lock.json`, `wxt.config.ts`, `tsconfig.json`, `LICENSE`, `README.md`) so untracked local files can never slip in.
+- `package.json`: `zip` (`wxt zip -b chrome && wxt zip -b firefox`) and `verify:zips`.
+- `scripts/verify-zips.mjs` (Node built-ins plus system `unzip`/`diff`): unpacked Chrome and Firefox zips equal `dist/*-ext`; the sources zip has no excluded path; the sources zip unpacked into an empty directory rebuilds `dist/firefox-ext` byte for byte with `npm ci && npm run build:firefox`; `web-ext lint` on the unpacked Firefox zip has no errors; `git status` clean.
+- Decision log: zip location and names, sources allowlist, how the verify script works.
+- Tests: the verify script (run by implementer and gate-checker; not in CI).
+- Open questions: none so far.
