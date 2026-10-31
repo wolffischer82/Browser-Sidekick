@@ -735,13 +735,26 @@ Status: implemented (2026-10-31), awaiting gate-checker.
 
 ## T24 Store listing kit and assets
 
-Status: in progress (2026-10-31).
+Status: implemented (2026-10-31), awaiting gate-checker and the orchestrator's look at every asset.
 
 ### Plan
 
 - `docs/store/listing.en.md`, `listing.de.md`: name, Chrome short description (≤ 132), AMO summary (≤ 250), full description (plain text), categories, support and homepage URLs; wording from README Features and Limits only.
 - `docs/store/chrome-web-store.md`: single purpose, a justification per permission and host permission of `dist/chrome-ext/manifest.json` (incl. optional `<all_urls>`), remote code (none), data-usage categories and the three certifications, policy URL; statements taken from `PRIVACY.md`.
 - `docs/store/amo.md`: pointers to the listing files, licence, policy text to paste, reviewer notes with exact source build instructions, `data_collection_permissions` explained.
-- Assets: `tests/store/assets.store.ts` run by `playwright.store.config.ts` via `npm run store:assets` (not part of `npm run e2e`), Chromium only. Fictional fixture pages on `.example` hosts (routed to the local fixture server), fictional providers and models on the mock LLM, English and German browser locale. Each screenshot composes the fixture page (880 px) and the sidebar (400 px) to 1280×800; the promo tile is a local HTML template at 440×280 with the icon, name and the Chrome short description. Writes `docs/store/assets/screenshot-<n>-<topic>.<lang>.png` and `promo-small.<lang>.png`; fails if any image has the wrong size.
+- Assets: `tests/store/assets.store.ts` run by `playwright.store.config.ts` via `npm run store:assets` (not part of `npm run e2e`), Chromium only. Fictional fixture pages on `.example` hosts (routed to the local fixture server), fictional providers and models on the mock LLM, English and German browser locale. Each screenshot composes the fixture page and the sidebar to 1280×800 (finally 800 + 480 px, decisions.md T24-4); the promo tile is a local HTML template at 440×280 with the icon, name and the Chrome short description. Writes `docs/store/assets/screenshot-<n>-<topic>.<lang>.png` and `promo-small.<lang>.png`; fails if any image has the wrong size.
 - Tests: the asset script; `tests/store-assets.test.ts` reads the PNG headers and checks sizes and the file set; a test counting the listing character limits.
 - Open questions: none so far.
+
+### Acceptance
+
+- [x] Character limits hold: Chrome short description 55 (en) / 63 (de) of 132, equal to `extDescription`; AMO summary 249 / 250 of 250; full descriptions within 16,000 (`tests/store-listing.test.ts`).
+- [x] Every permission in both manifests has a justification: `chrome-web-store.md` (all six Chrome permissions, the three provider hosts, optional `<all_urls>`), `amo.md` "Permissions" (all Firefox permissions and hosts); checked by `tests/store-listing.test.ts`. Disclosures agree with `PRIVACY.md` and with the Firefox `data_collection_permissions` (Web history + Website content = `browsingActivity` + `websiteContent`). Open: questions.md Store publishing 1 (API key and chat categories).
+- [x] Screenshots exactly 1280×800 and promo tiles exactly 440×280, English and German (four screenshots each: answer, summary, sessions, settings); fictional `.example` pages, fictional providers and models, no real URLs, keys or personal data; the script talks only to the mock LLM and the local fixture server. Regenerating gives byte-identical files.
+- [ ] UI check: the orchestrator looks at every asset.
+- [x] `dist/` rebuilt: unchanged (no source change). README: no change (no user-facing feature, limit or install change; T25 adds the store line).
+
+### Tests
+
+- `npm run store:assets` (`tests/store/assets.store.ts`): 4 passed; fails on any image with the wrong size.
+- `tests/store-assets.test.ts`: PNG header sizes, file set per language, header parser. `tests/store-listing.test.ts`: limits, plain text, contact address, permission coverage, `data_collection_permissions`.
