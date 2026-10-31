@@ -35,8 +35,9 @@ export async function launchWithExtension(
     headless: true,
     locale,
     // Chromium on Linux takes its UI language, which `i18n.getMessage`
-    // follows, from LANGUAGE rather than from `--lang`.
-    env: { ...process.env, LANGUAGE: locale.replace('-', '_') },
+    // follows, from LANGUAGE rather than from `--lang`. Only set for another
+    // locale, so the English e2e suite starts as before (decisions.md T24-5).
+    ...(locale === 'en-US' ? {} : { env: { ...process.env, LANGUAGE: locale.replace('-', '_') } }),
     colorScheme: 'light',
     // Drawer and chevron animations off, for stable screenshots.
     reducedMotion: 'reduce',
