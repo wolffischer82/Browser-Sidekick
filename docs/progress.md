@@ -732,3 +732,16 @@ Status: implemented (2026-10-31), awaiting gate-checker.
 
 - `npm run verify:zips` (`scripts/verify-zips.mjs`, decisions.md Store publishing T23-3): all five checks ok in the working tree and in a fresh clone; it fails (exit 1, with the diff) after a file in `dist/chrome-ext` is changed.
 - Gate (2026-10-31): lint, typecheck, 1330 unit tests in 55 files, build, check:dist, lint:firefox (0 errors, 18 warnings), e2e. First e2e run: 23 passed, 1 failed (`pinning.spec.ts` "pin from the needle…": the context menu was not yet registered when checked, `menuExists` false); the rerun passed 24 of 24. No extension code changed in T23, so this is a timing flake in the existing test.
+
+## T24 Store listing kit and assets
+
+Status: in progress (2026-10-31).
+
+### Plan
+
+- `docs/store/listing.en.md`, `listing.de.md`: name, Chrome short description (≤ 132), AMO summary (≤ 250), full description (plain text), categories, support and homepage URLs; wording from README Features and Limits only.
+- `docs/store/chrome-web-store.md`: single purpose, a justification per permission and host permission of `dist/chrome-ext/manifest.json` (incl. optional `<all_urls>`), remote code (none), data-usage categories and the three certifications, policy URL; statements taken from `PRIVACY.md`.
+- `docs/store/amo.md`: pointers to the listing files, licence, policy text to paste, reviewer notes with exact source build instructions, `data_collection_permissions` explained.
+- Assets: `tests/store/assets.store.ts` run by `playwright.store.config.ts` via `npm run store:assets` (not part of `npm run e2e`), Chromium only. Fictional fixture pages on `.example` hosts (routed to the local fixture server), fictional providers and models on the mock LLM, English and German browser locale. Each screenshot composes the fixture page (880 px) and the sidebar (400 px) to 1280×800; the promo tile is a local HTML template at 440×280 with the icon, name and the Chrome short description. Writes `docs/store/assets/screenshot-<n>-<topic>.<lang>.png` and `promo-small.<lang>.png`; fails if any image has the wrong size.
+- Tests: the asset script; `tests/store-assets.test.ts` reads the PNG headers and checks sizes and the file set; a test counting the listing character limits.
+- Open questions: none so far.
