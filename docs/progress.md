@@ -677,7 +677,7 @@ Status: done (2026-10-06; gate-checker PASS-WITH-NOTES, orchestrator UI check in
 
 # Store publishing
 
-Spec: `specs/store-publishing.md`. Branch `claude/nifty-euler-7zmzi7`. Status values as above.
+Spec: `specs/store-publishing.md` (deleted at the end of T25, owner decision O7; see decisions.md Store publishing T25-1). Branch `claude/nifty-euler-7zmzi7`. Status values as above.
 
 ## T22 Licence and privacy policy
 
@@ -708,7 +708,7 @@ Status: done (2026-10-31). Gate-checker: PASS-WITH-NOTES, accepted (minor stored
 
 ## T23 Store packages
 
-Status: implemented (2026-10-31), awaiting gate-checker.
+Status: done (2026-10-31). Gate-checker: passed.
 
 ### Plan
 
@@ -735,7 +735,7 @@ Status: implemented (2026-10-31), awaiting gate-checker.
 
 ## T24 Store listing kit and assets
 
-Status: implemented (2026-10-31), awaiting gate-checker and the orchestrator's look at every asset.
+Status: done (2026-10-31), including the O8 follow-up. Gate-checker: passed.
 
 ### Plan
 

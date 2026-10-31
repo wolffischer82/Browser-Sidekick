@@ -352,7 +352,7 @@ Spec: `specs/redesign.md`. Numbering continues per task.
 
 # Store publishing
 
-Spec: `specs/store-publishing.md`. Numbering continues per task.
+Spec: `specs/store-publishing.md` (deleted at the end of T25, owner decision O7; its owner decisions are in T25-1). Numbering continues per task.
 
 ## T22
 
@@ -387,3 +387,20 @@ Spec: `specs/store-publishing.md`. Numbering continues per task.
 8. **Disclosures mirror the Firefox declaration.** The Chrome data-usage section ticks "Web history" and "Website content", matching `browsingActivity` and `websiteContent`. Superseded by T24-10. All justifications reuse the statements of `PRIVACY.md` "Permissions" and "What leaves your device"; the offscreen justification also uses `src/shared/extract/pdf-offscreen.ts` (pdf.js's worker can't start in the service worker; the document closes when no PDF is left).
 9. **AMO privacy policy and source notes point to files.** `amo.md` says to paste `PRIVACY.md` (and `PRIVACY.de.md` for German) as they are, rather than holding a copy that could drift. The build instructions give the environment the package was built in (Ubuntu 24.04, Node 22.23.4, npm 10.9.9), `npm ci && npm run build:firefox`, and `dist/firefox-ext/`, as verified by `npm run verify:zips` in T23.
 10. **Four data categories on both stores** (owner decision O8, 2026-10-31, answering questions.md Store publishing 1). `wxt.config.ts` adds `authenticationInfo` and `personalCommunications` to the Firefox `data_collection_permissions.required` (key names checked against the addons-linter manifest schema in `node_modules`, `CommonDataCollectionPermission`; `web-ext lint` 0 errors); `tests/manifest.test.ts` and its snapshot follow; `dist/firefox-ext` rebuilt. `chrome-web-store.md` ticks Authentication information, Personal communications, Web history and Website content; `amo.md` explains all four. `PRIVACY.md` and `PRIVACY.de.md` already said the API key and the conversation go to the provider; their Firefox paragraph now names the four categories and that the store listings declare the same.
+
+## T25
+
+1. **Owner decisions of the store-publishing spec, kept here** because the spec file is deleted at the end of T25 (O7). All dated 2026-10-31 unless noted.
+   - O1 Contact: the public contact email is `feedback@findach.de` (privacy policy, listings, dashboards, guide); the GitHub issue tracker `https://github.com/wolffischer82/Browser-Sidekick/issues` is the support and homepage link. No other email address appears.
+   - O2 Icon: the current icon (`design/icon.svg`, exported to `public/icon/`) is used on both stores as it is.
+   - O3 Version: the first store release is 0.1.0.
+   - O4 Languages: listings and the privacy policy exist in English and German.
+   - O5 Licence: MIT, copyright holder `wolffischer82`.
+   - O6 Policy hosting: the repository is public; the privacy policy is `PRIVACY.md`, linked by its GitHub URL on `main`. No GitHub Pages site.
+   - O7 Spec removal: `specs/store-publishing.md` is deleted as the last commit of T25, after the final report; the logs keep the decisions.
+   - O8 Data disclosures: both stores declare website content, browsing activity / web history, authentication information and personal communications; the Firefox `data_collection_permissions.required` lists the four (the one manifest change the spec allowed). See T24-10.
+   - Out of scope of that spec: behaviour, permission, stored-data or UI-string changes (except O8), new icon artwork, automated uploads and release workflows, Edge, Safari, Firefox for Android, self-distributed signed Firefox builds.
+2. **Guide structure** (`docs/publishing.md`). One "Before you start" part for both stores (merge to `main` so the policy URL resolves, Node.js, `npm ci && npm run zip && npm run verify:zips`, list of files), then per store the dashboard's own order: account, upload, listing, privacy, distribution, reviewer notes, submit and review; then "After the listings are live" and "Shipping an update". Form fields are mapped to files and sections in tables so each step names its source. Field names and rules that may have changed (Chrome fee amount, trader declaration, German listing selector, test-instructions field, AMO source-build field, AMO locale selector, review timing) say "check the current form" instead of guessing. The guide documents Chrome account creation even though this owner already has the account; the final report marks that step done.
+3. **Chrome test instructions reuse the AMO reviewer notes.** Rather than a second copy in `docs/store/`, the guide says to paste the "Notes to reviewer" block of `amo.md` with `moz-extension://*` replaced by `chrome-extension://*` and "sidebar" by "side panel". Affects only the guide.
+4. **Version bump command.** The update section uses `npm version <new-version> --no-git-tag-version`, which updates `package.json` and `package-lock.json` together without creating a git tag.
+5. **Spec references in code comments.** `wxt.config.ts`, `playwright.store.config.ts`, `scripts/verify-zips.mjs` and `tests/store/*.ts` named the spec file or its sections in comments; they now point at this log (T23-2, T24, T24-10). No code changed; `dist/` is unchanged. The `Spec:` lines of the Store publishing headings in `progress.md`, `decisions.md` and `questions.md` stay as plain text with a note that the file was deleted.

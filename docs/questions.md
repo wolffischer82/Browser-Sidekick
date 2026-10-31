@@ -33,7 +33,7 @@ None open.
 
 # Store publishing
 
-Spec: `specs/store-publishing.md`. Each entry names the task it blocks.
+Spec: `specs/store-publishing.md` (deleted at the end of T25, owner decision O7; see decisions.md Store publishing T25-1). Each entry names the task it blocks.
 
 None open.
 
