@@ -760,3 +760,16 @@ Status: implemented (2026-10-31), awaiting gate-checker and the orchestrator's l
 - `tests/store-assets.test.ts`: PNG header sizes, file set per language, header parser. `tests/store-listing.test.ts`: limits, plain text, contact address, permission coverage, `data_collection_permissions`.
 - Gate (2026-10-31): lint, typecheck, 1345 unit tests in 57 files, build, check:dist, lint:firefox (0 errors, 18 warnings), 24 e2e tests passed. An earlier gate run failed once on the known `pinning.spec.ts` context-menu timing flake (T23); it fails about 1 in 4 runs of that test alone, independent of T24's changes.
 - O8 follow-up (2026-10-31): Firefox manifest declares the four categories, store docs and both policies updated, question closed. Gate: lint, typecheck, 1345 unit tests in 57 files, build, check:dist, lint:firefox (0 errors, 18 warnings), 24 e2e passed.
+
+## T25 Publishing guide, README, final report
+
+Status: in progress (2026-10-31).
+
+### Plan
+
+- `docs/publishing.md`: owner checklist per store in order (before you start, account, build and verify the zips, upload, listing, privacy, distribution or visibility, submit, review and reviewer questions), each step naming the exact file or section in `docs/store/`, `PRIVACY*.md`, `LICENSE` or `public/icon/`; a "Shipping an update" section. Where a dashboard may have changed: "check the current form".
+- README: one Install line pointing maintainers to `docs/publishing.md`; `npm run store:assets` under Development. Status line stays.
+- `docs/store-publishing-report.md`: what shipped, deviations, what the owner still has to do, open questions.
+- Before deleting the spec (O7): copy owner decisions O1–O8 into decisions.md, point code comments that name the spec file at the decision log, check no doc links to it.
+- Tests: none beyond the gate (documentation only). `dist/` should stay unchanged.
+- Open questions: none so far.
