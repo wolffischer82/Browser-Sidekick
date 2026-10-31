@@ -759,4 +759,4 @@ Status: implemented (2026-10-31), awaiting gate-checker and the orchestrator's l
 - `npm run store:assets` (`tests/store/assets.store.ts`): 4 passed; fails on any image with the wrong size.
 - `tests/store-assets.test.ts`: PNG header sizes, file set per language, header parser. `tests/store-listing.test.ts`: limits, plain text, contact address, permission coverage, `data_collection_permissions`.
 - Gate (2026-10-31): lint, typecheck, 1345 unit tests in 57 files, build, check:dist, lint:firefox (0 errors, 18 warnings), 24 e2e tests passed. An earlier gate run failed once on the known `pinning.spec.ts` context-menu timing flake (T23); it fails about 1 in 4 runs of that test alone, independent of T24's changes.
-- O8 follow-up (2026-10-31): Firefox manifest declares the four categories, store docs and both policies updated, question closed.
+- O8 follow-up (2026-10-31): Firefox manifest declares the four categories, store docs and both policies updated, question closed. Gate: lint, typecheck, 1345 unit tests in 57 files, build, check:dist, lint:firefox (0 errors, 18 warnings), 24 e2e passed.
