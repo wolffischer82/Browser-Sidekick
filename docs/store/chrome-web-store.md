@@ -101,3 +101,15 @@ https://github.com/wolffischer82/Browser-Sidekick/blob/main/PRIVACY.md
 
 - Contact email for the developer account and the listing: feedback@findach.de
 - Support URL: https://github.com/wolffischer82/Browser-Sidekick/issues
+
+## Test instructions
+
+The field is limited to 500 characters; this block has 492. Paste into the test instructions field:
+
+```text
+No login needed; nothing is sent to the developer. Testing needs an LLM provider. Free option: Ollama.
+1. ollama pull llama3.2, then: OLLAMA_ORIGINS="chrome-extension://*" ollama serve
+2. Side panel > Settings (sliders icon) > Add provider: OpenAI-compatible, base URL http://localhost:11434/v1, no key. Load models, pick one, Save, allow localhost.
+3. On any article, pin the tab (or right-click > Pin to Sidekick), then ask or press Summarize.
+An OpenAI, Anthropic or Gemini key also works.
+```

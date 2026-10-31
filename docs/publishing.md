@@ -92,7 +92,7 @@ If the dashboard asks for a justification for a permission that isn't listed in 
 
 ### 6. Test instructions for the reviewer
 
-If the dashboard has a field for test instructions (check the current form), paste the "Notes to reviewer" block from `docs/store/amo.md` with two changes: replace `moz-extension://*` with `chrome-extension://*`, and "sidebar" with "side panel".
+Paste the block from `docs/store/chrome-web-store.md`, section "Test instructions", into the test instructions field (limited to 500 characters).
 
 ### 7. Submit and review
 
