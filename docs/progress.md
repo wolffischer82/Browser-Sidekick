@@ -763,7 +763,7 @@ Status: done (2026-10-31), including the O8 follow-up. Gate-checker: passed.
 
 ## T25 Publishing guide, README, final report
 
-Status: in progress (2026-10-31).
+Status: implemented (2026-10-31), awaiting gate-checker.
 
 ### Plan
 
@@ -773,3 +773,17 @@ Status: in progress (2026-10-31).
 - Before deleting the spec (O7): copy owner decisions O1–O8 into decisions.md, point code comments that name the spec file at the decision log, check no doc links to it.
 - Tests: none beyond the gate (documentation only). `dist/` should stay unchanged.
 - Open questions: none so far.
+
+### Acceptance
+
+- [x] Each step in `docs/publishing.md` names the exact file or section to use: zips by full name, listing fields by file and section heading (tables per form), privacy answers by section of `chrome-web-store.md` and `amo.md`, images by file name, icon `public/icon/128.png`, policy `PRIVACY.md` / `PRIVACY.de.md`, licence `LICENSE`.
+- [x] Following the guide needs nothing outside the repository apart from the owner's accounts, the Chrome fee and Node.js to build the zips (as the README's build section already requires). Dashboard wording that may have changed says "check the current form".
+- [x] README: one Install line pointing maintainers to `docs/publishing.md`; `npm run store:assets` under Development; status line unchanged.
+- [x] Final report `docs/store-publishing-report.md`: what shipped, deviations, what the owner still has to do (Chrome account marked done for this owner), open questions (none).
+- [x] Owner decisions O1–O8 copied to decisions.md Store publishing T25-1; comments naming the spec file now point at the decision log; no doc links to the spec file. The spec is deleted in the last commit of T25 (O7).
+- [x] `dist/` rebuilt: unchanged, so no build commit.
+
+### Tests
+
+- None owed (documentation only).
+- Gate (2026-10-31): lint, typecheck, 1345 unit tests in 57 files, build, check:dist, lint:firefox (0 errors, 18 warnings), 24 e2e passed. `npm run zip && npm run verify:zips`: all six checks ok.
