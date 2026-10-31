@@ -17,10 +17,11 @@ One command produces the files each store accepts. The repository holds a privac
 - **O5 Licence.** MIT. Copyright holder: `wolffischer82`.
 - **O6 Policy hosting.** The repository is public. The privacy policy is a Markdown file in it, linked by its GitHub URL on `main`. No GitHub Pages site.
 - **O7 Spec removal (2026-10-31).** This spec file is deleted from the repository at the end of T25, after the final report is written; the logs keep the decisions.
+- **O8 Data disclosures (2026-10-31).** Both stores declare four categories: website content, browsing activity / web history, authentication information (the API key, sent to the provider it belongs to) and personal communications (questions and answers sent to the provider). Firefox: `authenticationInfo` and `personalCommunications` are added to `data_collection_permissions.required` in `wxt.config.ts`; this is the one manifest change this spec allows (§3).
 
 ## 3. Out of scope
 
-- Any change to extension behaviour, permissions, stored data or UI strings.
+- Any change to extension behaviour, permissions, stored data or UI strings, except O8.
 - New icon artwork.
 - Automated uploads (Chrome Web Store API, `web-ext sign`, store credentials in CI) and release workflows.
 - Edge, Safari, Firefox for Android.
