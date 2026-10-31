@@ -100,7 +100,14 @@ describe('manifest', () => {
     expect(manifest.browser_specific_settings).toMatchObject({
       gecko: {
         strict_min_version: '140.0',
-        data_collection_permissions: { required: ['websiteContent', 'browsingActivity'] },
+        data_collection_permissions: {
+          required: [
+            'websiteContent',
+            'browsingActivity',
+            'authenticationInfo',
+            'personalCommunications',
+          ],
+        },
       },
     });
     expect(manifest.sidebar_action).toMatchObject({
