@@ -823,7 +823,7 @@ Status: done (2026-11-15), gate-checker PASS (2026-11-15).
 
 ## T27 Split button, transcript label, README, final report
 
-Status: in progress (2026-11-15).
+Status: partial (2026-11-15): all done except the final report file, see the last acceptance item.
 
 ### Plan
 
@@ -835,3 +835,23 @@ Status: in progress (2026-11-15).
 - Tests: split-button component tests, transcript label tests (en, de), existing tests updated to the new accessible name and label; e2e `summary-levels.spec.ts` (pick Short, new session, reopen) with screenshots.
 - README Features line; `docs/summary-levels-report.md`.
 - Open questions: none so far.
+
+### Acceptance
+
+- [x] The main part summarizes at the remembered level; the menu lists Very short, Short, Standard, Detailed with the remembered one checked; picking one summarizes at it and becomes the remembered level, also for a new session and after reopening the side panel (`tests/sidepanel-summarize.test.tsx` "the split button…", `tests/e2e/summary-levels.spec.ts`).
+- [x] The suffix shows the remembered level in a wide panel (480 px and up, decisions.md Summary levels T27-3) and is hidden in a narrow one; the accessible name always includes it (component test and e2e at 320, 400 and 480 px).
+- [x] Both parts are `aria-disabled` with today's tooltips when Summarize is unavailable; the menu cannot be opened then, and an open menu closes (`tests/sidepanel-summarize-button.test.tsx`, e2e while a summary streams).
+- [x] Keyboard behaviour of §4.2 holds; focus returns to the arrow on close (component tests and e2e).
+- [x] Transcript shows "Summarize · <level>" for new summaries and "Summarize" for stored ones without a level, in both locales (component tests; e2e in English).
+- [x] README Features line updated in one line.
+- [ ] Final report `docs/summary-levels-report.md`: not written. The agent's file-writing tool refused to create a report file from a subagent run; the content (what shipped, deviations, manual checks, open questions: none) is ready for the orchestrator.
+- [x] Mock LLM records the prompt it received (`MockLlm.prompts`).
+- [x] UI check in Chromium (T27 screens reviewed: suffix at 480 px, label at 400 px, icon at 320 px, menu inside the panel, transcript label, light and dark). Firefox: `lint:firefox` only; rendering there is the orchestrator's UI check.
+- [x] `dist/` rebuilt and committed.
+
+### Tests
+
+- `tests/sidepanel-summarize-button.test.tsx` (new): labels and suffix in en and de, menu open/close, checked item, picking, keyboard, disabled states, transcript labels for every level, without a level, live, and in German.
+- `tests/sidepanel-summarize.test.tsx`: the split button through `App` (pick Short, storage, main part reuses it, reopened menu checks it). `tests/chat-summarize.test.ts`: `summaryLevelNameKey`. `tests/mock-llm.test.ts`: recorded prompts.
+- `tests/e2e/summary-levels.spec.ts` (new): screens `T27-01` to `T27-05`. Existing component and e2e tests follow the new accessible name and label (decisions.md Summary levels T27-7).
+- Gate (2026-11-15): lint, typecheck, 1399 unit tests in 58 files, build, check:dist, lint:firefox (0 errors, 18 warnings), 25 e2e passed. One earlier full e2e run failed on the known `pinning.spec.ts` context-menu flake (T23).
