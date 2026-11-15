@@ -4,6 +4,7 @@ import {
   pinWait,
   summarizeState,
   summaryPageSet,
+  summaryLevelNameKey,
   summaryPromptKey,
   waitForPins,
   type SummaryPageSet,
@@ -324,5 +325,16 @@ describe('summaryPromptKey (specs/summary-levels.md 4.4)', () => {
   it('reads a missing or null level as Standard', () => {
     expect(summaryPromptKey(undefined)).toBe('summarizePrompt');
     expect(summaryPromptKey(null)).toBe('summarizePrompt');
+  });
+});
+
+describe('summaryLevelNameKey (specs/summary-levels.md 4.5)', () => {
+  it('names each level, in O1 order', () => {
+    expect(SUMMARY_LEVELS.map(summaryLevelNameKey)).toEqual([
+      'summaryLevelVeryShort',
+      'summaryLevelShort',
+      'summaryLevelStandard',
+      'summaryLevelDetailed',
+    ]);
   });
 });

@@ -115,3 +115,15 @@ const PROMPT_KEYS: Record<SummaryLevel, MessageKey> = {
 export function summaryPromptKey(level: SummaryLevel | null | undefined): MessageKey {
   return PROMPT_KEYS[level ?? DEFAULT_SUMMARY_LEVEL];
 }
+
+const NAME_KEYS: Record<SummaryLevel, MessageKey> = {
+  veryShort: 'summaryLevelVeryShort',
+  short: 'summaryLevelShort',
+  standard: 'summaryLevelStandard',
+  detailed: 'summaryLevelDetailed',
+};
+
+/** The message key of a level's name (specs/summary-levels.md 4.5). */
+export function summaryLevelNameKey(level: SummaryLevel): MessageKey {
+  return NAME_KEYS[level];
+}
