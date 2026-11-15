@@ -794,7 +794,7 @@ Spec: `specs/summary-levels.md`. Branch `claude/wizardly-bell-ocx6mp`. Status va
 
 ## T26 Summary level: data, prompts and request
 
-Status: done (2026-11-15), pending the gate-checker.
+Status: done (2026-11-15), gate-checker PASS (2026-11-15).
 
 ### Plan
 
@@ -820,3 +820,18 @@ Status: done (2026-11-15), pending the gate-checker.
 
 - `tests/settings.test.ts` (default, round trip, unknown value, watch, kept by Delete all data), `tests/repository.test.ts` (level on summarize requests only), `tests/chat-summarize.test.ts` (`summaryPromptKey`), `tests/sidepanel-summarize.test.tsx` "summary levels" (eight level × locale requests, no stored level, another sidebar's change, Retry after a change, legacy Retry), `tests/locales.test.ts`.
 - Gate (2026-11-15): lint, typecheck, 1368 unit tests in 57 files, build, check:dist, lint:firefox (0 errors, 18 warnings), 24 e2e passed. The first gate run failed once on the known `pinning.spec.ts` context-menu timing flake (T23, `menuExists` false); the rerun passed all 24.
+
+## T27 Split button, transcript label, README, final report
+
+Status: in progress (2026-11-15).
+
+### Plan
+
+- `components/SummarizeButton.tsx` becomes the split button: main part (icon, "Summarize", muted level suffix, accessible name `summarizeWithLevel`), arrow (`aria-haspopup="menu"`, `aria-expanded`) opening a `menu` of four `menuitemradio` items upward, keyboard and outside-click handling as in `ThinkingMenu`; both parts share today's tooltip and `aria-disabled`.
+- `Composer` and `App`: `onSummarize(level)`; a pick writes `updateSettings({ summaryLevel })` and passes the level to `chat.summarize`.
+- `shared/chat/summarize.ts`: `summaryLevelNameKey(level)`. Strings of §4.5 in both locales.
+- `Transcript`: "Summarize · <level>" for a summary with a level (stored or live), "Summarize" without.
+- Mock LLM: `prompts` records the last message of every completion request.
+- Tests: split-button component tests, transcript label tests (en, de), existing tests updated to the new accessible name and label; e2e `summary-levels.spec.ts` (pick Short, new session, reopen) with screenshots.
+- README Features line; `docs/summary-levels-report.md`.
+- Open questions: none so far.
