@@ -29,8 +29,9 @@ import type { AddressInfo } from 'node:net';
  *   without using up a scripted reply. Without the field the model answers
  *   like any other.
  * - Every request is recorded in `requests` (method, path, headers, parsed
- *   body), and the `reasoning_effort` of every completion request in
- *   `reasoningEfforts`. Nothing is printed.
+ *   body), the `reasoning_effort` of every completion request in
+ *   `reasoningEfforts`, and the content of its last message, the prompt the
+ *   model is asked, in `prompts`. Nothing is printed.
  * - CORS is open (`*`), so it also answers extension pages without host access.
  */
 
@@ -84,6 +85,11 @@ export interface MockLlm {
    * for a request that didn't carry the field.
    */
   reasoningEfforts: unknown[];
+  /**
+   * The content of the last message of each completion request, in order:
+   * the prompt the model is asked; `undefined` when the body had none.
+   */
+  prompts: (string | undefined)[];
   /** Queues replies for the next completion requests, in order. */
   script(...replies: ScriptedReply[]): void;
   /** Lets every stream that waits at a `holdAt` continue to its next hold. */
@@ -92,7 +98,7 @@ export interface MockLlm {
   setApiKey(key: string | undefined): void;
   /** Changes the model list; `null` makes `/v1/models` answer 404. */
   setModels(models: MockModel[] | null): void;
-  /** Clears the request log, the recorded efforts and the script. */
+  /** Clears the request log, the recorded efforts and prompts, and the script. */
   reset(): void;
   close(): Promise<void>;
 }
@@ -147,6 +153,16 @@ function sendJson(res: ServerResponse, status: number, body: unknown): void {
   res.end(JSON.stringify(body));
 }
 
+/** The content of a chat body's last message, if it is text. */
+function lastPrompt(body: unknown): string | undefined {
+  if (typeof body !== 'object' || body === null || !('messages' in body)) return undefined;
+  const { messages } = body;
+  if (!Array.isArray(messages)) return undefined;
+  const last: unknown = messages.at(-1);
+  if (typeof last !== 'object' || last === null || !('content' in last)) return undefined;
+  return typeof last.content === 'string' ? last.content : undefined;
+}
+
 /** Splits text into chunks of a few characters, like a streamed answer. */
 export function chunkText(text: string, size = 6): string[] {
   const chunks: string[] = [];
@@ -163,6 +179,7 @@ export async function startMockLlm(options: MockLlmOptions = {}): Promise<MockLl
   const queue: ScriptedReply[] = [];
   const requests: RecordedRequest[] = [];
   const reasoningEfforts: unknown[] = [];
+  const prompts: (string | undefined)[] = [];
   const open = new Set<ServerResponse>();
   /** Streams waiting at a `holdAt`, each with what lets it continue. */
   const held = new Set<() => void>();
@@ -229,7 +246,10 @@ export async function startMockLlm(options: MockLlmOptions = {}): Promise<MockLl
       typeof body === 'object' && body !== null && 'reasoning_effort' in body
         ? body.reasoning_effort
         : undefined;
-    if (isChat) reasoningEfforts.push(effort);
+    if (isChat) {
+      reasoningEfforts.push(effort);
+      prompts.push(lastPrompt(body));
+    }
 
     if (apiKey !== undefined && req.headers.authorization !== `Bearer ${apiKey}`) {
       sendJson(
@@ -319,6 +339,7 @@ export async function startMockLlm(options: MockLlmOptions = {}): Promise<MockLl
     port,
     requests,
     reasoningEfforts,
+    prompts,
     script: (...replies) => {
       queue.push(...replies);
     },
@@ -334,6 +355,7 @@ export async function startMockLlm(options: MockLlmOptions = {}): Promise<MockLl
     reset: () => {
       requests.length = 0;
       reasoningEfforts.length = 0;
+      prompts.length = 0;
       queue.length = 0;
     },
     close: async () => {
