@@ -13,7 +13,7 @@ import {
   type ProviderConfig,
   type SummaryLevel,
 } from '@/shared/model';
-import { updateSettings } from '@/shared/settings';
+import { getSettings, updateSettings } from '@/shared/settings';
 import { readMessages, type Locale } from './helpers/i18n';
 import { controlledResponse, jsonResponse } from './helpers/llm-fetch';
 import { NATIVE_HOSTS, fakePermissions } from './helpers/permissions';
@@ -182,12 +182,14 @@ async function open(options: OpenOptions = {}): Promise<string> {
   if (locale === 'en') await renderSidebar(repo);
   else {
     render(<App repository={Promise.resolve(repo)} />);
-    await screen.findByRole('button', { name: readMessages(locale).summarize?.message });
+    await screen.findByRole('button', { name: mainName(readMessages(locale).summarize?.message) });
   }
   return session.id;
 }
 
-const button = (name = 'Summarize') => screen.getByRole('button', { name });
+/** The split button's main part: "<Summarize> · <level>" (specs/summary-levels.md O5). */
+const mainName = (name = 'Summarize') => new RegExp(`^${name} · `);
+const button = (name = 'Summarize') => screen.getByRole('button', { name: mainName(name) });
 const tooltip = () =>
   document.getElementById(button().getAttribute('aria-describedby') ?? '')?.textContent ?? null;
 const answers = () => screen.queryAllByRole('article', { name: 'Answer' });
@@ -339,7 +341,7 @@ describe('the Summarize button', () => {
   it('shows the German button and tooltip', async () => {
     tabs = [];
     await open({ pins: [], locale: 'de' });
-    const de = screen.getByRole('button', { name: 'Zusammenfassen' });
+    const de = screen.getByRole('button', { name: 'Zusammenfassen · Standard' });
     await waitFor(() => {
       expect(de.getAttribute('aria-disabled')).toBe('true');
       expect(document.getElementById(de.getAttribute('aria-describedby') ?? '')?.textContent).toBe(
@@ -436,7 +438,7 @@ describe('summarising', () => {
     );
     fireEvent.click(button());
     await waitFor(() => {
-      expect(questions().map((q) => q.textContent)).toEqual(['Summarize']);
+      expect(questions().map((q) => q.textContent)).toEqual(['Summarize · Standard']);
     });
     await screen.findByRole('button', { name: 'Stop' });
     stream.push(event('**Night trains return** [1]: sleepers are back. '));
@@ -496,7 +498,7 @@ describe('summarising', () => {
     cleanup();
     await renderSidebar(repo);
     await waitFor(() => {
-      expect(questions().map((q) => q.textContent)).toEqual(['Summarize']);
+      expect(questions().map((q) => q.textContent)).toEqual(['Summarize · Standard']);
     });
   });
 
@@ -524,7 +526,10 @@ describe('summarising', () => {
       { role: 'assistant', content: 'The summary.' },
       { role: 'user', content: 'And the price?' },
     ]);
-    expect(questions().map((q) => q.textContent)).toEqual(['Summarize', 'And the price?']);
+    expect(questions().map((q) => q.textContent)).toEqual([
+      'Summarize · Standard',
+      'And the price?',
+    ]);
   });
 
   it('Stop keeps the partial summary, marked stopped', async () => {
@@ -573,7 +578,7 @@ describe('summarising', () => {
       expect(answers()[0]?.textContent).toContain('Now a summary.');
     });
     expect(screen.queryByRole('alert')).toBeNull();
-    expect(questions().map((q) => q.textContent)).toEqual(['Summarize']);
+    expect(questions().map((q) => q.textContent)).toEqual(['Summarize · Standard']);
     expect(bodies[1]?.messages.slice(1)).toEqual([{ role: 'user', content: PROMPT }]);
     const stored = await repo.listMessages(id);
     expect(stored.map((m) => [m.kind, m.error ?? null])).toEqual([
@@ -601,7 +606,7 @@ describe('summarising', () => {
 
   it('sends the German prompt with a German UI and shows "Zusammenfassen"', async () => {
     await open({ locale: 'de' });
-    const de = screen.getByRole('button', { name: 'Zusammenfassen' });
+    const de = screen.getByRole('button', { name: 'Zusammenfassen · Standard' });
     await waitFor(() => {
       expect(de.getAttribute('aria-disabled')).toBe('false');
     });
@@ -624,7 +629,9 @@ describe('summarising', () => {
     expect(prompt).toMatch(/widersprechen/);
     expect(bodies[0]?.messages.at(-1)).toEqual({ role: 'user', content: prompt });
     await waitFor(() => {
-      expect(document.querySelector('.chat-question')?.textContent).toBe('Zusammenfassen');
+      expect(document.querySelector('.chat-question')?.textContent).toBe(
+        'Zusammenfassen · Standard',
+      );
       expect(document.querySelector('.chat-answer')?.textContent).toContain('Zusammenfassung.');
     });
   });
@@ -842,5 +849,52 @@ describe('summary levels (specs/summary-levels.md 4.3)', () => {
     });
     expect(bodies[0]?.messages.slice(1)).toEqual([{ role: 'user', content: PROMPT }]);
     expect((await repo.listMessages(id))[0]).not.toHaveProperty('summaryLevel');
+  });
+
+  it('the split button: a picked level is remembered and sent, the main part then reuses it', async () => {
+    const id = await open();
+    await enabled();
+    expect(button().getAttribute('aria-label')).toBe('Summarize · Standard');
+    responders.push(
+      () => sse('Short summary.'),
+      () => sse('A title'),
+      () => sse('Again short.'),
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Summary level' }));
+    fireEvent.click(screen.getByRole('menuitemradio', { name: 'Short' }));
+    await waitFor(() => {
+      expect(answers()[0]?.textContent).toContain('Short summary.');
+    });
+    await enabled();
+    await waitFor(() => {
+      expect(titleButton().textContent).toBe('A title');
+    });
+    expect(lastTurn(0)).toEqual({ role: 'user', content: promptOf('short') });
+    expect((await getSettings()).summaryLevel).toBe('short');
+    expect(button().getAttribute('aria-label')).toBe('Summarize · Short');
+    expect(questions().map((q) => q.textContent)).toEqual(['Summarize · Short']);
+
+    fireEvent.click(button());
+    await waitFor(() => {
+      expect(answers()[1]?.textContent).toContain('Again short.');
+    });
+    await enabled();
+    expect(lastTurn(2)?.content).toBe(promptOf('short'));
+    const stored = await repo.listMessages(id);
+    expect(stored.filter((m) => m.role === 'user').map((m) => m.summaryLevel)).toEqual([
+      'short',
+      'short',
+    ]);
+
+    // Reopened, the menu still checks it.
+    cleanup();
+    await renderSidebar(repo);
+    await enabled();
+    expect(button().getAttribute('aria-label')).toBe('Summarize · Short');
+    fireEvent.click(screen.getByRole('button', { name: 'Summary level' }));
+    const checked = screen
+      .getAllByRole('menuitemradio')
+      .filter((item) => item.getAttribute('aria-checked') === 'true');
+    expect(checked.map((item) => item.textContent)).toEqual(['Short']);
   });
 });

@@ -1,6 +1,7 @@
 import { createContext } from 'preact';
 import { useContext, useLayoutEffect, useRef, useState } from 'preact/hooks';
 import { CITATION_CLASS, renderAnswer, renderReasoning } from '@/shared/chat/markdown';
+import { summaryLevelNameKey } from '@/shared/chat/summarize';
 import { t } from '@/shared/i18n';
 import { LlmError } from '@/shared/llm';
 import { llmErrorText } from '@/shared/llm-messages';
@@ -99,10 +100,20 @@ function ReasoningBlock({ blockKey, text, thinking }: ReasoningBlockProps) {
   );
 }
 
-function Question({ message }: { message: Pick<Message, 'kind' | 'text'> }) {
+/**
+ * A summary shows "Summarize · <level>", or "Summarize" when it was stored
+ * before levels existed (specs/summary-levels.md O4); a question its text.
+ */
+function questionLabel(message: Pick<Message, 'kind' | 'text' | 'summaryLevel'>): string {
+  if (message.kind !== 'summarize') return message.text;
+  const level = message.summaryLevel;
+  return level ? t('summarizeWithLevel', t(summaryLevelNameKey(level))) : t('summarize');
+}
+
+function Question({ message }: { message: Pick<Message, 'kind' | 'text' | 'summaryLevel'> }) {
   return (
     <article class="chat-question" aria-label={t('chatQuestionLabel')}>
-      <p>{message.kind === 'summarize' ? t('summarize') : message.text}</p>
+      <p>{questionLabel(message)}</p>
     </article>
   );
 }
@@ -315,7 +326,13 @@ export function Transcript({ messages, live, errorOf, onStop, onRetry, onOpenSou
                 ),
               )}
               {live && !liveQuestionStored && (
-                <Question message={{ kind: live.kind, text: live.question }} />
+                <Question
+                  message={{
+                    kind: live.kind,
+                    text: live.question,
+                    summaryLevel: live.summaryLevel,
+                  }}
+                />
               )}
               {live && <Live answer={live} onStop={onStop} />}
             </div>

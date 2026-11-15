@@ -43,7 +43,9 @@ function renderComposer({ state = { kind: 'ready' }, busy = false, summarize }: 
       onOpenSettings={() => undefined}
       onGrantAccess={() => undefined}
       summarize={summarize ?? { kind: 'ready' }}
+      summaryLevel="standard"
       onSummarize={onSummarize}
+      onPickSummaryLevel={() => undefined}
       onNewSession={onNewSession}
     />,
   );
@@ -75,6 +77,7 @@ describe('Send (redesign spec 5.4)', () => {
     expect([...(toolbar?.querySelectorAll('button') ?? [])].map((b) => b.id)).toEqual([
       'new-session-button',
       'summarize-button',
+      'summary-level-button',
       'send-button',
     ]);
   });
@@ -128,7 +131,9 @@ describe('Send (redesign spec 5.4)', () => {
         onOpenSettings={() => undefined}
         onGrantAccess={() => undefined}
         summarize={{ kind: 'ready' }}
+        summaryLevel="standard"
         onSummarize={() => undefined}
+        onPickSummaryLevel={() => undefined}
         onNewSession={() => undefined}
       />,
     );
@@ -238,9 +243,9 @@ describe('New session in the toolbar (redesign spec O4)', () => {
 describe('Summarize in the toolbar', () => {
   it('keeps its name with an icon, and its unavailable tooltip', () => {
     const { onSummarize } = renderComposer({ summarize: { kind: 'nothing' } });
-    const button = screen.getByRole('button', { name: 'Summarize' });
+    const button = screen.getByRole('button', { name: 'Summarize · Standard' });
     expect(button.querySelector('svg')?.getAttribute('aria-hidden')).toBe('true');
-    expect(button.querySelector('.summarize-label')?.textContent).toBe('Summarize');
+    expect(button.querySelector('.summarize-label')?.textContent).toBe('SummarizeStandard');
     expect(button.getAttribute('aria-disabled')).toBe('true');
     const tooltip = screen.getByRole('tooltip');
     expect(button.getAttribute('aria-describedby')).toBe(tooltip.id);
@@ -258,7 +263,7 @@ describe('Summarize in the toolbar', () => {
     expect(label).toContain('clip-path: inset(50%)');
     expect(label).not.toContain('display: none');
     renderComposer();
-    expect(screen.getByRole('button', { name: 'Summarize' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Summarize · Standard' })).toBeTruthy();
   });
 });
 

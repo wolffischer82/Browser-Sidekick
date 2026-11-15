@@ -591,8 +591,17 @@ export function App({ repository }: Props) {
           state={composerState}
           busy={chat.busy}
           summarize={summarize}
+          summaryLevel={summaryLevel}
           onSummarize={() => {
             chat.summarize(tabContext(), summaryLevel);
+          }}
+          onPickSummaryLevel={(level) => {
+            // Written before the request starts; the request takes the
+            // picked level itself, not the storage event (decisions.md
+            // Summary levels T26-4).
+            setSummaryLevel(level);
+            run(() => updateSettings({ summaryLevel: level }));
+            chat.summarize(tabContext(), level);
           }}
           onNewSession={() => {
             run(async (r) => {

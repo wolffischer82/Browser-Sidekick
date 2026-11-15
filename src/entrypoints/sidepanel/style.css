@@ -749,7 +749,7 @@ textarea {
 }
 
 .tooltip-anchor:hover .tooltip,
-.tooltip-anchor > :focus-visible + .tooltip {
+.tooltip-anchor > :focus-visible ~ .tooltip {
   visibility: visible;
 }
 
@@ -845,9 +845,40 @@ textarea {
   gap: 6px;
   min-height: 30px;
   height: 30px;
-  padding: 0 10px;
-  border-radius: 8px;
+  padding: 0 8px 0 10px;
+  border-radius: 8px 0 0 8px;
   font-size: 12.5px;
+}
+
+/* The remembered level after the label (specs/summary-levels.md O5). */
+.summarize-level {
+  color: var(--muted);
+}
+
+.summarize-level::before {
+  content: ' · ';
+}
+
+/* The split button's arrow, joined to the main part (summary levels 4.2). */
+.summary-level-button {
+  width: 24px;
+  min-height: 30px;
+  height: 30px;
+  padding: 0;
+  border-left: 0;
+  border-radius: 0 8px 8px 0;
+}
+
+.summary-level-button .icon {
+  flex: none;
+  width: 12px;
+  height: 12px;
+  color: var(--muted);
+  stroke-width: 2.2;
+}
+
+.summary-level-list {
+  min-width: 150px;
 }
 
 .new-session-button {
@@ -917,7 +948,7 @@ textarea {
 /* Narrow panels: Summarize shows its icon only; its label stays the name. */
 @media (max-width: 359px) {
   .summarize-button {
-    padding: 0 8px;
+    padding: 0 6px 0 8px;
   }
 
   .summarize-label {
@@ -1290,12 +1321,14 @@ textarea {
   background: var(--sunken);
 }
 
-.model-option[aria-selected='true'] {
+.model-option[aria-selected='true'],
+.model-option[aria-checked='true'] {
   position: relative;
   font-weight: 600;
 }
 
-.model-option[aria-selected='true']::before {
+.model-option[aria-selected='true']::before,
+.model-option[aria-checked='true']::before {
   position: absolute;
   left: 8px;
   color: var(--accent);

@@ -145,7 +145,9 @@ async function show(locale: Locale = 'en'): Promise<void> {
     return;
   }
   render(<App repository={Promise.resolve(repo)} />);
-  await screen.findByRole('button', { name: readMessages(locale).summarize?.message });
+  await screen.findByRole('button', {
+    name: new RegExp(`^${readMessages(locale).summarize?.message ?? ''} · `),
+  });
 }
 
 const control = () => document.getElementById('thinking-button');
@@ -242,6 +244,7 @@ describe('the thinking-level control', () => {
       'thinking-button',
       'new-session-button',
       'summarize-button',
+      'summary-level-button',
       'send-button',
     ]);
     expect(screen.queryByRole('listbox')).toBeNull();
@@ -561,7 +564,7 @@ describe('what a request carries', () => {
 
   it('Summarize sends the level', async () => {
     await open({ level: 'medium' });
-    const button = screen.getByRole('button', { name: 'Summarize' });
+    const button = screen.getByRole('button', { name: 'Summarize · Standard' });
     await waitFor(() => {
       expect(button.getAttribute('aria-disabled')).toBe('false');
     });
