@@ -1,5 +1,5 @@
 import { browser } from 'wxt/browser';
-import { DEFAULT_SETTINGS, type ProviderConfig, type Settings } from './model';
+import { DEFAULT_SETTINGS, isSummaryLevel, type ProviderConfig, type Settings } from './model';
 
 /**
  * Settings store over `storage.local` (spec 6 "Storage", D5). Each field is
@@ -15,12 +15,23 @@ function defaults(): Settings {
   return { ...DEFAULT_SETTINGS, providers: [] };
 }
 
+/**
+ * A stored value as the setting it stands for: a missing value is the
+ * default, and so is a summary level this version doesn't know
+ * (specs/summary-levels.md 5).
+ */
+function read(key: SettingsKey, value: unknown): unknown {
+  if (value === undefined) return defaults()[key];
+  if (key === 'summaryLevel' && !isSummaryLevel(value)) return DEFAULT_SETTINGS.summaryLevel;
+  return value;
+}
+
 /** Reads all settings; missing keys fall back to their defaults. */
 export async function getSettings(): Promise<Settings> {
   const stored = await browser.storage.local.get<Partial<Settings>>(SETTINGS_KEYS);
   const settings = defaults();
   for (const key of SETTINGS_KEYS) {
-    if (stored[key] !== undefined) Object.assign(settings, { [key]: stored[key] });
+    if (stored[key] !== undefined) Object.assign(settings, { [key]: read(key, stored[key]) });
   }
   return settings;
 }
@@ -73,10 +84,9 @@ export function watchSettings(listener: (changed: Partial<Settings>) => void): (
   const onChanged = (changes: Record<string, { newValue?: unknown }>, areaName: string): void => {
     if (areaName !== 'local') return;
     const changed: Partial<Settings> = {};
-    const fallback = defaults();
     for (const key of SETTINGS_KEYS) {
       const change = changes[key];
-      if (change) Object.assign(changed, { [key]: change.newValue ?? fallback[key] });
+      if (change) Object.assign(changed, { [key]: read(key, change.newValue ?? undefined) });
     }
     if (Object.keys(changed).length > 0) listener(changed);
   };

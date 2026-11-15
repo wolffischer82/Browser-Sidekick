@@ -111,6 +111,25 @@ export interface Message {
    * to the model and never counted in the context budget.
    */
   reasoning?: string | null;
+  /**
+   * The level a Summarize request was sent at (specs/summary-levels.md 5).
+   * Set on `kind: 'summarize'` user messages only; missing or `null` (records
+   * written before the field existed) shows the plain "Summarize" label and
+   * retries at Standard.
+   */
+  summaryLevel?: SummaryLevel | null;
+}
+
+/** The summary levels, shortest first (specs/summary-levels.md O1, 4.1). */
+export const SUMMARY_LEVELS = ['veryShort', 'short', 'standard', 'detailed'] as const;
+
+export type SummaryLevel = (typeof SUMMARY_LEVELS)[number];
+
+/** The level before one was picked; also what an unknown stored value reads as. */
+export const DEFAULT_SUMMARY_LEVEL: SummaryLevel = 'standard';
+
+export function isSummaryLevel(value: unknown): value is SummaryLevel {
+  return (SUMMARY_LEVELS as readonly unknown[]).includes(value);
 }
 
 export type ProviderKind = 'openai-compatible' | 'anthropic' | 'gemini';
@@ -170,6 +189,11 @@ export interface Settings {
   sessionTabsExpanded: boolean;
   /** Whether the all-sites access banner was dismissed (spec 5.3). */
   accessBannerDismissed: boolean;
+  /**
+   * The remembered summary level for every session (specs/summary-levels.md
+   * O3, 5). The storage key may be missing: `getSettings` then reads Standard.
+   */
+  summaryLevel: SummaryLevel;
 }
 
 export const DEFAULT_SETTINGS: Readonly<Settings> = {
@@ -178,4 +202,5 @@ export const DEFAULT_SETTINGS: Readonly<Settings> = {
   activeSessionId: null,
   sessionTabsExpanded: true,
   accessBannerDismissed: false,
+  summaryLevel: DEFAULT_SUMMARY_LEVEL,
 };
