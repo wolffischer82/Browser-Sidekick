@@ -404,3 +404,18 @@ Spec: `specs/store-publishing.md` (deleted at the end of T25, owner decision O7;
 3. **Chrome test instructions reuse the AMO reviewer notes.** Rather than a second copy in `docs/store/`, the guide says to paste the "Notes to reviewer" block of `amo.md` with `moz-extension://*` replaced by `chrome-extension://*` and "sidebar" by "side panel". Affects only the guide.
 4. **Version bump command.** The update section uses `npm version <new-version> --no-git-tag-version`, which updates `package.json` and `package-lock.json` together without creating a git tag.
 5. **Spec references in code comments.** `wxt.config.ts`, `playwright.store.config.ts`, `scripts/verify-zips.mjs` and `tests/store/*.ts` named the spec file or its sections in comments; they now point at this log (T23-2, T24, T24-10). No code changed; `dist/` is unchanged. The `Spec:` lines of the Store publishing headings in `progress.md`, `decisions.md` and `questions.md` stay as plain text with a note that the file was deleted.
+
+# Summary levels
+
+Spec: `specs/summary-levels.md`. Numbering continues per task.
+
+## T26
+
+1. **Owner and orchestrator decisions of the spec** (2026-11-15), copied here as the spec asks.
+   - O1 Levels: four levels, in this order: Very short, Short, Standard, Detailed. Standard is the existing prompt, unchanged.
+   - O2 Control: a split button in the composer toolbar replaces the Summarize button. The main part summarizes at the remembered level in one click; the arrow opens a menu of the four levels, and picking one summarizes immediately and becomes the remembered level.
+   - O3 Memory: one remembered level for the whole extension, in `storage.local`, used by every session, old or new. Before anything was picked it is Standard.
+   - O4 Transcript: a summary's user message shows its level, e.g. "Zusammenfassen · Kurz"; summaries stored before the feature show "Zusammenfassen".
+   - O5 (orchestrator) The main part keeps the label "Summarize" with the remembered level as a muted suffix ("Summarize · Short") when the panel is wide enough; in a narrow panel only the icon shows. Its accessible name always includes the level.
+   - O6 (orchestrator) The arrow follows the main part's availability: when Summarize is unavailable both parts are `aria-disabled` with today's tooltip. The menu marks the remembered level with a check.
+   - O7 (orchestrator) Retry of a summary resends the level stored on that message, not the current remembered level.

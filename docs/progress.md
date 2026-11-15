@@ -787,3 +787,21 @@ Status: done (2026-10-31). Gate-checker: PASS-WITH-NOTES, accepted (warning coun
 
 - None owed (documentation only).
 - Gate (2026-10-31): lint, typecheck, 1345 unit tests in 57 files, build, check:dist, lint:firefox (0 errors, 18 warnings), 24 e2e passed. `npm run zip && npm run verify:zips`: all six checks ok.
+
+# Summary levels
+
+Spec: `specs/summary-levels.md`. Branch `claude/wizardly-bell-ocx6mp`. Status values as above.
+
+## T26 Summary level: data, prompts and request
+
+Status: in progress.
+
+### Plan
+
+- `src/shared/model.ts`: `SUMMARY_LEVELS` (O1 order), `SummaryLevel`, `isSummaryLevel`; `Settings.summaryLevel` (default `'standard'`); `Message.summaryLevel?: SummaryLevel | null`.
+- `src/shared/settings.ts`: `getSettings` and `watchSettings` read a missing or unknown `summaryLevel` as `'standard'`; `updateSettings` writes it like the other fields.
+- `src/shared/db/repository.ts`: `NewMessage.summaryLevel`, stored on `kind: 'summarize'` user messages only. No DB version bump.
+- `src/shared/chat/summarize.ts`: `summaryPromptKey(level)`; `public/_locales/{en,de}/messages.json`: `summarizePromptVeryShort`, `summarizePromptShort`, `summarizePromptDetailed` (§4.4), `summarizePrompt` unchanged.
+- `useChat`: `summarize(tab, level)` sends that level's prompt and stores the level on the user message; Retry of a summary sends the stored level's prompt (missing or `null` = Standard). `App` keeps the remembered level from settings (and their change events) and passes it; the button is unchanged.
+- Tests: settings (default, round trip, unknown value, watch), repository (level stored on summarize user messages only), sidepanel-summarize (each level's prompt in en and de, stored level, Retry after the remembered level changed, legacy message retries at Standard, no stored level = today's prompt), locales (every message has a description).
+- Open questions: none so far.
