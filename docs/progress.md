@@ -823,7 +823,7 @@ Status: done (2026-11-15), gate-checker PASS (2026-11-15).
 
 ## T27 Split button, transcript label, README, final report
 
-Status: partial (2026-11-15): all done except the final report file, see the last acceptance item.
+Status: done (2026-11-15); final report written by the orchestrator, pending the gate-checker.
 
 ### Plan
 
@@ -844,9 +844,9 @@ Status: partial (2026-11-15): all done except the final report file, see the las
 - [x] Keyboard behaviour of §4.2 holds; focus returns to the arrow on close (component tests and e2e).
 - [x] Transcript shows "Summarize · <level>" for new summaries and "Summarize" for stored ones without a level, in both locales (component tests; e2e in English).
 - [x] README Features line updated in one line.
-- [ ] Final report `docs/summary-levels-report.md`: not written. The agent's file-writing tool refused to create a report file from a subagent run; the content (what shipped, deviations, manual checks, open questions: none) is ready for the orchestrator.
+- [x] Final report `docs/summary-levels-report.md`: what shipped, deviations, manual checks, owner checklist, open questions (none). Written by the orchestrator from the implementer's text (a subagent may not create report files).
 - [x] Mock LLM records the prompt it received (`MockLlm.prompts`).
-- [x] UI check in Chromium (T27 screens reviewed: suffix at 480 px, label at 400 px, icon at 320 px, menu inside the panel, transcript label, light and dark). Firefox: `lint:firefox` only; rendering there is the orchestrator's UI check.
+- [x] UI check in Chromium (T27 screens reviewed: suffix at 480 px, label at 400 px, icon at 320 px, menu inside the panel, transcript label, light and dark). Firefox: `lint:firefox` only; no Firefox in the build container, so the Firefox UI check is on the owner checklist in the final report.
 - [x] `dist/` rebuilt and committed.
 
 ### Tests
