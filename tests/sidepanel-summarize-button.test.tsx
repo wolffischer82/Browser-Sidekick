@@ -86,9 +86,13 @@ describe('Summarize split button: main part (O5)', () => {
     expect(menu()).toBeNull();
   });
 
-  it('shows the suffix muted after a separator, and hides it with the label in a narrow panel', () => {
+  it('shows the suffix muted after a separator in a wide panel only, the name keeping it', () => {
     const css = readFileSync(STYLE_PATH, 'utf8');
-    expect(/\.summarize-level \{([^}]*)\}/.exec(css)?.[1]).toContain('color: var(--muted)');
+    const base = /\.summarize-level \{([^}]*)\}/.exec(css)?.[1] ?? '';
+    expect(base).toContain('color: var(--muted)');
+    expect(base).toContain('display: none');
+    const wide = /@media \(min-width: 480px\) \{([\s\S]*?)\n\}/.exec(css)?.[1] ?? '';
+    expect(/\.summarize-level \{([^}]*)\}/.exec(wide)?.[1]).toContain('display: inline');
     expect(/\.summarize-level::before \{([^}]*)\}/.exec(css)?.[1]).toContain("content: ' · '");
     const narrow = /@media \(max-width: 359px\) \{([\s\S]*?)\n\}/.exec(css)?.[1] ?? '';
     expect(/\.summarize-label \{([^}]*)\}/.exec(narrow)?.[1]).toContain('clip-path: inset(50%)');

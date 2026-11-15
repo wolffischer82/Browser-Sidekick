@@ -850,9 +850,20 @@ textarea {
   font-size: 12.5px;
 }
 
-/* The remembered level after the label (specs/summary-levels.md O5). */
+/*
+ * The remembered level after the label (specs/summary-levels.md O5), only
+ * where it leaves the model name the room it has without it at 400 px
+ * (decisions.md Summary levels T27). The button's name always carries it.
+ */
 .summarize-level {
+  display: none;
   color: var(--muted);
+}
+
+@media (min-width: 480px) {
+  .summarize-level {
+    display: inline;
+  }
 }
 
 .summarize-level::before {
@@ -1333,6 +1344,8 @@ textarea {
   left: 8px;
   color: var(--accent);
   content: '✓';
+  /* Decorative: the state is in aria-selected / aria-checked, not the name. */
+  content: '✓' / '';
 }
 
 /* Warning notice (redesign spec 4.4, 5.5): the provider notice under the header. */
