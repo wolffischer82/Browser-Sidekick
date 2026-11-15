@@ -823,7 +823,7 @@ Status: done (2026-11-15), gate-checker PASS (2026-11-15).
 
 ## T27 Split button, transcript label, README, final report
 
-Status: done (2026-11-15); final report written by the orchestrator, pending the gate-checker.
+Status: done (2026-11-15); final report written by the orchestrator; gate-checker PASS-WITH-NOTES (2026-11-15).
 
 ### Plan
 
