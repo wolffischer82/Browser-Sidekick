@@ -6,6 +6,7 @@ import type {
   Pin,
   PinKind,
   Session,
+  SummaryLevel,
   TitleSource,
 } from '../model';
 import { openSidekickDb, type OpenDbOptions, type SidekickDb } from './schema';
@@ -55,6 +56,8 @@ export interface NewMessage {
   error?: Message['error'];
   /** An answer's reasoning; ignored for a user message. */
   reasoning?: string | null;
+  /** A Summarize request's level; ignored for any other message. */
+  summaryLevel?: SummaryLevel | null;
 }
 
 /** Fields that change while an answer streams and completes, or when it is retried. */
@@ -293,6 +296,10 @@ export async function openRepository(options: RepositoryOptions = {}): Promise<R
         error: input.error ?? null,
         // Assistant messages only (specs/thinking-levels.md 5).
         ...(input.role === 'assistant' ? { reasoning: input.reasoning ?? null } : {}),
+        // Summarize requests only (specs/summary-levels.md 5).
+        ...(input.role === 'user' && input.kind === 'summarize'
+          ? { summaryLevel: input.summaryLevel ?? null }
+          : {}),
       };
       await Promise.all([
         messages.add(message),

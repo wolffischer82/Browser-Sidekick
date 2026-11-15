@@ -351,6 +351,34 @@ describe('messages', () => {
     expect(m.kind).toBe('summarize');
   });
 
+  it('stores the summary level on a Summarize request only', async () => {
+    const s = await repo.createSession({ providerId: null, model: null });
+    const short = await repo.addMessage(s.id, {
+      role: 'user',
+      kind: 'summarize',
+      text: 'p',
+      summaryLevel: 'short',
+    });
+    const unset = await repo.addMessage(s.id, { role: 'user', kind: 'summarize', text: 'p' });
+    const ask = await repo.addMessage(s.id, { role: 'user', text: 'q', summaryLevel: 'short' });
+    const answer = await repo.addMessage(s.id, {
+      role: 'assistant',
+      kind: 'summarize',
+      text: 'a',
+      summaryLevel: 'short',
+    });
+    expect(short.summaryLevel).toBe('short');
+    expect(unset.summaryLevel).toBeNull();
+    expect(ask).not.toHaveProperty('summaryLevel');
+    expect(answer).not.toHaveProperty('summaryLevel');
+    expect((await repo.listMessages(s.id)).map((m) => m.summaryLevel)).toEqual([
+      'short',
+      null,
+      undefined,
+      undefined,
+    ]);
+  });
+
   it('keeps the messages of each session apart', async () => {
     const a = await repo.createSession({ providerId: null, model: null });
     const b = await repo.createSession({ providerId: null, model: null });
