@@ -794,7 +794,7 @@ Spec: `specs/summary-levels.md`. Branch `claude/wizardly-bell-ocx6mp`. Status va
 
 ## T26 Summary level: data, prompts and request
 
-Status: in progress.
+Status: done (2026-11-15), pending the gate-checker.
 
 ### Plan
 
@@ -805,3 +805,18 @@ Status: in progress.
 - `useChat`: `summarize(tab, level)` sends that level's prompt and stores the level on the user message; Retry of a summary sends the stored level's prompt (missing or `null` = Standard). `App` keeps the remembered level from settings (and their change events) and passes it; the button is unchanged.
 - Tests: settings (default, round trip, unknown value, watch), repository (level stored on summarize user messages only), sidepanel-summarize (each level's prompt in en and de, stored level, Retry after the remembered level changed, legacy message retries at Standard, no stored level = today's prompt), locales (every message has a description).
 - Open questions: none so far.
+
+### Acceptance
+
+- [x] Without a stored level, Summarize sends exactly today's request: the last turn is `summarizePrompt` byte for byte and the user message stores `'standard'` (`tests/sidepanel-summarize.test.tsx` "without a stored level…"; the existing summarize tests are unchanged and pass).
+- [x] Each level sends its own prompt in the UI language (en and de), with the same pages (two pins and the current tab), the same pin wait and the session's thinking level (the request code is shared; only the prompt differs).
+- [x] The summarize user message stores its level; Retry resends that level's prompt after the remembered level changed and the sidebar was reopened; a summary stored without the field retries at Standard (decisions.md Summary levels T26-6).
+- [x] Settings read missing or unknown `summaryLevel` as `'standard'`, also in change events; writing it round-trips every level (`tests/settings.test.ts`).
+- [x] The three new prompt strings exist in both locales with a `description`; `tests/locales.test.ts` now also checks every message has a description and each level's prompt is distinct and ends with the answer language.
+- [x] No visible UI change: the Summarize button is unchanged and summarizes at the remembered level. README: no change (T27 adds the Features line with the visible control).
+- [x] `dist/` rebuilt and committed.
+
+### Tests
+
+- `tests/settings.test.ts` (default, round trip, unknown value, watch, kept by Delete all data), `tests/repository.test.ts` (level on summarize requests only), `tests/chat-summarize.test.ts` (`summaryPromptKey`), `tests/sidepanel-summarize.test.tsx` "summary levels" (eight level × locale requests, no stored level, another sidebar's change, Retry after a change, legacy Retry), `tests/locales.test.ts`.
+- Gate (2026-11-15): lint, typecheck, 1368 unit tests in 57 files, build, check:dist, lint:firefox (0 errors, 18 warnings), 24 e2e passed. The first gate run failed once on the known `pinning.spec.ts` context-menu timing flake (T23, `menuExists` false); the rerun passed all 24.
