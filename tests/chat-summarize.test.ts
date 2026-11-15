@@ -4,11 +4,17 @@ import {
   pinWait,
   summarizeState,
   summaryPageSet,
+  summaryPromptKey,
   waitForPins,
   type SummaryPageSet,
 } from '@/shared/chat/summarize';
 import type { CurrentTab } from '@/shared/current-tab';
-import { DEFAULT_CONTEXT_BUDGET, type Pin, type ProviderConfig } from '@/shared/model';
+import {
+  DEFAULT_CONTEXT_BUDGET,
+  SUMMARY_LEVELS,
+  type Pin,
+  type ProviderConfig,
+} from '@/shared/model';
 
 // Summarize (spec 5.6, D4): which pages a summary covers, the button's
 // state, and the short wait for pins that are still being read.
@@ -302,5 +308,21 @@ describe('waitForPins', () => {
     await waiting;
     await vi.advanceTimersByTimeAsync(pinWait.timeoutMs);
     expect(list.mock.calls.length).toBe(calls);
+  });
+});
+
+describe('summaryPromptKey (specs/summary-levels.md 4.4)', () => {
+  it('gives each level its own prompt, Standard the existing one', () => {
+    expect(SUMMARY_LEVELS.map(summaryPromptKey)).toEqual([
+      'summarizePromptVeryShort',
+      'summarizePromptShort',
+      'summarizePrompt',
+      'summarizePromptDetailed',
+    ]);
+  });
+
+  it('reads a missing or null level as Standard', () => {
+    expect(summaryPromptKey(undefined)).toBe('summarizePrompt');
+    expect(summaryPromptKey(null)).toBe('summarizePrompt');
   });
 });
