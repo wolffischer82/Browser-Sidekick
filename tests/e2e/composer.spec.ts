@@ -28,6 +28,7 @@ const TOOLBAR = [
   '#thinking-button',
   '#new-session-button',
   '#summarize-button',
+  '#summary-level-button',
   '#send-button',
 ];
 
@@ -43,7 +44,8 @@ interface ChatBody {
 
 const input = (page: Page) => page.getByRole('textbox', { name: 'Ask about these pages…' });
 const send = (page: Page) => page.getByRole('button', { name: 'Send', exact: true });
-const summarize = (page: Page) => page.getByRole('button', { name: 'Summarize', exact: true });
+const summarize = (page: Page) =>
+  page.getByRole('button', { name: 'Summarize · Standard', exact: true });
 const modelButton = (page: Page) => page.locator('#model-button');
 const thinkingButton = (page: Page) => page.locator('#thinking-button');
 const modelList = (page: Page) => page.getByRole('listbox', { name: 'Model' });
@@ -206,7 +208,7 @@ test.describe('composer', () => {
         'position',
         width < 360 ? 'absolute' : 'static',
       );
-      await expect(summarize(sidebar)).toHaveAccessibleName('Summarize');
+      await expect(summarize(sidebar)).toHaveAccessibleName('Summarize · Standard');
     });
 
     // 3. The model menu by mouse: it opens upward and changes the model.
@@ -311,7 +313,7 @@ test.describe('composer', () => {
       holdAt: [1],
     });
     await summarize(sidebar).click();
-    await expect(questions(sidebar).last()).toHaveText('Summarize');
+    await expect(questions(sidebar).last()).toHaveText('Summarize · Standard');
     await expect(answers(sidebar).last()).toContainText('Night trains');
     await expect(summarize(sidebar)).toHaveAttribute('aria-disabled', 'true');
     await stopButton(sidebar).click();

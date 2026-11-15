@@ -267,7 +267,13 @@ test('thinking level: the composer toolbar fits a narrow sidebar with a long mod
       if (!rect) throw new Error(`${selector} has no box`);
       return rect;
     };
-    const toolbar = ['#model-button', '#thinking-button', '#summarize-button', '#send-button'];
+    const toolbar = [
+      '#model-button',
+      '#thinking-button',
+      '#summarize-button',
+      '#summary-level-button',
+      '#send-button',
+    ];
     /**
      * The composer's toolbar lies inside the sidebar on one line, the page
      * doesn't scroll sideways, and the header title keeps room (redesign spec 5.4).
