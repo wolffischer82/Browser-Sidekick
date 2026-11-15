@@ -4,11 +4,14 @@ import { fakeBrowser } from 'wxt/testing/fake-browser';
 import { App } from '@/entrypoints/sidepanel/App';
 import { pinWait } from '@/shared/chat/summarize';
 import type { Repository } from '@/shared/db/repository';
+import { openSidekickDb } from '@/shared/db/schema';
 import {
   DEFAULT_CONTEXT_BUDGET,
+  SUMMARY_LEVELS,
   type MessageSource,
   type PinStatus,
   type ProviderConfig,
+  type SummaryLevel,
 } from '@/shared/model';
 import { updateSettings } from '@/shared/settings';
 import { readMessages, type Locale } from './helpers/i18n';
@@ -149,6 +152,8 @@ interface OpenOptions {
   locale?: Locale;
   /** Host permissions held; all sites by default. */
   granted?: string[];
+  /** The remembered summary level; none stored by default. */
+  level?: SummaryLevel;
 }
 
 /** A session with the given pins and the provider stored, and the sidebar rendered. */
@@ -173,6 +178,7 @@ async function open(options: OpenOptions = {}): Promise<string> {
     defaultProviderId: usable ? 'p1' : null,
     activeSessionId: session.id,
   });
+  if (options.level) await updateSettings({ summaryLevel: options.level });
   if (locale === 'en') await renderSidebar(repo);
   else {
     render(<App repository={Promise.resolve(repo)} />);
@@ -684,5 +690,157 @@ describe('a pin that is still being read', () => {
       ['summarize', false, PROMPT],
       ['summarize', true, ''],
     ]);
+  });
+});
+
+describe('summary levels (specs/summary-levels.md 4.3)', () => {
+  const KEYS: Record<SummaryLevel, string> = {
+    veryShort: 'summarizePromptVeryShort',
+    short: 'summarizePromptShort',
+    standard: 'summarizePrompt',
+    detailed: 'summarizePromptDetailed',
+  };
+  const promptOf = (level: SummaryLevel, locale: Locale = 'en') =>
+    readMessages(locale)[KEYS[level]]?.message ?? '';
+  const lastTurn = (i: number) => bodies[i]?.messages.at(-1);
+
+  it('without a stored level sends exactly today’s request and stores Standard', async () => {
+    const id = await open();
+    expect(await fakeBrowser.storage.local.get('summaryLevel')).toEqual({});
+    await enabled();
+    responders.push(
+      () => sse('Summary.'),
+      () => sse('A title'),
+    );
+    fireEvent.click(button());
+    await finished();
+    // The title request has gone out too, before the fetch stub is removed.
+    await waitFor(() => {
+      expect(titleButton().textContent).toBe('A title');
+    });
+    expect(lastTurn(0)).toEqual({ role: 'user', content: PROMPT });
+    expect(promptOf('standard')).toBe(PROMPT);
+    const [question] = await repo.listMessages(id);
+    expect(question).toMatchObject({ kind: 'summarize', text: PROMPT, summaryLevel: 'standard' });
+  });
+
+  it.each(
+    SUMMARY_LEVELS.flatMap((level) =>
+      (['en', 'de'] as const).map((l): [SummaryLevel, Locale] => [level, l]),
+    ),
+  )(
+    'the %s level sends its own prompt in %s, with the same pages, and is stored',
+    async (level, locale) => {
+      const id = await open({ pins: [ARTICLE_PIN, SECOND_PIN], level, locale });
+      const name = readMessages(locale).summarize?.message;
+      await waitFor(() => {
+        expect(button(name).getAttribute('aria-disabled')).toBe('false');
+      });
+      responders.push(
+        () => sse('Summary.'),
+        () => sse('A title'),
+      );
+      fireEvent.click(button(name));
+      // The answer and the title request are both done (the names are per locale).
+      await waitFor(() => {
+        expect(document.querySelector('.chat-answer')?.textContent).toContain('Summary.');
+        expect(bodies).toHaveLength(2);
+      });
+      expect(lastTurn(0)).toEqual({ role: 'user', content: promptOf(level, locale) });
+      expect(bodies[0]?.messages).toHaveLength(2);
+      const system = systemOf(0);
+      expect(system).toContain(PIN_TEXT);
+      expect(system).toContain(SECOND_TEXT);
+      expect(system).toContain(TAB_TEXT);
+      expect(system).toContain('<<<PAGE 3>>>');
+      const [question] = await repo.listMessages(id);
+      expect(question).toMatchObject({ role: 'user', kind: 'summarize', summaryLevel: level });
+    },
+  );
+
+  it('each level’s prompt is its own', () => {
+    for (const locale of ['en', 'de'] as const) {
+      const prompts = SUMMARY_LEVELS.map((level) => promptOf(level, locale));
+      expect(new Set(prompts).size).toBe(4);
+      expect(prompts.every((p) => p !== '')).toBe(true);
+    }
+  });
+
+  it('follows a level picked in another sidebar', async () => {
+    const id = await open();
+    await enabled();
+    await updateSettings({ summaryLevel: 'veryShort' });
+    await pause();
+    responders.push(
+      () => sse('Summary.'),
+      () => sse('A title'),
+    );
+    fireEvent.click(button());
+    await finished();
+    // The title request has gone out too, before the fetch stub is removed.
+    await waitFor(() => {
+      expect(titleButton().textContent).toBe('A title');
+    });
+    expect(lastTurn(0)).toEqual({ role: 'user', content: promptOf('veryShort') });
+    expect((await repo.listMessages(id))[0]?.summaryLevel).toBe('veryShort');
+  });
+
+  it('Retry resends the stored level, not the level remembered since', async () => {
+    const id = await open({ level: 'short' });
+    await enabled();
+    responders.push(
+      () => jsonResponse(429, { error: { message: 'Slow down' } }),
+      () => sse('Now a summary.'),
+      () => sse('A title'),
+    );
+    fireEvent.click(button());
+    await screen.findByRole('alert');
+    await updateSettings({ summaryLevel: 'detailed' });
+    // Also after the sidebar is reopened.
+    cleanup();
+    await renderSidebar(repo);
+    fireEvent.click(await screen.findByRole('button', { name: 'Retry' }));
+    await waitFor(() => {
+      expect(answers()[0]?.textContent).toContain('Now a summary.');
+    });
+    expect(bodies[1]?.messages.slice(1)).toEqual([{ role: 'user', content: promptOf('short') }]);
+    const stored = await repo.listMessages(id);
+    expect(stored).toHaveLength(2);
+    expect(stored[0]?.summaryLevel).toBe('short');
+    expect(stored[1]?.error ?? null).toBeNull();
+  });
+
+  it('a summary stored without a level retries at Standard', async () => {
+    const id = await open({ level: 'detailed' });
+    await repo.addMessage(id, { role: 'user', kind: 'summarize', text: 'An older prompt.' });
+    await repo.addMessage(id, {
+      role: 'assistant',
+      kind: 'summarize',
+      text: '',
+      providerLabel: 'Local',
+      model: 'gpt-a',
+      error: 'network',
+    });
+    // As written before the field existed: no `summaryLevel` at all.
+    const db = await openSidekickDb();
+    const legacy = (await db.getAllFromIndex('messages', 'sessionId', id)).find(
+      (m) => m.role === 'user',
+    );
+    if (!legacy) throw new Error('no message');
+    const withoutLevel = { ...legacy };
+    delete withoutLevel.summaryLevel;
+    await db.put('messages', withoutLevel);
+    db.close();
+    expect((await repo.listMessages(id))[0]).not.toHaveProperty('summaryLevel');
+
+    cleanup();
+    await renderSidebar(repo);
+    responders.push(() => sse('A summary.'));
+    fireEvent.click(await screen.findByRole('button', { name: 'Retry' }));
+    await waitFor(() => {
+      expect(answers()[0]?.textContent).toContain('A summary.');
+    });
+    expect(bodies[0]?.messages.slice(1)).toEqual([{ role: 'user', content: PROMPT }]);
+    expect((await repo.listMessages(id))[0]).not.toHaveProperty('summaryLevel');
   });
 });
