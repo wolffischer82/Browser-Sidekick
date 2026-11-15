@@ -146,6 +146,18 @@
     "message": "Summarize the pages provided. Structure your answer in exactly two parts, in this order, each under its own Markdown heading:\n\n## TL;DR\nAlways start with this part. Two or three sentences on what the content is about and its gist: the core message or takeaway.\n\n## Detailed summary\nA detailed summary of the content itself: the main points, arguments, explanations, examples, facts and figures, and conclusions, in the order they come up. Report what is actually said, not just how the content is structured; for a video, summarize what is said in it. If there is more than one page, give the detailed summary of each page under its title, then an overall summary that covers the themes the pages share and the points on which they disagree.\n\nCite pages with their number. Answer in English.",
     "description": "The fixed request sent to the model by Summarize (spec 5.6), in the UI language. Not shown in the UI: the transcript shows \"Summarize\" instead."
   },
+  "summarizePromptVeryShort": {
+    "message": "Summarize the pages provided in two or three sentences: what the content is about and its core message or takeaway. No headings and no lists. If there is more than one page, cover them together in those sentences. Cite pages with their number. Answer in English.",
+    "description": "The fixed request Summarize sends at the Very short summary level (specs/summary-levels.md 4.4), in the UI language. Not shown in the UI."
+  },
+  "summarizePromptShort": {
+    "message": "Summarize the pages provided briefly. Start with one sentence on what the content is about, then list the five to seven most important points as bullets, one sentence each. Report what is actually said, not how the content is structured; for a video, summarize what is said in it. If there is more than one page, give three to five points for each page under its title, then one sentence on what the pages share or where they disagree. Cite pages with their number. Answer in English.",
+    "description": "The fixed request Summarize sends at the Short summary level (specs/summary-levels.md 4.4), in the UI language. Not shown in the UI."
+  },
+  "summarizePromptDetailed": {
+    "message": "Summarize the pages provided thoroughly. Structure your answer in exactly three parts, in this order, each under its own Markdown heading:\n\n## TL;DR\nAlways start with this part. Two or three sentences on what the content is about and its gist: the core message or takeaway.\n\n## Detailed summary\nGo through the content section by section, in the order it comes up, with a subheading for each section: its main points, arguments, explanations, examples, facts and figures, names and dates, and conclusions. Report what is actually said, not just how the content is structured; for a video, summarize what is said in it. Leave out nothing of substance. If there is more than one page, give the detailed summary of each page under its title, then an overall summary that covers the themes the pages share and the points on which they disagree.\n\n## Key takeaways\nA bulleted list of the most important conclusions and facts to remember.\n\nCite pages with their number. Answer in English.",
+    "description": "The fixed request Summarize sends at the Detailed summary level (specs/summary-levels.md 4.4), in the UI language. Not shown in the UI."
+  },
   "inputPlaceholder": {
     "message": "Ask about these pages…",
     "description": "Placeholder of the question input."
