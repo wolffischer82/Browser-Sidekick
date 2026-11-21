@@ -2,7 +2,7 @@
 
 A sidebar extension for Chrome and Firefox. Pin the pages you're reading into a session, then ask your own LLM about them or have it summarise them.
 
-Status: MVP, version 0.1.0. It isn't in the Chrome Web Store or on addons.mozilla.org.
+Status: MVP, version 0.2.0. It isn't in the Chrome Web Store or on addons.mozilla.org.
 
 ## Features
 
@@ -61,9 +61,9 @@ Store releases for the Chrome Web Store and addons.mozilla.org are being prepare
 
 `npm run store:assets` regenerates the store screenshots and promo tiles in `docs/store/assets/` against the mock LLM.
 
-The builds in `dist/` are tracked in git. CI fails if they differ from a fresh build (`npm run check:dist`), so rebuild and commit them with every source change, and don't edit them by hand.
+The builds in `dist/` are tracked in git. CI fails if they differ from a fresh build (`npm run check:dist`) or if `package.json`, manifests, and this file disagree on version (`npm run check:version`), so update them together and don't edit `dist/` by hand.
 
-Specs live in `specs/`, decision and progress logs in `docs/`. Builds and CI run on the self-hosted runner `lenovo-ai-server`; see `CLAUDE.md` for how work is driven.
+Specs live in `specs/`, decision and progress logs in `docs/`. Builds and CI run on the self-hosted runner `lenovo-ai-server`; see `AGENTS.md` for how work is driven.
 
 ## Privacy
 
