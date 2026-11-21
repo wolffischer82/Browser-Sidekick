@@ -61,7 +61,8 @@ const answers = (page: Page) => page.getByRole('article', { name: 'Answer' });
 const questions = (page: Page) => page.getByRole('article', { name: 'Your question' });
 const stopButton = (page: Page) => page.getByRole('button', { name: 'Stop' });
 const titleButton = (page: Page) => page.getByTitle('Rename session');
-const summarize = (page: Page) => page.getByRole('button', { name: 'Summarize', exact: true });
+const summarize = (page: Page) =>
+  page.getByRole('button', { name: 'Summarize · Standard', exact: true });
 const tooltip = (page: Page) => page.getByRole('tooltip');
 
 function chats(mock: MockLlm) {
@@ -194,7 +195,7 @@ test.describe('summarize', () => {
       { kind: 'stream', chunks: ['"Night trains ', 'and tickets."'] },
     );
     await summarize(sidebar).click();
-    await expect(questions(sidebar)).toHaveText(['Summarize']);
+    await expect(questions(sidebar)).toHaveText(['Summarize · Standard']);
     await expect(stopButton(sidebar)).toBeVisible();
     await expect(answers(sidebar).first()).toContainText('Sleeper services');
     // While it streams, the button is disabled and says so.
@@ -266,7 +267,7 @@ test.describe('summarize', () => {
     await summarize(sidebar).click();
     await expect(answers(sidebar).nth(1)).toContainText(MOCK_REPLY);
     await expect(stopButton(sidebar)).toHaveCount(0);
-    await expect(questions(sidebar)).toHaveText(['Summarize', 'Summarize']);
+    await expect(questions(sidebar)).toHaveText(['Summarize · Standard', 'Summarize · Standard']);
     expect(chats(mock)).toHaveLength(3);
     const excluded = system(body(mock, 2));
     expect(excluded.includes(ARTICLE_MARK), 'pinned page still sent').toBe(true);
@@ -279,7 +280,7 @@ test.describe('summarize', () => {
     // The summaries are stored: they are there after a reload, as "Summarize".
     await sidebar.reload();
     await expect(titleButton(sidebar)).toHaveText(TITLE);
-    await expect(questions(sidebar)).toHaveText(['Summarize', 'Summarize']);
+    await expect(questions(sidebar)).toHaveText(['Summarize · Standard', 'Summarize · Standard']);
     await expect(answers(sidebar)).toHaveCount(2);
     await expect(answers(sidebar).first().locator('button.citation')).toHaveCount(6);
 

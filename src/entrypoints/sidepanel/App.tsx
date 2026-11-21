@@ -3,7 +3,13 @@ import { browser } from 'wxt/browser';
 import type { Repository } from '@/shared/db/repository';
 import { t } from '@/shared/i18n';
 import { broadcast, isSidekickMessage, sendToBackground } from '@/shared/messages';
-import type { Pin, ProviderConfig, Session } from '@/shared/model';
+import {
+  DEFAULT_SUMMARY_LEVEL,
+  type Pin,
+  type ProviderConfig,
+  type Session,
+  type SummaryLevel,
+} from '@/shared/model';
 import { findTab, focusOrOpen, watchOpenTabs, type OpenTab } from '@/shared/open-tabs';
 import {
   activateSession,
@@ -92,6 +98,8 @@ export function App({ repository }: Props) {
   /** Whether the all-sites grant is held; `null` until checked (spec 5.3). */
   const [allSites, setAllSites] = useState<boolean | null>(null);
   const [bannerDismissed, setBannerDismissed] = useState(true);
+  /** The remembered summary level, for every session (specs/summary-levels.md O3). */
+  const [summaryLevel, setSummaryLevel] = useState<SummaryLevel>(DEFAULT_SUMMARY_LEVEL);
   const [drawer, setDrawer] = useState<SessionSummary[] | null>(null);
   const [view, setView] = useState<'main' | 'settings'>('main');
   const [focusPageAccess, setFocusPageAccess] = useState(false);
@@ -192,6 +200,7 @@ export function App({ repository }: Props) {
       setProviders(settings.providers);
       setDefaultProviderId(settings.defaultProviderId);
       setBannerDismissed(settings.accessBannerDismissed);
+      setSummaryLevel(settings.summaryLevel);
       setStatus('ready');
       // Host access can change outside the sidebar (decisions.md T05).
       refreshAccess();
@@ -206,6 +215,7 @@ export function App({ repository }: Props) {
       if (changed.accessBannerDismissed !== undefined) {
         setBannerDismissed(changed.accessBannerDismissed);
       }
+      if (changed.summaryLevel !== undefined) setSummaryLevel(changed.summaryLevel);
     });
     const checkAllSites = () => {
       void hasAllSitesAccess().then((granted) => {
@@ -581,8 +591,17 @@ export function App({ repository }: Props) {
           state={composerState}
           busy={chat.busy}
           summarize={summarize}
+          summaryLevel={summaryLevel}
           onSummarize={() => {
-            chat.summarize(tabContext());
+            chat.summarize(tabContext(), summaryLevel);
+          }}
+          onPickSummaryLevel={(level) => {
+            // Written before the request starts; the request takes the
+            // picked level itself, not the storage event (decisions.md
+            // Summary levels T26-4).
+            setSummaryLevel(level);
+            run(() => updateSettings({ summaryLevel: level }));
+            chat.summarize(tabContext(), level);
           }}
           onNewSession={() => {
             run(async (r) => {

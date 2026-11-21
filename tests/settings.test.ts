@@ -7,7 +7,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fakeBrowser } from 'wxt/testing/fake-browser';
 import { openRepository } from '@/shared/db/repository';
 import { openSidekickDb } from '@/shared/db/schema';
-import { DEFAULT_CONTEXT_BUDGET, DEFAULT_SETTINGS, type ProviderConfig } from '@/shared/model';
+import {
+  DEFAULT_CONTEXT_BUDGET,
+  DEFAULT_SETTINGS,
+  SUMMARY_LEVELS,
+  type ProviderConfig,
+} from '@/shared/model';
 import {
   clearSettingsForDeleteAll,
   deleteProvider,
@@ -56,6 +61,7 @@ describe('getSettings', () => {
       activeSessionId: null,
       sessionTabsExpanded: true,
       accessBannerDismissed: false,
+      summaryLevel: 'standard',
     });
   });
 
@@ -100,6 +106,46 @@ describe('updateSettings', () => {
     await updateSettings({ activeSessionId: undefined });
     await updateSettings({ unknown: 1 } as never);
     expect(set).not.toHaveBeenCalled();
+  });
+});
+
+describe('summaryLevel (specs/summary-levels.md 5)', () => {
+  it('is Standard while nothing is stored', async () => {
+    expect((await getSettings()).summaryLevel).toBe('standard');
+    expect(await fakeBrowser.storage.local.get(null)).toEqual({});
+  });
+
+  it('round-trips every level under its own key', async () => {
+    for (const level of SUMMARY_LEVELS) {
+      await updateSettings({ summaryLevel: level });
+      expect(await fakeBrowser.storage.local.get(null)).toEqual({ summaryLevel: level });
+      expect((await getSettings()).summaryLevel).toBe(level);
+    }
+  });
+
+  it('reads an unknown stored value as Standard', async () => {
+    for (const value of ['long', '', 3, null, { level: 'short' }]) {
+      await fakeBrowser.storage.local.set({ summaryLevel: value });
+      expect((await getSettings()).summaryLevel).toBe('standard');
+    }
+  });
+
+  it('is reported by watchSettings, an unknown or removed value as Standard', async () => {
+    const listener = vi.fn();
+    watchSettings(listener);
+    await updateSettings({ summaryLevel: 'short' });
+    expect(listener).toHaveBeenLastCalledWith({ summaryLevel: 'short' });
+    await fakeBrowser.storage.local.set({ summaryLevel: 'huge' });
+    expect(listener).toHaveBeenLastCalledWith({ summaryLevel: 'standard' });
+    await updateSettings({ summaryLevel: 'detailed' });
+    await fakeBrowser.storage.local.remove('summaryLevel');
+    expect(listener).toHaveBeenLastCalledWith({ summaryLevel: 'standard' });
+  });
+
+  it('is kept by Delete all data', async () => {
+    await updateSettings({ summaryLevel: 'veryShort' });
+    await clearSettingsForDeleteAll({ includeProviders: true });
+    expect((await getSettings()).summaryLevel).toBe('veryShort');
   });
 });
 

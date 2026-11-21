@@ -290,6 +290,23 @@ describe('mock OpenAI-compatible server', () => {
       expect(mock.reasoningEfforts).toEqual([]);
     });
 
+    it('records the prompt of every completion request: its last message', async () => {
+      await collect();
+      await collect(KEY, {
+        ...REQUEST,
+        turns: [
+          { role: 'user', content: 'First' },
+          { role: 'assistant', content: 'Answer' },
+          { role: 'user', content: 'Summarize briefly.' },
+        ],
+      });
+      await failure(collect('sk-wrong'));
+      await provider().listModels();
+      expect(mock.prompts).toEqual(['Hello', 'Summarize briefly.', 'Hello']);
+      mock.reset();
+      expect(mock.prompts).toEqual([]);
+    });
+
     it('records the effort of a request it rejects for its key or its model', async () => {
       expect((await failure(collect('sk-wrong', withLevel('mock-large', 'medium')))).code).toBe(
         'invalid-key',

@@ -40,3 +40,9 @@ None open.
 ## Closed
 
 1. **Chrome data-usage categories for the API key and the chat** (T24). Answered 2026-10-31: yes, on both stores (spec O8). Chrome ticks Authentication information, Personal communications, Web history and Website content; Firefox `data_collection_permissions.required` adds `authenticationInfo` and `personalCommunications`. decisions.md Store publishing T24-10.
+
+# Summary levels
+
+Spec: `specs/summary-levels.md`. Each entry names the task it blocks.
+
+None open.

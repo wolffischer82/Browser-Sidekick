@@ -1,5 +1,6 @@
 import type { CurrentTab } from '../current-tab';
-import type { Pin, ProviderConfig } from '../model';
+import type { MessageKey } from '../i18n';
+import { DEFAULT_SUMMARY_LEVEL, type Pin, type ProviderConfig, type SummaryLevel } from '../model';
 import { requestCurrentTab, type CurrentTabRef } from './context';
 
 /**
@@ -98,4 +99,31 @@ export async function waitForPins(
     pins = await listPins();
   }
   return { pins, stillExtracting: extracting(pins) };
+}
+
+const PROMPT_KEYS: Record<SummaryLevel, MessageKey> = {
+  veryShort: 'summarizePromptVeryShort',
+  short: 'summarizePromptShort',
+  standard: 'summarizePrompt',
+  detailed: 'summarizePromptDetailed',
+};
+
+/**
+ * The message key of a level's fixed prompt (specs/summary-levels.md 4.4).
+ * Missing or `null`, as on a summary stored before levels existed, is Standard.
+ */
+export function summaryPromptKey(level: SummaryLevel | null | undefined): MessageKey {
+  return PROMPT_KEYS[level ?? DEFAULT_SUMMARY_LEVEL];
+}
+
+const NAME_KEYS: Record<SummaryLevel, MessageKey> = {
+  veryShort: 'summaryLevelVeryShort',
+  short: 'summaryLevelShort',
+  standard: 'summaryLevelStandard',
+  detailed: 'summaryLevelDetailed',
+};
+
+/** The message key of a level's name (specs/summary-levels.md 4.5). */
+export function summaryLevelNameKey(level: SummaryLevel): MessageKey {
+  return NAME_KEYS[level];
 }

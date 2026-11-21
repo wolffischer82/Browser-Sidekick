@@ -24,6 +24,7 @@ const TOOLBAR = [
   '#thinking-button',
   '#new-session-button',
   '#summarize-button',
+  '#summary-level-button',
   '#send-button',
 ];
 

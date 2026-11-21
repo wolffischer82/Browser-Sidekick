@@ -142,9 +142,51 @@
     "message": "Warte, bis die Antwort fertig ist, oder stoppe sie.",
     "description": "Tooltip of the disabled Summarize button while an answer is on its way."
   },
+  "summaryLevelVeryShort": {
+    "message": "Sehr kurz",
+    "description": "Name of the shortest summary level, in the Summarize menu, its suffix and the transcript label."
+  },
+  "summaryLevelShort": {
+    "message": "Kurz",
+    "description": "Name of the short summary level, in the Summarize menu, its suffix and the transcript label."
+  },
+  "summaryLevelStandard": {
+    "message": "Standard",
+    "description": "Name of the standard summary level, in the Summarize menu, its suffix and the transcript label."
+  },
+  "summaryLevelDetailed": {
+    "message": "Ausführlich",
+    "description": "Name of the longest summary level, in the Summarize menu, its suffix and the transcript label."
+  },
+  "summaryLevelMenu": {
+    "message": "Zusammenfassungsstufe",
+    "description": "Accessible name of the arrow next to Summarize that opens the menu of summary levels."
+  },
+  "summarizeWithLevel": {
+    "message": "Zusammenfassen · $LEVEL$",
+    "description": "Transcript label of a summary and accessible name of the Summarize button, with the summary level name.",
+    "placeholders": {
+      "level": {
+        "content": "$1",
+        "example": "Kurz"
+      }
+    }
+  },
   "summarizePrompt": {
     "message": "Fasse die bereitgestellten Seiten zusammen. Gliedere deine Antwort in genau zwei Teile, in dieser Reihenfolge, jeweils unter einer eigenen Markdown-Überschrift:\n\n## TL;DR\nBeginne immer mit diesem Teil. Zwei bis drei Sätze dazu, worum es geht und was der Kern ist: die zentrale Aussage oder Erkenntnis.\n\n## Ausführliche Zusammenfassung\nEine ausführliche Zusammenfassung des eigentlichen Inhalts: die wichtigsten Punkte, Argumente, Erklärungen, Beispiele, Fakten und Zahlen sowie Schlussfolgerungen, in der Reihenfolge, in der sie vorkommen. Gib wieder, was tatsächlich gesagt wird, nicht nur, wie der Inhalt aufgebaut ist; bei einem Video fasse zusammen, was darin gesagt wird. Bei mehreren Seiten gib die ausführliche Zusammenfassung für jede Seite unter ihrem Titel und danach eine Gesamtzusammenfassung, die die gemeinsamen Themen der Seiten und die Punkte nennt, in denen sie sich widersprechen.\n\nZitiere die Seiten mit ihrer Nummer. Antworte auf Deutsch.",
     "description": "The fixed request sent to the model by Summarize (spec 5.6), in the UI language. Not shown in the UI: the transcript shows \"Summarize\" instead."
+  },
+  "summarizePromptVeryShort": {
+    "message": "Fasse die bereitgestellten Seiten in zwei bis drei Sätzen zusammen: worum es geht und was die zentrale Aussage oder Erkenntnis ist. Keine Überschriften und keine Listen. Bei mehreren Seiten fasse sie gemeinsam in diesen Sätzen zusammen. Zitiere die Seiten mit ihrer Nummer. Antworte auf Deutsch.",
+    "description": "The fixed request Summarize sends at the Very short summary level (specs/summary-levels.md 4.4), in the UI language. Not shown in the UI."
+  },
+  "summarizePromptShort": {
+    "message": "Fasse die bereitgestellten Seiten kurz zusammen. Beginne mit einem Satz dazu, worum es geht, und nenne dann die fünf bis sieben wichtigsten Punkte als Aufzählung, jeweils in einem Satz. Gib wieder, was tatsächlich gesagt wird, nicht, wie der Inhalt aufgebaut ist; bei einem Video fasse zusammen, was darin gesagt wird. Bei mehreren Seiten gib für jede Seite unter ihrem Titel drei bis fünf Punkte und danach einen Satz dazu, was die Seiten gemeinsam haben oder worin sie sich widersprechen. Zitiere die Seiten mit ihrer Nummer. Antworte auf Deutsch.",
+    "description": "The fixed request Summarize sends at the Short summary level (specs/summary-levels.md 4.4), in the UI language. Not shown in the UI."
+  },
+  "summarizePromptDetailed": {
+    "message": "Fasse die bereitgestellten Seiten gründlich zusammen. Gliedere deine Antwort in genau drei Teile, in dieser Reihenfolge, jeweils unter einer eigenen Markdown-Überschrift:\n\n## TL;DR\nBeginne immer mit diesem Teil. Zwei bis drei Sätze dazu, worum es geht und was der Kern ist: die zentrale Aussage oder Erkenntnis.\n\n## Ausführliche Zusammenfassung\nGehe den Inhalt Abschnitt für Abschnitt durch, in der Reihenfolge, in der er vorkommt, mit einer Zwischenüberschrift für jeden Abschnitt: seine wichtigsten Punkte, Argumente, Erklärungen, Beispiele, Fakten und Zahlen, Namen und Daten sowie Schlussfolgerungen. Gib wieder, was tatsächlich gesagt wird, nicht nur, wie der Inhalt aufgebaut ist; bei einem Video fasse zusammen, was darin gesagt wird. Lass nichts Wesentliches weg. Bei mehreren Seiten gib die ausführliche Zusammenfassung für jede Seite unter ihrem Titel und danach eine Gesamtzusammenfassung, die die gemeinsamen Themen der Seiten und die Punkte nennt, in denen sie sich widersprechen.\n\n## Wichtigste Erkenntnisse\nEine Aufzählung der wichtigsten Schlussfolgerungen und Fakten, die man sich merken sollte.\n\nZitiere die Seiten mit ihrer Nummer. Antworte auf Deutsch.",
+    "description": "The fixed request Summarize sends at the Detailed summary level (specs/summary-levels.md 4.4), in the UI language. Not shown in the UI."
   },
   "inputPlaceholder": {
     "message": "Frag etwas zu diesen Seiten…",

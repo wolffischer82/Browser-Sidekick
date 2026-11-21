@@ -2,14 +2,21 @@ import { useEffect, useRef, useState } from 'preact/hooks';
 import { browser } from 'wxt/browser';
 import { assembleContext, requestCurrentTab } from '@/shared/chat/context';
 import { readCurrentTabText } from '@/shared/chat/current-tab-text';
-import { waitForPins } from '@/shared/chat/summarize';
+import { summaryPromptKey, waitForPins } from '@/shared/chat/summarize';
 import { generateSessionTitle, isFirstAnswer } from '@/shared/chat/title';
 import type { CurrentTab } from '@/shared/current-tab';
 import type { Repository } from '@/shared/db/repository';
 import { t } from '@/shared/i18n';
 import { createProvider, LlmError } from '@/shared/llm';
 import { broadcast, isSidekickMessage } from '@/shared/messages';
-import type { Message, MessageKind, MessageSource, ProviderConfig, Session } from '@/shared/model';
+import type {
+  Message,
+  MessageKind,
+  MessageSource,
+  ProviderConfig,
+  Session,
+  SummaryLevel,
+} from '@/shared/model';
 import { requestThinking } from '@/shared/thinking';
 
 /**
@@ -25,9 +32,11 @@ import { requestThinking } from '@/shared/thinking';
  * (4.1). Nothing about the question, the pages, the answer or its
  * reasoning is logged.
  *
- * Summarize (D4, decisions.md T11) is the same flow with the fixed prompt as
- * the question and `kind: 'summarize'`; it also waits briefly for pins that
- * are still being read.
+ * Summarize (D4, decisions.md T11) is the same flow with the fixed prompt of
+ * the chosen level as the question and `kind: 'summarize'`; it also waits
+ * briefly for pins that are still being read. The user message stores the
+ * level, and Retry resends that level's prompt (specs/summary-levels.md 4.3,
+ * O7); a summary stored without a level retries at Standard.
  */
 
 /** An answer on its way: waiting for the first text, or streaming. */
@@ -36,6 +45,8 @@ export interface LiveAnswer {
   /** A typed question, or the Summarize request (shown as "Summarize"). */
   kind: MessageKind;
   question: string;
+  /** A summary's level; `null` for a typed question. */
+  summaryLevel: SummaryLevel | null;
   /** The stored question this answers; `null` until it is saved. */
   questionId: string | null;
   /** The failed answer a Retry replaces; hidden while this one is on its way. */
@@ -80,8 +91,8 @@ export interface Chat {
    */
   errorOf: (messageId: string) => LlmError | undefined;
   send: (question: string, tab: TabContext) => void;
-  /** Sends the fixed Summarize request for D4's page set. */
-  summarize: (tab: TabContext) => void;
+  /** Sends the fixed Summarize request of `level` for D4's page set. */
+  summarize: (tab: TabContext, level: SummaryLevel) => void;
   stop: () => void;
   /** Resends the question of the failed answer `failed`. */
   retry: (failed: Message, tab: TabContext) => void;
@@ -155,7 +166,13 @@ export function useChat({ repo, session, providers, onTitleChanged }: Options): 
     };
   }, [repo]);
 
-  const ask = (kind: MessageKind, question: string, tab: TabContext, retry: Retry | null) => {
+  const ask = (
+    kind: MessageKind,
+    question: string,
+    summaryLevel: SummaryLevel | null,
+    tab: TabContext,
+    retry: Retry | null,
+  ) => {
     if (!repo || !session) return;
     const provider = providers.find((p) => p.id === session.providerId);
     const model = session.model;
@@ -168,6 +185,7 @@ export function useChat({ repo, session, providers, onTitleChanged }: Options): 
       sessionId: id,
       kind,
       question,
+      summaryLevel,
       questionId: retry?.question.id ?? null,
       replacesId: retry?.failed.id ?? null,
       status: 'waiting',
@@ -208,7 +226,8 @@ export function useChat({ repo, session, providers, onTitleChanged }: Options): 
     /** Sends the question and collects the answer; rejects with what stopped it. */
     const stream = async () => {
       const userMessage =
-        retry?.question ?? (await repo.addMessage(id, { role: 'user', kind, text: question }));
+        retry?.question ??
+        (await repo.addMessage(id, { role: 'user', kind, text: question, summaryLevel }));
       answer.questionId = userMessage.id;
       await reload(repo, id);
       if (!retry) await broadcast({ type: 'messages-changed', sessionId: id });
@@ -313,10 +332,10 @@ export function useChat({ repo, session, providers, onTitleChanged }: Options): 
     errorOf: (messageId) => errors.current.get(messageId),
     send: (question, tab) => {
       const text = question.trim();
-      if (text) ask('ask', text, tab, null);
+      if (text) ask('ask', text, null, tab, null);
     },
-    summarize: (tab) => {
-      ask('summarize', t('summarizePrompt'), tab, null);
+    summarize: (tab, level) => {
+      ask('summarize', t(summaryPromptKey(level)), level, tab, null);
     },
     stop: () => {
       if (sessionId) controllers.current.get(sessionId)?.abort();
@@ -328,7 +347,11 @@ export function useChat({ repo, session, providers, onTitleChanged }: Options): 
         .reverse()
         .find((m) => m.role === 'user');
       if (index === -1 || !failed.error || !question) return;
-      ask(question.kind, question.text, tab, { question, failed });
+      if (question.kind === 'summarize') {
+        // The level stored with the request, not the remembered one (O7).
+        const level = question.summaryLevel ?? null;
+        ask('summarize', t(summaryPromptKey(level)), level, tab, { question, failed });
+      } else ask(question.kind, question.text, null, tab, { question, failed });
     },
   };
 }

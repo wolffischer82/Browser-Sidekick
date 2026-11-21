@@ -2,6 +2,7 @@ import type { ComponentChildren } from 'preact';
 import { useRef, useState } from 'preact/hooks';
 import type { SummarizeState } from '@/shared/chat/summarize';
 import { t } from '@/shared/i18n';
+import type { SummaryLevel } from '@/shared/model';
 import { ArrowUpIcon, PlusIcon } from './icons';
 import { SummarizeButton } from './SummarizeButton';
 
@@ -22,7 +23,12 @@ interface Props {
   onGrantAccess: () => void;
   /** Whether Summarize can be used, or why not. */
   summarize: SummarizeState;
+  /** The remembered summary level (specs/summary-levels.md O3). */
+  summaryLevel: SummaryLevel;
+  /** Summarize at the remembered level. */
   onSummarize: () => void;
+  /** A level picked in Summarize's menu: remember it and summarize at it. */
+  onPickSummaryLevel: (level: SummaryLevel) => void;
   /**
    * Starts a new session (redesign spec O4, 5.4). Usable whenever the header
    * button it replaces was, including while asking is unavailable.
@@ -94,7 +100,12 @@ export function Composer(props: Props) {
           >
             <PlusIcon />
           </button>
-          <SummarizeButton state={props.summarize} onSummarize={props.onSummarize} />
+          <SummarizeButton
+            state={props.summarize}
+            level={props.summaryLevel}
+            onSummarize={props.onSummarize}
+            onPickLevel={props.onPickSummaryLevel}
+          />
           <button
             id="send-button"
             type="button"

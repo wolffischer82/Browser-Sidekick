@@ -787,3 +787,71 @@ Status: done (2026-10-31). Gate-checker: PASS-WITH-NOTES, accepted (warning coun
 
 - None owed (documentation only).
 - Gate (2026-10-31): lint, typecheck, 1345 unit tests in 57 files, build, check:dist, lint:firefox (0 errors, 18 warnings), 24 e2e passed. `npm run zip && npm run verify:zips`: all six checks ok.
+
+# Summary levels
+
+Spec: `specs/summary-levels.md`. Branch `claude/wizardly-bell-ocx6mp`. Status values as above.
+
+## T26 Summary level: data, prompts and request
+
+Status: done (2026-11-15), gate-checker PASS (2026-11-15).
+
+### Plan
+
+- `src/shared/model.ts`: `SUMMARY_LEVELS` (O1 order), `SummaryLevel`, `isSummaryLevel`; `Settings.summaryLevel` (default `'standard'`); `Message.summaryLevel?: SummaryLevel | null`.
+- `src/shared/settings.ts`: `getSettings` and `watchSettings` read a missing or unknown `summaryLevel` as `'standard'`; `updateSettings` writes it like the other fields.
+- `src/shared/db/repository.ts`: `NewMessage.summaryLevel`, stored on `kind: 'summarize'` user messages only. No DB version bump.
+- `src/shared/chat/summarize.ts`: `summaryPromptKey(level)`; `public/_locales/{en,de}/messages.json`: `summarizePromptVeryShort`, `summarizePromptShort`, `summarizePromptDetailed` (§4.4), `summarizePrompt` unchanged.
+- `useChat`: `summarize(tab, level)` sends that level's prompt and stores the level on the user message; Retry of a summary sends the stored level's prompt (missing or `null` = Standard). `App` keeps the remembered level from settings (and their change events) and passes it; the button is unchanged.
+- Tests: settings (default, round trip, unknown value, watch), repository (level stored on summarize user messages only), sidepanel-summarize (each level's prompt in en and de, stored level, Retry after the remembered level changed, legacy message retries at Standard, no stored level = today's prompt), locales (every message has a description).
+- Open questions: none so far.
+
+### Acceptance
+
+- [x] Without a stored level, Summarize sends exactly today's request: the last turn is `summarizePrompt` byte for byte and the user message stores `'standard'` (`tests/sidepanel-summarize.test.tsx` "without a stored level…"; the existing summarize tests are unchanged and pass).
+- [x] Each level sends its own prompt in the UI language (en and de), with the same pages (two pins and the current tab), the same pin wait and the session's thinking level (the request code is shared; only the prompt differs).
+- [x] The summarize user message stores its level; Retry resends that level's prompt after the remembered level changed and the sidebar was reopened; a summary stored without the field retries at Standard (decisions.md Summary levels T26-6).
+- [x] Settings read missing or unknown `summaryLevel` as `'standard'`, also in change events; writing it round-trips every level (`tests/settings.test.ts`).
+- [x] The three new prompt strings exist in both locales with a `description`; `tests/locales.test.ts` now also checks every message has a description and each level's prompt is distinct and ends with the answer language.
+- [x] No visible UI change: the Summarize button is unchanged and summarizes at the remembered level. README: no change (T27 adds the Features line with the visible control).
+- [x] `dist/` rebuilt and committed.
+
+### Tests
+
+- `tests/settings.test.ts` (default, round trip, unknown value, watch, kept by Delete all data), `tests/repository.test.ts` (level on summarize requests only), `tests/chat-summarize.test.ts` (`summaryPromptKey`), `tests/sidepanel-summarize.test.tsx` "summary levels" (eight level × locale requests, no stored level, another sidebar's change, Retry after a change, legacy Retry), `tests/locales.test.ts`.
+- Gate (2026-11-15): lint, typecheck, 1368 unit tests in 57 files, build, check:dist, lint:firefox (0 errors, 18 warnings), 24 e2e passed. The first gate run failed once on the known `pinning.spec.ts` context-menu timing flake (T23, `menuExists` false); the rerun passed all 24.
+
+## T27 Split button, transcript label, README, final report
+
+Status: done (2026-11-15); final report written by the orchestrator; gate-checker PASS-WITH-NOTES (2026-11-15).
+
+### Plan
+
+- `components/SummarizeButton.tsx` becomes the split button: main part (icon, "Summarize", muted level suffix, accessible name `summarizeWithLevel`), arrow (`aria-haspopup="menu"`, `aria-expanded`) opening a `menu` of four `menuitemradio` items upward, keyboard and outside-click handling as in `ThinkingMenu`; both parts share today's tooltip and `aria-disabled`.
+- `Composer` and `App`: `onSummarize(level)`; a pick writes `updateSettings({ summaryLevel })` and passes the level to `chat.summarize`.
+- `shared/chat/summarize.ts`: `summaryLevelNameKey(level)`. Strings of §4.5 in both locales.
+- `Transcript`: "Summarize · <level>" for a summary with a level (stored or live), "Summarize" without.
+- Mock LLM: `prompts` records the last message of every completion request.
+- Tests: split-button component tests, transcript label tests (en, de), existing tests updated to the new accessible name and label; e2e `summary-levels.spec.ts` (pick Short, new session, reopen) with screenshots.
+- README Features line; `docs/summary-levels-report.md`.
+- Open questions: none so far.
+
+### Acceptance
+
+- [x] The main part summarizes at the remembered level; the menu lists Very short, Short, Standard, Detailed with the remembered one checked; picking one summarizes at it and becomes the remembered level, also for a new session and after reopening the side panel (`tests/sidepanel-summarize.test.tsx` "the split button…", `tests/e2e/summary-levels.spec.ts`).
+- [x] The suffix shows the remembered level in a wide panel (480 px and up, decisions.md Summary levels T27-3) and is hidden in a narrow one; the accessible name always includes it (component test and e2e at 320, 400 and 480 px).
+- [x] Both parts are `aria-disabled` with today's tooltips when Summarize is unavailable; the menu cannot be opened then, and an open menu closes (`tests/sidepanel-summarize-button.test.tsx`, e2e while a summary streams).
+- [x] Keyboard behaviour of §4.2 holds; focus returns to the arrow on close (component tests and e2e).
+- [x] Transcript shows "Summarize · <level>" for new summaries and "Summarize" for stored ones without a level, in both locales (component tests; e2e in English).
+- [x] README Features line updated in one line.
+- [x] Final report `docs/summary-levels-report.md`: what shipped, deviations, manual checks, owner checklist, open questions (none). Written by the orchestrator from the implementer's text (a subagent may not create report files).
+- [x] Mock LLM records the prompt it received (`MockLlm.prompts`).
+- [x] UI check in Chromium (T27 screens reviewed: suffix at 480 px, label at 400 px, icon at 320 px, menu inside the panel, transcript label, light and dark). Firefox: `lint:firefox` only; no Firefox in the build container, so the Firefox UI check is on the owner checklist in the final report.
+- [x] `dist/` rebuilt and committed.
+
+### Tests
+
+- `tests/sidepanel-summarize-button.test.tsx` (new): labels and suffix in en and de, menu open/close, checked item, picking, keyboard, disabled states, transcript labels for every level, without a level, live, and in German.
+- `tests/sidepanel-summarize.test.tsx`: the split button through `App` (pick Short, storage, main part reuses it, reopened menu checks it). `tests/chat-summarize.test.ts`: `summaryLevelNameKey`. `tests/mock-llm.test.ts`: recorded prompts.
+- `tests/e2e/summary-levels.spec.ts` (new): screens `T27-01` to `T27-05`. Existing component and e2e tests follow the new accessible name and label (decisions.md Summary levels T27-7).
+- Gate (2026-11-15): lint, typecheck, 1399 unit tests in 58 files, build, check:dist, lint:firefox (0 errors, 18 warnings), 25 e2e passed. One earlier full e2e run failed on the known `pinning.spec.ts` context-menu flake (T23).

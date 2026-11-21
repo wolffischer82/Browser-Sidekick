@@ -30,7 +30,11 @@ describe('sidebar root', () => {
       screen.getByRole('button', { name: `${m.sessionTabsLabel?.message ?? ''} 0` }),
     ).toBeTruthy();
     expect(screen.getByText(m.transcriptEmpty?.message ?? '')).toBeTruthy();
-    expect(screen.getByRole('button', { name: m.summarize?.message })).toBeTruthy();
+    expect(
+      screen.getByRole('button', {
+        name: `${m.summarize?.message ?? ''} · ${m.summaryLevelStandard?.message ?? ''}`,
+      }),
+    ).toBeTruthy();
     expect(screen.getByPlaceholderText(m.inputPlaceholder?.message ?? '')).toBeTruthy();
   });
 
@@ -92,7 +96,7 @@ describe('summarize and input', () => {
   it('keeps Summarize visible but unavailable with a tooltip', async () => {
     repo = await freshRepository();
     await renderSidebar(repo);
-    const button = screen.getByRole('button', { name: 'Summarize' });
+    const button = screen.getByRole('button', { name: 'Summarize · Standard' });
     expect(button.getAttribute('aria-disabled')).toBe('true');
     // No provider yet: the tooltip names that first (the states are T11's tests).
     const hint = document.getElementById(button.getAttribute('aria-describedby') ?? '');
