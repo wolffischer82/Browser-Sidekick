@@ -43,7 +43,7 @@ exports[`manifest > chrome: exact permissions and snapshot 1`] = `
   "side_panel": {
     "default_path": "sidepanel.html",
   },
-  "version": "0.1.0",
+  "version": "<package.json>",
 }
 `;
 
@@ -109,6 +109,6 @@ exports[`manifest > firefox: exact permissions and snapshot 1`] = `
     "default_title": "__MSG_extName__",
     "open_at_install": false,
   },
-  "version": "0.1.0",
+  "version": "<package.json>",
 }
 `;

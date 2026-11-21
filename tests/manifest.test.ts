@@ -14,6 +14,11 @@ const PROVIDER_HOSTS = [
 const outDirs: string[] = [];
 const built: Partial<Record<'chrome' | 'firefox', string>> = {};
 
+async function packageVersion(): Promise<string> {
+  const pkg = JSON.parse(await readFile(join(root, 'package.json'), 'utf8')) as { version: string };
+  return pkg.version;
+}
+
 async function exists(browser: 'chrome' | 'firefox', file: string): Promise<boolean> {
   const dir = built[browser];
   if (!dir) throw new Error(`No ${browser} build yet.`);
@@ -88,7 +93,9 @@ describe('manifest', () => {
     expect(await exists('chrome', 'offscreen.html')).toBe(true);
     expect(await exists('chrome', 'pdf.worker.js')).toBe(true);
     await expectFonts('chrome');
-    expect(manifest).toMatchSnapshot();
+    expect(manifest.version).toMatch(/^\d+\.\d+\.\d+$/);
+    expect(manifest.version).toBe(await packageVersion());
+    expect({ ...manifest, version: '<package.json>' }).toMatchSnapshot();
   }, 60_000);
 
   it('firefox: exact permissions and snapshot', async () => {
@@ -118,6 +125,8 @@ describe('manifest', () => {
     expect(await exists('firefox', 'offscreen.html')).toBe(false);
     expect(await exists('firefox', 'pdf.worker.js')).toBe(true);
     await expectFonts('firefox');
-    expect(manifest).toMatchSnapshot();
+    expect(manifest.version).toMatch(/^\d+\.\d+\.\d+$/);
+    expect(manifest.version).toBe(await packageVersion());
+    expect({ ...manifest, version: '<package.json>' }).toMatchSnapshot();
   }, 60_000);
 });

@@ -18,6 +18,8 @@ jobs:
       cancel-in-progress: true
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Toolchain
         run: |
@@ -58,6 +60,14 @@ jobs:
       - name: check:dist
         if: steps.detect.outputs.present == 'true'
         run: npm run --if-present check:dist
+
+      - name: check:version
+        if: steps.detect.outputs.present == 'true'
+        env:
+          GITHUB_BASE_REF: ${{ github.base_ref }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          ALLOW_MAJOR_BUMP: ${{ contains(github.event.pull_request.labels.*.name, 'major-release') }}
+        run: npm run --if-present check:version
 
       # web-ext lint on the unpacked Firefox build from the step above.
       - name: lint:firefox
