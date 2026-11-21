@@ -36,7 +36,7 @@ WHAT IT DOES
 - Sessions of pinned pages: pin the current tab from the sidebar, or right-click a page and choose "Pin to Sidekick". Each pin keeps a snapshot of the page's text, which you can refresh while the tab is open. Sessions are kept until you delete them, and you can switch between them and rename them.
 - Web pages, YouTube and PDFs: articles are reduced to their readable text, YouTube videos to their transcript, and PDFs to their text layer.
 - Ask and summarise: questions are answered from the pinned pages plus the tab you're on. Summarize gives a short summary per page and an overall one. Answers stream in and cite their sources by number; clicking a number opens that page.
-- Your own provider and key: works with Anthropic, Google Gemini and any OpenAI-compatible API (OpenAI, OpenRouter, Groq, or a local server such as Ollama or LM Studio). You can save several providers and choose the model per session.
+- Your own provider and key: connect your own API key for supported cloud LLM providers, or point it to a local model server. You can save several providers and choose the model per session.
 - Thinking level per session: choose how much the model should think before it answers (Default, Low, Medium or High), for models that support it.
 - Reasoning on demand: when the model returns its reasoning, you can open it above the answer.
 - Local data: sessions, pins, chat history and API keys stay on your device. Page text goes only to the provider you chose, and only when you ask or summarise. There is no telemetry.
