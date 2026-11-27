@@ -63,7 +63,7 @@ Store releases for the Chrome Web Store and addons.mozilla.org are being prepare
 
 The builds in `dist/` are tracked in git. CI fails if they differ from a fresh build (`npm run check:dist`) or if `package.json`, manifests, and this file disagree on version (`npm run check:version`), so update them together and don't edit `dist/` by hand.
 
-Specs live in `specs/`, decision and progress logs in `docs/`. Builds and CI run on the self-hosted runner `lenovo-ai-server`; see `AGENTS.md` for how work is driven.
+Current-state product, boundary, decision, and operations docs live in [docs/product.md](docs/product.md), [docs/boundaries.md](docs/boundaries.md), [docs/decisions/](docs/decisions/), and [docs/ops.md](docs/ops.md). Builds and CI run on the self-hosted runner `lenovo-ai-server`; see [AGENTS.md](AGENTS.md) for workshop conventions.
 
 ## Privacy
 

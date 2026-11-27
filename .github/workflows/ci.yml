@@ -5,6 +5,7 @@ on:
     branches:
       - main
   pull_request:
+  workflow_dispatch:
 
 jobs:
   build:
@@ -26,8 +27,7 @@ jobs:
           node --version
           npm --version
 
-      # The toolchain arrives with the first spec. Until a package.json
-      # exists, the remaining steps are skipped so the pipeline stays green.
+      # Skip remaining steps if package.json is absent.
       - name: Detect project
         id: detect
         run: |
@@ -74,7 +74,7 @@ jobs:
         if: steps.detect.outputs.present == 'true'
         run: npm run --if-present lint:firefox
 
-      # Chrome e2e (spec 9 "Browser automation") on the build from above.
+      # Chrome e2e (see docs/ops.md) on the build from above.
       # Playwright's Chromium is already installed on the runner; screenshots
       # stay in test-results/ on the machine and are not uploaded.
       - name: e2e
