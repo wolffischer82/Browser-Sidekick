@@ -164,7 +164,7 @@ Open "Edit Product Page" for the add-on:
 
 ## Shipping an update
 
-1. Bump the version: `npm version <new-version> --no-git-tag-version` sets `version` in `package.json` and `package-lock.json`. Both stores reject a version they already have.
+1. Check the version (`x.y.z`): under the repository's versioning rules (`AGENTS.md`), minor (`y`) bumps automatically on feature PRs and patch (`z`) on bugfix PRs, while major (`x`) bumps are owner-decided (`major-release` PR label). Both stores reject a version they already have. Confirm the version on `main` is ahead of what is live on both stores; if not, run `npm version <new-version> --no-git-tag-version` (updates `package.json` and `package-lock.json`).
 2. Rebuild and commit the builds: `npm run build`, then commit `dist/chrome-ext` and `dist/firefox-ext` (`npm run check:dist` must pass afterwards). Update the version in the `README.md` status line.
 3. Merge to `main`, then build the zips from `main`: `npm run zip` and `npm run verify:zips`, as in "Before you start".
 4. If the update changes the listing, permissions or data handling, update `docs/store/`, the privacy policies and the images first (see "After the listings are live"), and change the same fields in both dashboards.
