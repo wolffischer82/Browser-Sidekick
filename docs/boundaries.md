@@ -21,8 +21,8 @@ Permissions are locked to the narrowest working set and verified by `tests/manif
 
 ## 3. Privacy, security & zero remote code
 
-- **No telemetry or developer backend:** Data never leaves the browser except to the user's chosen LLM provider on explicit Ask, Summarize, or session-title generation.
-- **No remote code or runtime CDNs:** `pdfjs-dist`'s `pdf.worker.js` and Geist `.woff2` fonts (plus `assets/OFL.txt`) are bundled locally via `wxt.config.ts` `build:publicAssets`.
+- **No telemetry or developer backend:** Data never leaves the browser except to the user's chosen LLM provider on explicit Ask, Summarize, session-title generation, or Settings model-list/connection checks (plus cookie-free fetches of user-selected PDF URLs during extraction).
+- **No remote code or runtime CDNs:** `pdfjs-dist`'s `pdf.worker.js` and `assets/OFL.txt` are copied locally via `wxt.config.ts` `build:publicAssets`, and Vite bundles the Geist `.woff2` fonts from `src/entrypoints/sidepanel/style.css`.
 - **Output sanitization:** All LLM Markdown is rendered with `marked` + `dompurify`; rendered external links carry `rel="noopener noreferrer"`.
 - **Direct browser API calls:** Anthropic direct browser requests send `anthropic-dangerous-direct-browser-access: true`; provider API keys stay in `storage.local` and are never logged.
 - **Source hygiene:** Never log, print, or transmit page content, URLs, or browsing history in `src/`. No `console.log` or `debugger` in shipped code; no unexplained lint-disable comments.

@@ -27,8 +27,7 @@ jobs:
           node --version
           npm --version
 
-      # The toolchain arrives with the first spec. Until a package.json
-      # exists, the remaining steps are skipped so the pipeline stays green.
+      # Skip remaining steps if package.json is absent.
       - name: Detect project
         id: detect
         run: |
